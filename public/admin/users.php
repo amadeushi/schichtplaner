@@ -91,6 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $users = db()->query('SELECT * FROM users ORDER BY role, name')->fetchAll();
 
+// Wie admin/calendar.php: Name/E-Mail/Rolle/Status/Zeiterfassung/Aktion sind sechs Spalten - in der
+// mobile-first 640px-Spalte blieb pro Spalte so wenig Platz, dass selbst kurze Namen und Badges
+// mitten im Wort umbrachen. Am Desktop ist mehr Platz da, also nutzen wir ihn.
+$mainWide = true;
 require __DIR__ . '/../partials/header.php';
 ?>
 <h1>Mitarbeiter verwalten</h1>
@@ -136,7 +140,7 @@ require __DIR__ . '/../partials/header.php';
           <?= csrfField() ?>
           <input type="hidden" name="action" value="toggle_time_tracking">
           <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
-          <button type="submit" class="btn small <?= $u['time_tracking_enabled'] ? '' : 'secondary' ?>"><?= $u['time_tracking_enabled'] ? 'Aktiv' : 'Gesperrt' ?></button>
+          <button type="submit" class="btn small btn-toggle <?= $u['time_tracking_enabled'] ? '' : 'secondary' ?>"><?= $u['time_tracking_enabled'] ? 'Aktiv' : 'Gesperrt' ?></button>
         </form>
       </td>
       <td data-label="Aktion">

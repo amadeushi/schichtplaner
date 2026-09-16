@@ -97,9 +97,12 @@ function navActive(string $path, array $matches): bool
      dass die Tabelle sichtbar über den Kartenrand auf den dunklen Tresen-Hintergrund hinausläuft. */
   table { width: 100%; border-collapse: collapse; overflow-x: auto; }
   th, td { text-align: left; padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--ink-line); font-size: 0.9rem; vertical-align: middle; }
-  /* Nur Zelleninhalt (E-Mail-Adressen etc.) darf hart umbrechen, damit eine Spalte nicht die ganze
-     Tabelle in die Breite zieht; die kurzen Großbuchstaben-Spaltenköpfe bleiben unangetastet. */
-  td { overflow-wrap: break-word; word-break: break-word; }
+  /* Bewusst KEIN erzwungenes word-break auf Zellen: das brach frühere Male auch kurze, normale
+     Wörter (Namen, "Administrator") mitten im Wort, sobald eine Spalte knapp wurde, obwohl genug
+     Gesamtbreite da gewesen wäre. Ein Wort bricht jetzt nur noch an einer echten Wortgrenze
+     (Leerzeichen/Bindestrich); ein wirklich unbrechbares langes Wort (seltene E-Mail ohne
+     Trennstelle) lässt die Tabelle notfalls per overflow-x horizontal scrollen statt zu brechen. */
+  td { overflow-wrap: normal; word-break: normal; }
   th { color: var(--ink-soft); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
   td.mono, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
@@ -124,6 +127,10 @@ function navActive(string $path, array $matches): bool
   .btn.danger:hover { background: var(--danger-wash); }
   /* .small bleibt kompakt für dichte Reihen, aber nie unter 36px Kantenlänge */
   .btn.small { min-height: 2.25rem; min-width: 2.25rem; padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+  /* Für einen Umschalt-Button, dessen zwei Zustände unterschiedlich lange Labels haben
+     (z.B. "Aktiv"/"Gesperrt") - gleiche Breite für beide Zustände statt springender Spalte.
+     Muss .btn.small (2 Klassen) an Spezifität schlagen, sonst gewinnt dessen min-width. */
+  .btn.small.btn-toggle { min-width: 6rem; }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
   form.inline { display: inline; }
   /* Für Tabellenzellen mit mehreren Aktions-Buttons (z.B. "Passwort zurücksetzen" +
@@ -147,6 +154,9 @@ function navActive(string $path, array $matches): bool
     display: inline-flex; align-items: center; gap: 0.3rem;
     padding: 0.18rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.03em; border: 1.5px solid currentColor;
+    /* eine Pille bricht nie mitten im Wort - in einer engen Zelle lieber leicht breiter als
+       kaputt aussehen (siehe .btn, dieselbe Regel). */
+    white-space: nowrap; overflow-wrap: normal; word-break: normal;
   }
   .badge.confirmed, .badge.approved, .badge.open { color: var(--ink); background: var(--confirm-wash); border-color: var(--ink-line-strong); }
   .badge.pending { color: var(--ink-soft); background: transparent; border-style: dashed; }

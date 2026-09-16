@@ -6,6 +6,26 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.7.3] - 2026-09-17
+
+### Behoben
+- Mitarbeiter verwalten: die Tabelle (Name/E-Mail/Rolle/Status/Zeiterfassung/
+  Aktion, sechs Spalten) war auf die mobile-first 640px-Spalte begrenzt und
+  presste selbst am Desktop jede Spalte so eng, dass kurze Namen ("Hamun"),
+  E-Mail-Adressen und sogar Status-Badges ("AKTIV") mitten im Wort umbrachen.
+  Bekommt jetzt wie `admin/calendar.php` mehr Breite am Desktop (`main.wide`).
+- Grundsätzlicher: das erzwungene `word-break` auf Tabellenzellen (aus der
+  letzten Korrektur) brach auch kurze, normale Wörter, sobald eine Spalte
+  knapp wurde, statt die insgesamt vorhandene Breite zu nutzen. Zellen
+  brechen jetzt nur noch an echten Wortgrenzen; ein wirklich unbrechbares
+  langes Wort lässt die Tabelle stattdessen horizontal scrollen
+  (`overflow-x`, siehe 1.7.1) statt mitten im Wort zu reißen.
+- Badges brechen jetzt ebenfalls nie mehr mitten im Wort (dieselbe Regel wie
+  zuvor schon bei Buttons).
+- Der Zeiterfassung-Umschalter ("Aktiv"/"Gesperrt") hat jetzt eine
+  einheitliche Mindestbreite, statt je nach Zustand unterschiedlich breit zu
+  sein.
+
 ## [1.7.2] - 2026-09-17
 
 ### Behoben
