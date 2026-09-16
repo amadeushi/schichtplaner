@@ -1,0 +1,5 @@
+# Sicherheitsnetz falls der Webserver versehentlich auf das Projekt-
+# Wurzelverzeichnis statt auf public/ zeigt: gesamten Zugriff verweigern.
+# Korrektes Setup: DocumentRoot / Nginx root MUSS auf das public/-
+# Verzeichnis zeigen, siehe README.md.
+Require all denied

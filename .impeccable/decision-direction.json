@@ -1,0 +1,90 @@
+{
+  "title": "Visuelle Welt für den Schichtplaner wählen",
+  "question": "Der Wurf hat \"Der Leitstand\" zugewiesen. Behalten, eine Alternative wählen, oder neu würfeln.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Der Leitstand",
+      "kicker": "THE ROLL",
+      "lineage": "Einsatz-/Dispatch-Leitstand für Kurierflotten",
+      "thesis": "Der Dienstplan liest sich wie eine Einsatztafel: ein Blick sagt, ob du im Dienst bist.",
+      "palette": ["#14181c", "#e8e6e1", "#ff6a1a", "#39d98a"],
+      "materials": ["mattes Charcoal-Panel", "hinterleuchtete Status-LED", "tabellarische Monospace-Ziffern"],
+      "viewport": "Oben ein großer Dienst-Schalter (An/Aus, mit Uhrzeit seit wann), darunter eine Wochenreihe aus sieben Tages-Chips; antippen öffnet die Einsatzzeilen des Tages mit Status und einer einzigen, daumengroßen Aktion.",
+      "risk": "Wirkt zu \"Fahrdienst-App\", wenn Küche/Service sich nicht als Kurier verstehen.",
+      "raised": [
+        { "from": "challenger-cloud", "raise": "Farbe markiert nur den aktiven/neuesten Zustand, der Rest bleibt achromatische Struktur." },
+        { "from": "challenger-arcade", "raise": "Jeder Status bekommt genau eine reservierte Farbe, die sonst nirgends im Interface auftaucht." },
+        { "from": "challenger-terminal", "raise": "Alle Zeiten und Daten in einer einzigen, tabellarischen Monospace-Type für schnelles Scannen." }
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "Der Bon-Strang",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "Bon-Rail über der Kücheninsel, Thermodruck-Bestellzettel",
+      "thesis": "Jede Schicht ist ein Bon am Strang über der Ausgabe — genau das, was eine Küche ohnehin stündlich liest.",
+      "palette": ["#faf7f0", "#1a1a1a", "#d94f2b"],
+      "materials": ["Thermodruckpapier", "perforierter Abriss", "Bon-Klammer"],
+      "viewport": "Ein vertikaler Streifen aus Bons, der heutige oben vergrößert mit Lochrand, darunter die Woche als abreißbare Bons zum Antippen.",
+      "risk": "Der naheliegendste \"analog-gemütliche\" Kniff der Kategorie — muss echte Druck-/Papierdisziplin halten, sonst wirkt es wie ein Filter."
+    },
+    {
+      "id": "challenger-hazard",
+      "label": "Die Kennzeichnung",
+      "verdict": "competitive",
+      "lineage": "Lagerhallen-Streetwear: Zip-Tie-Anhänger, Warnstreifen, wörtliche Etiketten",
+      "thesis": "Jede Schicht trägt ihr eigenes Etikett wie ein Teil im Lager — \"BESETZT\", \"FREI\", \"VOLL\", schwarz auf weiß, Warnstreifen für gesperrte Tage.",
+      "palette": ["#f5f5f0", "#111111", "#ff7a00"],
+      "materials": ["Baumwoll-Etikett", "schwarz-gelbe Warnstreifen", "Zip-Tie"],
+      "case": "Identifikation stark (Warnstreifen/Zip-Ties sind täglicher Küchenalltag), verliert knapp gegen den Leitstand beim Kern-Mechanismus Ein-/Ausstempeln — kein natürlicher Live-Schalter-Zustand in dieser Sprache.",
+      "risk": "Kann laut/baustellenartig wirken, wenn Warnstreifen überhandnehmen statt nur Zustand zu markieren.",
+      "kept": "Wörtliche, großgeschriebene Zustands-Etiketten statt kleiner Badges."
+    },
+    {
+      "id": "challenger-cloud",
+      "label": "Iriseszierender Wolkenrand",
+      "verdict": "declined",
+      "lineage": "meteorologische Beobachtung, Tröpfchen-Beugung am Wolkenrand",
+      "thesis": "Farbe nur als zarter Saum um Unsicherheit — passt nicht zu einem Werkzeug, das klare Ja/Nein-Zustände braucht.",
+      "palette": ["#ffffff", "#4a4a52", "#e8b4c8"],
+      "materials": ["zarte Farbsäume", "dünne Grundschrift"],
+      "case": "Verfehlt beide Achsen: weder erkennt sich eine Küche darin wieder, noch passt die Zurückhaltung zu einem Statustool.",
+      "kept": "Farbe ausschließlich für den aktiven/neuesten Zustand reservieren."
+    },
+    {
+      "id": "challenger-arcade",
+      "label": "Arcade-Pixelglut",
+      "verdict": "declined",
+      "lineage": "CRT-Arkade-Automat, Sprite-Palette, Scanlines",
+      "thesis": "Strenge Palettengesetze pro Zustand — spielerisch, riskiert aber, ein lohnrelevantes Werkzeug wie ein Spiel wirken zu lassen.",
+      "palette": ["#0d0d14", "#ffd23f", "#39d98a"],
+      "materials": ["Pixelraster", "Phosphor-Glow"],
+      "case": "Verfehlt Wiedererkennung (Gaming-Welt statt Küchen-Welt); Klarheit wäre ok, aber Vertrauen für Arbeitszeiterfassung leidet.",
+      "kept": "Jeder Zustand bekommt genau eine exklusive Farbe."
+    },
+    {
+      "id": "challenger-terminal",
+      "label": "Phosphor-Terminal",
+      "verdict": "declined",
+      "lineage": "grüner Röhren-Terminal, endlose Transkript-Rolle",
+      "thesis": "Ein fortlaufendes Protokoll passt schlecht zu \"ich will genau Dienstag sehen\", gut zur Lesbarkeit der Zahlen.",
+      "palette": ["#0a0f0a", "#39ff6a"],
+      "materials": ["Phosphor-Glas", "Monospace-Bitmap"],
+      "case": "Ein scrollendes Protokoll ist die falsche Topologie für eine Woche mit sieben klar getrennten Tagen.",
+      "kept": "Tabellarische Monospace-Ziffern für alle Zeiten."
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code" },
+  "canon": true,
+  "canonCard": {
+    "label": "Der Klassiker",
+    "thesis": "Weiße Karten, runde Ecken, ein Blau-Akzent — der Dienstplan, wie ihn jede SaaS-Scheduling-App zeigt.",
+    "palette": ["#ffffff", "#111827", "#2563eb"],
+    "materials": ["weiche Schatten", "abgerundete Karten"],
+    "viewport": "Kalenderraster oben, Listenkarten darunter, ein blauer Hauptbutton.",
+    "risk": "Nicht unterscheidbar von jeder anderen Planungs-App — absichtlich."
+  },
+  "steer": true
+}

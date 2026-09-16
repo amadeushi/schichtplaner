@@ -1,0 +1,6 @@
+DirectoryIndex index.php
+Options -Indexes
+
+<FilesMatch "\.(sqlite|db)$">
+    Require all denied
+</FilesMatch>

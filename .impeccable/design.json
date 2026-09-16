@@ -1,0 +1,328 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-16T00:00:00Z",
+  "title": "Design System: Schichtplaner",
+  "extensions": {
+    "colorMeta": {
+      "paper-surround": {
+        "role": "neutral",
+        "displayName": "Espresso Counter",
+        "canonical": "#332b1c",
+        "tonalRamp": [
+          "#15110a",
+          "#241d13",
+          "#332b1c",
+          "#4a3f2a",
+          "#6b5d43",
+          "#8f7f62",
+          "#b8ab8c",
+          "#ded4bd"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Thermal Cream",
+        "canonical": "#faf3e3",
+        "tonalRamp": [
+          "#3d3527",
+          "#5c503c",
+          "#7d6f57",
+          "#a89877",
+          "#cabb9c",
+          "#e5dcc7",
+          "#faf3e3",
+          "#fffdf7"
+        ]
+      },
+      "surround-ink": {
+        "role": "neutral",
+        "displayName": "Counter Ink",
+        "canonical": "#f3e8d3",
+        "tonalRamp": [
+          "#3a3225",
+          "#584d3a",
+          "#7a6d52",
+          "#a29370",
+          "#c7b89a",
+          "#e3d7bd",
+          "#f3e8d3",
+          "#faf3e6"
+        ]
+      },
+      "surround-ink-soft": {
+        "role": "neutral",
+        "displayName": "Counter Ink Soft",
+        "canonical": "#a8967a",
+        "tonalRamp": [
+          "#2e2620",
+          "#453a2e",
+          "#5f5140",
+          "#7a6a54",
+          "#96826a",
+          "#a8967a",
+          "#c2b39c",
+          "#ded3c0"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Printer Black",
+        "canonical": "#1c1917",
+        "tonalRamp": [
+          "#0c0b0a",
+          "#1c1917",
+          "#332e2a",
+          "#4d453f",
+          "#6b6459",
+          "#958c7c",
+          "#c4bba9",
+          "#e6dfd0"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "#6b6459",
+        "tonalRamp": [
+          "#2a2721",
+          "#413c33",
+          "#595246",
+          "#6b6459",
+          "#8a8271",
+          "#aaa18e",
+          "#cac2ad",
+          "#e5dfcf"
+        ]
+      },
+      "stamp": {
+        "role": "primary",
+        "displayName": "Stamp Red",
+        "canonical": "#c8391f",
+        "tonalRamp": [
+          "#4a1409",
+          "#6e1e0d",
+          "#932813",
+          "#a92c17",
+          "#c8391f",
+          "#dd6b4c",
+          "#eda184",
+          "#f7e3dc"
+        ]
+      },
+      "danger": {
+        "role": "danger",
+        "displayName": "Decline Red",
+        "canonical": "#b3261e",
+        "tonalRamp": [
+          "#450e0a",
+          "#661510",
+          "#871d16",
+          "#9e231b",
+          "#b3261e",
+          "#c85f52",
+          "#e09e93",
+          "#f7e3dc"
+        ]
+      },
+      "confirm-wash": {
+        "role": "neutral",
+        "displayName": "Confirm / Weekend Wash",
+        "canonical": "#eee8d8",
+        "tonalRamp": [
+          "#3c372a",
+          "#59523f",
+          "#7a7057",
+          "#9d9276",
+          "#c1b699",
+          "#dcd4bd",
+          "#eee8d8",
+          "#f8f5ec"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The single <h1> per screen (Mein Plan, Schichtplan, Zeiterfassung)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Ticket day name; hero ticket steps this up to mark today."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Ticket meta captions, table cells, muted prose."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase eyebrow voice: section headings, form labels, badges."
+      },
+      "mono": {
+        "displayName": "Register-Tape Mono",
+        "purpose": "Every time, date, duration, and the tab bar/wordmark — anything that is a fact rather than a name."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-lift",
+        "value": "0 1px 0 rgba(28,25,23,0.04)",
+        "purpose": "Flat hairline lift under .card surfaces."
+      },
+      {
+        "name": "ticket-lift",
+        "value": "0 1px 0 rgba(28,25,23,0.05), 0 8px 16px -12px rgba(28,25,23,0.4)",
+        "purpose": "Ambient lift so each .ticket reads as a slip of paper off the rail."
+      }
+    ],
+    "motion": [
+      {
+        "name": "tap-press",
+        "value": "transform 0.15s ease",
+        "purpose": "Duty-stamp scale-down on :active; the system's only motion beyond instant state swaps."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile-max",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default low-emphasis action button, solid ink fill.",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Speichern</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px; border: 1.5px solid; cursor: pointer; font-size: 0.88rem; font-weight: 600; text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: 0.01em; } .ds-btn-primary { background: #1c1917; border-color: #1c1917; color: #faf3e3; } .ds-btn-primary:hover { background: #000; } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Stamp Button",
+      "kind": "button",
+      "refersTo": "button-stamp",
+      "description": "The system's one affirmative/'yes' action — Bewerben (apply), Annehmen (approve). The only button that carries the stamp accent.",
+      "html": "<button class=\"ds-btn ds-btn-stamp\">Bewerben</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px; border: 1.5px solid; cursor: pointer; font-size: 0.88rem; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: 0.01em; } .ds-btn-stamp { background: #c8391f; border-color: #c8391f; color: #fff8f4; } .ds-btn-stamp:hover { background: #a92c17; } .ds-btn-stamp:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Paper-filled, ink-line-bordered secondary action. Filled (not transparent) so it stays legible where it sits directly on the dark paper-surround background.",
+      "html": "<button class=\"ds-btn ds-btn-secondary\">Abbrechen</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px; border: 1.5px solid; cursor: pointer; font-size: 0.88rem; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: 0.01em; } .ds-btn-secondary { background: #faf3e3; color: #1c1917; border-color: #b9ad91; } .ds-btn-secondary:hover { background: #eee8d8; } .ds-btn-secondary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Shift Ticket",
+      "kind": "custom",
+      "refersTo": "ticket",
+      "description": "The system's signature component: a perforated paper ticket. Punch-hole top edge and torn zigzag bottom, both drawn with CSS gradients on pseudo-elements — no image asset.",
+      "html": "<div class=\"ds-ticket\"><div class=\"ds-ticket-head\"><div><div class=\"ds-ticket-day\">Montag</div><div class=\"ds-ticket-date\">12.10.2026</div></div></div><div class=\"ds-ticket-row\"><div><div class=\"ds-ticket-title\">Spätschicht Küche</div><div class=\"ds-ticket-meta\">17:00–23:00 · Filiale Nord</div></div></div></div>",
+      "css": ".ds-ticket { background: #faf3e3; border: 1.5px solid #ddd4bf; border-radius: 2px; position: relative; padding: 1.1rem 1.1rem 1.25rem; margin-top: 8px; box-shadow: 0 1px 0 rgba(28,25,23,0.05), 0 8px 16px -12px rgba(28,25,23,0.4); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; } .ds-ticket::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 16px; background-image: radial-gradient(circle, #332b1c 4px, transparent 4.3px); background-size: 24px 16px; background-position: 12px center; background-repeat: repeat-x; } .ds-ticket::after { content: ''; position: absolute; left: 0; right: 0; bottom: -7px; height: 14px; background-image: linear-gradient(135deg, #faf3e3 50%, transparent 50.5%), linear-gradient(45deg, #faf3e3 50%, transparent 50.5%); background-size: 14px 14px; background-position: left top; background-repeat: repeat-x; } .ds-ticket-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin-bottom: 0.5rem; } .ds-ticket-day { font-weight: 700; font-size: 0.95rem; color: #1c1917; } .ds-ticket-date { font-family: ui-monospace, 'SF Mono', 'Roboto Mono', 'IBM Plex Mono', Menlo, Consolas, monospace; color: #6b6459; font-size: 0.8rem; } .ds-ticket-row { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.55rem 0; } .ds-ticket-title { font-weight: 700; color: #1c1917; } .ds-ticket-meta { font-size: 0.82rem; color: #6b6459; font-family: ui-monospace, 'SF Mono', 'Roboto Mono', 'IBM Plex Mono', Menlo, Consolas, monospace; }"
+    },
+    {
+      "name": "Today Hero Ticket",
+      "kind": "custom",
+      "refersTo": "ticket-hero",
+      "description": "Today's ticket enlarged and pulled above the rail — a distinct hero card, not a bordered ticket in its normal weekday slot.",
+      "html": "<div class=\"ds-ticket ds-ticket-hero ds-ticket-today\"><div class=\"ds-ticket-head\"><div><div class=\"ds-ticket-day\">Heute · Montag</div><div class=\"ds-ticket-date\">12.10.2026</div></div><span class=\"ds-stamp-mark\">IM<br>DIENST</span></div></div>",
+      "css": ".ds-ticket { background: #faf3e3; border: 1.5px solid #c8391f; border-radius: 2px; position: relative; padding: 1.4rem 1.4rem 1.6rem; margin-top: 8px; box-shadow: 0 1px 0 rgba(28,25,23,0.05), 0 8px 16px -12px rgba(28,25,23,0.4); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; } .ds-ticket::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 16px; background-image: radial-gradient(circle, #332b1c 4px, transparent 4.3px); background-size: 24px 16px; background-position: 12px center; background-repeat: repeat-x; } .ds-ticket-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; } .ds-ticket-day { font-weight: 700; font-size: 1.25rem; color: #1c1917; } .ds-ticket-date { font-family: ui-monospace, 'SF Mono', 'Roboto Mono', 'IBM Plex Mono', Menlo, Consolas, monospace; color: #6b6459; font-size: 0.88rem; } .ds-stamp-mark { display: inline-flex; align-items: center; justify-content: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 2.5px solid #c8391f; color: #c8391f; font-family: ui-monospace, 'SF Mono', 'Roboto Mono', 'IBM Plex Mono', Menlo, Consolas, monospace; font-weight: 700; font-size: 0.62rem; letter-spacing: 0.02em; text-transform: uppercase; transform: rotate(-9deg); mix-blend-mode: multiply; text-align: center; line-height: 1.05; flex-shrink: 0; }"
+    },
+    {
+      "name": "Duty Stamp",
+      "kind": "custom",
+      "description": "The Stempeln (clock-in/out) screen's primary control. Off-duty is a dashed ring; on-duty is a solid rotated stamp-red ring with multiply blend, reading as pressed ink.",
+      "html": "<button class=\"ds-duty-stamp ds-duty-on\"><span class=\"ds-duty-label\">Im Dienst</span><span class=\"ds-duty-time\">seit 09:00</span></button>",
+      "css": ".ds-duty-stamp { width: 10rem; height: 10rem; border-radius: 50%; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem; cursor: pointer; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #faf3e3; border: none; transition: transform 0.15s ease; } .ds-duty-stamp:active { transform: scale(0.96); } .ds-duty-on { border: 4px solid #c8391f; color: #c8391f; transform: rotate(-6deg); mix-blend-mode: multiply; box-shadow: inset 0 0 0 2px #f7e3dc; } .ds-duty-on:active { transform: rotate(-6deg) scale(0.96); } .ds-duty-label { font-size: 1.2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; } .ds-duty-time { font-size: 0.78rem; font-family: ui-monospace, 'SF Mono', 'Roboto Mono', 'IBM Plex Mono', Menlo, Consolas, monospace; }"
+    },
+    {
+      "name": "Badge",
+      "kind": "custom",
+      "refersTo": "badge-today",
+      "description": "Pill status badge. Achromatic by default; only the today/active-duty variant carries stamp red.",
+      "html": "<span class=\"ds-badge ds-badge-today\">Heute</span> <span class=\"ds-badge ds-badge-confirmed\">Bestätigt</span> <span class=\"ds-badge ds-badge-pending\">Angefragt</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.18rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; border: 1.5px solid currentColor; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; } .ds-badge-today { color: #c8391f; background: #f7e3dc; } .ds-badge-confirmed { color: #1c1917; background: #eee8d8; border-color: #b9ad91; } .ds-badge-pending { color: #6b6459; background: transparent; border-style: dashed; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Text/date/time input with uppercase label above.",
+      "html": "<label class=\"ds-label\" for=\"demo-time\">Startzeit</label><input class=\"ds-input\" id=\"demo-time\" type=\"time\">",
+      "css": ".ds-label { display: block; font-size: 0.78rem; color: #6b6459; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.03em; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; } .ds-input { width: 100%; padding: 0.55rem 0.6rem; border: 1.5px solid #b9ad91; border-radius: 3px; font-size: 0.95rem; font-family: inherit; background: #faf3e3; color: #1c1917; } .ds-input:focus { outline: 2px solid #1c1917; outline-offset: 1px; }"
+    },
+    {
+      "name": "Bottom Tab Bar",
+      "kind": "nav",
+      "description": "Fixed bottom navigation, the primary nav for both roles. Mono, uppercase labels; active tab alone carries stamp red plus a small dot.",
+      "html": "<nav class=\"ds-tabbar\"><a class=\"ds-tab ds-tab-active\">Plan</a><a class=\"ds-tab\">Bewerb.</a><a class=\"ds-tab\">Stempeln</a><a class=\"ds-tab\">Mehr</a></nav>",
+      "css": ".ds-tabbar { display: flex; background: #faf3e3; border-top: 1px solid #ddd4bf; height: 62px; } .ds-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem; text-decoration: none; color: #6b6459; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.01em; font-family: ui-monospace, 'SF Mono', 'Roboto Mono', 'IBM Plex Mono', Menlo, Consolas, monospace; text-transform: uppercase; position: relative; } .ds-tab::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: transparent; } .ds-tab-active { color: #c8391f; } .ds-tab-active::before { background: #c8391f; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Der Bon-Strang — the ticket rail over the pass",
+    "overview": "Schichtplaner does not look like a scheduling SaaS. Its thesis, authored directly into the build (public/partials/header.php, first line of <body>), is that a shift plan is not a form — it is the string of order tickets clipped above a kitchen pass. Every shift is a perforated paper ticket with a scalloped punch-hole edge at top and a torn zigzag edge at bottom, printed in thermal-paper cream and printer black, and pinned to a dark espresso-umber counter sampled from the coat of Zeus, the business's real mascot, rather than an invented dark mode. One color is allowed to interrupt that monochrome: a stamped red, reserved for today, for on-duty, and for the two decisive \"yes\" actions (applying, approving). Everything else — confirmations, declines, pending states — stays achromatic, distinguished by weight, dash, and strike-through rather than hue.\n\nThe system is deliberately restrained because the product is: a self-hosted PHP/SQLite tool running on a resource-constrained Raspberry Pi, used one-handed by kitchen, counter, and delivery staff standing near the pass, not sitting at a desk. There is no JS framework, no animation library, no icon font — the ticket's texture comes from CSS gradients and pseudo-elements, and its rare iconographic marks are plain Unicode glyphs (✓ × › ‹), not an icon system. The admin sees the identical rail, with inline assignment controls folded into the same tickets rather than a separate management UI. The header carries the real AMDS wordmark, and the login screen introduces Zeus by photo inside a stamp-red ring.",
+    "keyCharacteristics": [
+      "A perforated paper ticket (.ticket) is the one component every surface is built from, whether read-only (staff) or editable (admin).",
+      "One warm stamp-red carries the entire system's visual emphasis; it is rationed, not decorative.",
+      "Monospace is load-bearing: every time, date, and duration is set in it; names and prose stay in the sans.",
+      "Thermal-paper-cream tickets and cards sit on a dark espresso-umber counter — flat, hairline-bordered, no soft app-chrome, no drop-shadow elevation beyond a whisper of ambient lift under each ticket.",
+      "Dashes mean \"not yet settled\" throughout the system: pending applications, unconfirmed rows, the off-duty ring, the rail's own connecting line.",
+      "Real brand assets are load-bearing identity: the AMDS wordmark in the header and Zeus's photo on login, not decoration — the surround color itself is sourced from Zeus's fur."
+    ],
+    "rules": [
+      {
+        "name": "The One Stamp Rule",
+        "body": "Stamp red appears in exactly one register: today, on duty, or \"yes.\" A destructive action (delete, remove assignment, logout, decline) never borrows it — that is danger (#b3261e), a separate, visually adjacent but distinct token.",
+        "section": "colors"
+      },
+      {
+        "name": "The Achromatic Badge Rule",
+        "body": "Status badges stay on the ink/paper/confirm-wash axis. Only .badge.today and .badge.active-duty earn the stamp. A badge's color is not how you tell states apart — its border style (solid vs. dashed vs. strike-through) is.",
+        "section": "colors"
+      },
+      {
+        "name": "The Register-Tape Rule",
+        "body": "Any value a user could look up on a time clock — a clock-in, a shift start/end, a date, a duration, an hours total — is set in mono with tabular-nums. Nothing else is.",
+        "section": "typography"
+      },
+      {
+        "name": "The No-Elevation-On-Interaction Rule",
+        "body": "Nothing gains a shadow on hover or focus. State change is communicated by border color, rotation, or scale — never by lifting a surface further.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Bare-Ground Rule",
+        "body": "Any element sitting directly on paper-surround (not nested inside a .card/.ticket) must use surround-ink/surround-ink-soft, never ink/ink-soft, which are calibrated for light paper surfaces and go low-contrast on the dark counter.",
+        "section": "colors"
+      },
+      {
+        "name": "The Comfortable-Tap Rule",
+        "body": "No interactive control renders below a 36px edge; primary-flow buttons (.btn without .small) hold to 44px. .small is a padding/type-scale reduction for dense rows, never a touch-target reduction — icon-only controls (the ticket rail's \"x\" remove button, the week-navigator's arrows) get a genuinely square hit area, not a shrink-to-glyph box. Use select.select-inline for a compact auto-width dropdown instead of an ad hoc inline style.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do reserve stamp red (#c8391f) for today/on-duty state and the two commit actions (apply, approve) — everywhere else stays on the ink/cream/confirm-wash axis.",
+      "Do give every shift ticket the perforated top and torn-zigzag bottom edge; it is the one non-negotiable signature of the \"Bon-Strang\" world, not an effect reserved for the hero card.",
+      "Do set every time, date, and duration in mono with tabular-nums; keep names and prose in the sans.",
+      "Do use a dashed border to mean \"not yet settled\" (pending applications, off-duty ring, unfilled shift chips, the rail's connecting line) and a solid border to mean settled.",
+      "Do keep the admin's shift-decision controls (assign/approve/reject) inside the ticket rail on admin/shifts.php only; any other admin surface showing applications must stay read-only history.",
+      "Do reach for plain Unicode glyphs (✓ × › ‹) for the rare iconographic need — never an icon font or SVG icon library, consistent with the Pi/mobile-data resource budget.",
+      "Do use surround-ink/surround-ink-soft for any text placed directly on the page background; reach for ink/ink-soft only inside a paper-colored card or ticket.",
+      "Do keep every button, input, and select at or above the Comfortable-Tap Rule's 36px/44px floor — this is a one-handed, kitchen-counter app, not a desktop admin panel.",
+      "Do write UI copy in proper German orthography (ä/ö/ü/ß) — the stack fully supports it end to end; never fall back to ae/oe/ue transliteration."
+    ],
+    "donts": [
+      "Don't introduce a second chromatic accent. danger (#b3261e) already covers destructive actions and must not be blended into \"emphasis\" or \"today\" contexts, even though its hex sits close to stamp.",
+      "Don't round any rectangular surface past 3px (buttons/cards/inputs) or 2px (tickets) — the geometry stays close to cut paper, not soft app-chrome. Circles (duty-stamp, stamp-mark, badge pills) are the sanctioned exception, not a precedent for other rounded shapes.",
+      "Don't add elevation on hover/focus. State changes through color, rotation, or scale — never through a bigger shadow.",
+      "Don't ship a heavy animation library, icon font, or client-side JS framework/bundle; the product's hard technical constraint is a memory-limited Raspberry Pi serving other services, and the entire visual system is built from plain CSS for exactly this reason.",
+      "Don't add a second place to approve or reject a shift application. One decision surface, the ticket rail, is a confirmed system rule, not a page-specific convenience.",
+      "Don't revert paper-surround to a generic warm cream/off-white page background — the dark espresso-umber counter is deliberately sourced from the real mascot photo to avoid the generic AI-interface \"warm cream ground\" tell.",
+      "Don't place ink/ink-soft text directly on paper-surround — use surround-ink/surround-ink-soft instead (the Bare-Ground Rule).",
+      "Don't shrink a button or select below the Comfortable-Tap floor with a one-off inline style; use the .small class or .select-inline instead so the reduction stays documented and consistent."
+    ]
+  }
+}
