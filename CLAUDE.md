@@ -90,3 +90,21 @@ Entscheidung, kein separater Key). Vor jedem Commit/Push kurz prüfen, dass
 Es gibt aktuell **keine automatisierte Test-Suite**. CI (`.github/workflows/`)
 prüft bisher nur `php -l` (Syntaxfehler) über alle PHP-Dateien — das ist
 kein Ersatz für echte Tests, nur ein Mindest-Sicherheitsnetz.
+
+## Versionierung
+
+`app/version.php` (Konstante `APP_VERSION`) ist die einzige Quelle der
+Wahrheit für die Versionsnummer, im Footer auf jeder Seite sichtbar.
+[CHANGELOG.md](CHANGELOG.md) hält die Historie fest (Format: Keep a Changelog).
+
+**Bei jeder nennenswerten Änderung** (neues Feature, sichtbarer Design-Fix,
+Sicherheits-Fix — nicht bei reiner Doku- oder Kommentar-Politur):
+1. `APP_VERSION` in `app/version.php` erhöhen (MINOR bei neuen Funktionen/
+   Design-Änderungen, PATCH bei reinen Fixes, MAJOR nur bei Breaking Changes
+   an Daten oder URLs).
+2. Einen neuen `## [X.Y.Z] - YYYY-MM-DD`-Abschnitt oben in CHANGELOG.md
+   ergänzen, mit `### Hinzugefügt`/`### Geändert`/`### Entfernt`/`### Behoben`
+   je nachdem was zutrifft.
+
+Das gilt auch für kleinere Refinements innerhalb einer laufenden Aufgabe,
+nicht nur für ganz neue Features.

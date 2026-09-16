@@ -27,7 +27,9 @@ $user = null;
 require __DIR__ . '/partials/header.php';
 ?>
 <div class="card" style="max-width:380px;margin:3rem auto;text-align:center;">
-  <img src="/assets/zeus.webp" alt="Zeus" width="96" height="96" style="border-radius:50%;border:3px solid var(--stamp);margin-bottom:0.75rem;object-fit:cover;">
+  <div class="zeus-frame">
+    <img src="/assets/zeus.webp" alt="Zeus" width="96" height="96">
+  </div>
   <h1 style="text-align:left;">Anmelden</h1>
   <?php if ($error): ?><div class="flash error"><?= e($error) ?></div><?php endif; ?>
   <form method="post">

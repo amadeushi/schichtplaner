@@ -1,3 +1,7 @@
+<footer class="site-footer">
+  <?= e(setting('app_name', 'Schichtplaner')) ?> · Amadeus Delivery ·
+  <a href="https://github.com/amadeushi/schichtplaner/blob/main/CHANGELOG.md" target="_blank" rel="noopener">v<?= e(APP_VERSION) ?></a>
+</footer>
 </main>
 <?php if (!empty($user)):
     $tabs = [];

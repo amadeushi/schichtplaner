@@ -21,6 +21,8 @@ function navActive(string $path, array $matches): bool
 <style>
   :root {
     --paper-surround: #332b1c;
+    --paper-surround-top: #443821;
+    --paper-surround-bottom: #251f14;
     --paper: #faf3e3;
     --ink: #1c1917;
     --ink-soft: #6b6459;
@@ -48,7 +50,7 @@ function navActive(string $path, array $matches): bool
   body {
     margin: 0;
     font-family: var(--font-sans);
-    background: var(--paper-surround);
+    background: linear-gradient(180deg, var(--paper-surround-top) 0%, var(--paper-surround-bottom) 100%);
     color: var(--ink);
     padding-bottom: calc(var(--tab-bar-h) + var(--safe-b) + 0.5rem);
     min-height: 100vh;
@@ -68,6 +70,9 @@ function navActive(string $path, array $matches): bool
   header.topbar .who { font-size: 0.8rem; color: var(--ink-soft); text-decoration: none; }
 
   main { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 1.5rem; }
+
+  .site-footer { margin-top: 1.5rem; text-align: center; font-size: 0.72rem; color: var(--surround-ink-soft); letter-spacing: 0.02em; }
+  .site-footer a { color: var(--surround-ink); text-decoration: underline; text-underline-offset: 2px; }
 
   h1 { font-size: 1.3rem; margin: 0.2rem 0 1rem; letter-spacing: -0.01em; color: var(--surround-ink); }
   .card h1 { color: var(--ink); }
@@ -200,6 +205,21 @@ function navActive(string $path, array $matches): bool
   .duty-stamp.on-duty:active { transform: rotate(-6deg) scale(0.96); }
   .duty-stamp.on-duty .duty-stamp-label { font-size: 1.2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; }
   .duty-stamp.on-duty .duty-stamp-time { font-size: 0.78rem; }
+
+  /* Zeus-Rahmen: ein einzelner rotierter Kreis sieht identisch zu einem unrotierten aus, darum kein
+     Stempel-Signal über Rotation allein. Stattdessen ein doppelter, absichtlich leicht unrund
+     registrierter Ring (wie ein von Hand gedrücktes Siegel) plus mix-blend-mode: multiply für die
+     Tuschequalität - dasselbe Blend-Prinzip wie beim Duty-Stamp, aber über zwei Ringe statt Rotation. */
+  .zeus-frame { position: relative; width: 96px; height: 96px; margin: 0 auto 0.75rem; }
+  .zeus-frame img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .zeus-frame::before {
+    content: ""; position: absolute; inset: -4px; border-radius: 50%;
+    border: 1.5px solid var(--stamp); mix-blend-mode: multiply;
+  }
+  .zeus-frame::after {
+    content: ""; position: absolute; inset: -9px; border-radius: 48% 52% 51% 49% / 52% 48% 53% 47%;
+    border: 2.5px solid var(--stamp); mix-blend-mode: multiply; transform: rotate(3deg);
+  }
 
   .stamp-mark {
     display: inline-flex; align-items: center; justify-content: center;

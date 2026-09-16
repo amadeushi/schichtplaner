@@ -10,7 +10,7 @@ $config = require $configFile;
 
 date_default_timezone_set($config['timezone'] ?? 'Europe/Berlin');
 
-// SQLite braucht ein beschreibbares Verzeichnis fuer die Datenbankdatei.
+// SQLite braucht ein beschreibbares Verzeichnis für die Datenbankdatei.
 $dbDir = dirname($config['db_path']);
 if (!is_dir($dbDir)) {
     mkdir($dbDir, 0775, true);
@@ -24,6 +24,7 @@ session_set_cookie_params([
 ]);
 session_start();
 
+require_once __DIR__ . '/version.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/auth.php';
