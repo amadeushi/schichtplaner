@@ -6,6 +6,26 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.7.2] - 2026-09-17
+
+### Behoben
+- Kalenderansicht: Wochentags-Spaltenköpfe und -Zellen ohne eigene Fläche
+  (alle außer Wochenende/heute) zeigten dunklen Ink-Text direkt auf dem
+  dunklen Tresen-Hintergrund — kaum lesbar. Das Wochenraster bekommt jetzt
+  selbst eine Papier-Fläche, wie jede andere Tabelle im System.
+- Uneinheitliche Ad-hoc-Schriftgrößen im Kalender-Chip (Zeit 0.7rem,
+  Entwurf-Label 0.62rem) auf die dokumentierte Label-Untergrenze (0.72rem)
+  vereinheitlicht.
+- Eine zugewiesene, aber noch unveröffentlichte Schicht im Kalender bekommt
+  jetzt zusätzlich zum Text-Label die im System etablierte gestrichelte
+  "nicht final"-Umrandung (wie offene Schichten und `.badge.pending`), statt
+  allein auf die kleine Beschriftung angewiesen zu sein.
+- Lange, ungebrochene Namen in der schmalen Mitarbeiter-Spalte des mobilen
+  Kalenders brachen mitten im Wort ohne Trennstrich (z.B. "Musterlanger" /
+  "name"). Die Spalte ist jetzt etwas breiter und nutzt echte deutsche
+  Silbentrennung (`hyphens: auto`), sodass ein nötiger Umbruch an einer
+  Silbengrenze mit sichtbarem Trennstrich erfolgt statt beliebig.
+
 ## [1.7.1] - 2026-09-16
 
 ### Behoben

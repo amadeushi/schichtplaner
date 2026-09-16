@@ -285,7 +285,11 @@ function navActive(string $path, array $matches): bool
   .week-nav-label { text-align: center; display: flex; flex-direction: column; gap: 0.1rem; color: var(--surround-ink); }
   .week-nav-label .muted { color: var(--surround-ink-soft); }
   .grid-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table.week-grid { width: auto; min-width: 100%; border-collapse: collapse; }
+  /* Bare-Ground Rule: ohne eigenen Papier-Hintergrund läge ink/ink-soft-Text der Zellen direkt auf
+     dem dunklen Tresen (nur .weekend/.today setzten bisher eine eigene Fläche) - kaum lesbar an
+     gewöhnlichen Wochentagen. Der Tabellen-Hintergrund liefert die Fläche für alle Zellen, die
+     keine speziellere eigene definieren. */
+  table.week-grid { width: auto; min-width: 100%; border-collapse: collapse; background: var(--paper); }
   table.week-grid th, table.week-grid td { border: 1px solid var(--ink-line); padding: 0.4rem; vertical-align: top; font-size: 0.85rem; min-width: 128px; }
   table.week-grid th { text-align: center; white-space: nowrap; min-width: auto; }
   .sticky-col { position: sticky; left: 0; background: var(--paper); z-index: 2; font-weight: 600; white-space: nowrap; }
@@ -294,12 +298,18 @@ function navActive(string $path, array $matches): bool
   table.week-grid th.today, table.week-grid td.today { outline: 2px solid var(--stamp); outline-offset: -2px; }
   .shift-chip { background: var(--paper); border: 1px solid var(--ink-line-strong); border-radius: 3px; padding: 0.3rem 1.3rem 0.3rem 0.4rem; margin-bottom: 0.3rem; font-size: 0.78rem; position: relative; }
   .shift-chip.pending { background: transparent; border: 1px dashed var(--ink-line-strong); }
+  /* Zugewiesene, aber noch unveröffentlichte Schicht: dieselbe gestrichelte "nicht final"-Sprache
+     wie .shift-chip.pending und .badge.pending, nur mit Papier-Fläche statt transparent, da hier
+     (anders als bei "Offen") tatsächlich schon jemand zugewiesen ist. */
+  .calendar-cell .shift-chip.draft-chip { border-style: dashed; }
   /* Als ziehbarer Kalender-Chip: kompaktes Padding (kein Platz für chip-remove reserviert),
      Titel/Zeit gestapelt, Greifhand-Cursor signalisiert die Drag-Fähigkeit. */
   .calendar-cell .shift-chip { display: block; padding: 0.3rem 0.4rem; cursor: grab; }
   .calendar-cell .shift-chip .chip-title { display: block; font-weight: 600; line-height: 1.2; }
-  .calendar-cell .shift-chip .chip-time { display: block; font-size: 0.7rem; color: var(--ink-soft); }
-  .chip-draft { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink-soft); }
+  /* Chip-Zeit und Entwurf-Label auf dieselbe Label-Untergrenze (0.72rem) gehoben - vorher 0.7rem
+     bzw. 0.62rem, zwei uneinheitliche Ad-hoc-Werte statt eines gemeinsamen Schritts der Skala. */
+  .calendar-cell .shift-chip .chip-time { display: block; font-size: 0.72rem; color: var(--ink-soft); }
+  .chip-draft { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink-soft); }
   .calendar-cell .shift-chip.dragging { opacity: 0.4; }
   .calendar-cell.today { background: var(--stamp-wash); }
   .calendar-cell { min-height: 3.2rem; }
@@ -315,7 +325,10 @@ function navActive(string $path, array $matches): bool
   .day-card .chip-remove { display: none; }
   @media (max-width: 640px) {
     table.week-grid th, table.week-grid td { min-width: 108px; }
-    .sticky-col { min-width: 96px; max-width: 96px; white-space: normal; }
+    /* Etwas breiter als zuvor (96px) und mit echter Silbentrennung statt hartem
+       Mitten-im-Wort-Umbruch: ein langer Nachname bricht jetzt an einer Silbengrenze mit
+       sichtbarem Trennstrich statt beliebig, sobald er nicht mehr in eine Zeile passt. */
+    .sticky-col { min-width: 112px; max-width: 112px; white-space: normal; hyphens: auto; -webkit-hyphens: auto; }
   }
 </style>
 </head>

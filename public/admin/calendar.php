@@ -259,7 +259,7 @@ require __DIR__ . '/../partials/header.php';
         <?php foreach ($days as $i => $d): ?>
           <td class="calendar-cell <?= $d === $todayDate ? 'today' : '' ?> <?= $i >= 5 ? 'weekend' : '' ?>" data-day="<?= $i ?>" data-employee="<?= (int)$emp['id'] ?>">
             <?php foreach ($grid[$emp['id']][$i] ?? [] as $chip): ?>
-              <div class="shift-chip" draggable="true" data-shift-id="<?= $chip['shift_id'] ?>" data-user-id="<?= (int)$emp['id'] ?>">
+              <div class="shift-chip<?= $chip['draft'] ? ' draft-chip' : '' ?>" draggable="true" data-shift-id="<?= $chip['shift_id'] ?>" data-user-id="<?= (int)$emp['id'] ?>">
                 <span class="chip-title"><?= e($chip['title']) ?><?php if ($chip['draft']): ?> <span class="chip-draft">Entwurf</span><?php endif; ?></span>
                 <span class="chip-time mono"><?= e($chip['start']) ?>&ndash;<?= e($chip['end']) ?></span>
               </div>
