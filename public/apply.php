@@ -13,7 +13,7 @@ $backTo = '/my_week.php' . ($returnDate ? '?date=' . urlencode($returnDate) : ''
 
 $stmt = db()->prepare(
     "SELECT sh.*, (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sh.id AND a.status = 'approved') AS approved_count
-     FROM shifts sh WHERE sh.id = :id AND sh.status = 'open'"
+     FROM shifts sh WHERE sh.id = :id AND sh.status = 'open' AND sh.published_at IS NOT NULL"
 );
 $stmt->execute(['id' => $shiftId]);
 $shift = $stmt->fetch();

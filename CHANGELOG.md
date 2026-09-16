@@ -6,6 +6,23 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.7.0] - 2026-09-16
+
+### Hinzugefügt
+- Entwurf/Publish-Workflow für Schichten (angelehnt an edtime): neue
+  Schichten und jede Änderung an einer bereits veröffentlichten Schicht
+  (Bearbeiten, Zu-/Abweisen, eine Bewerbung annehmen, im Kalender
+  verschieben/umbesetzen) sind für Mitarbeiter unsichtbar und nicht
+  bewerbbar, bis der Admin die Woche über eine neue Publish-Leiste
+  explizit veröffentlicht.
+- Statt einzelner Mails pro Änderung sammelt sich alles bis zum nächsten
+  Publish und geht dann als eine einzige, unspezifische Sammel-Mail
+  ("Änderungen an deinem Plan") an jede tatsächlich betroffene Person —
+  keine Schicht-Details im E-Mail-Text, nur ein Verweis auf die App.
+- Eine Bewerbungs-Ablehnung bleibt bewusst die eine Ausnahme und wird
+  weiterhin sofort verschickt, da sie eine direkte persönliche Antwort ist.
+- `bin/migrate_publish.php` für bereits laufende Installationen.
+
 ## [1.6.0] - 2026-09-16
 
 ### Hinzugefügt

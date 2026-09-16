@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS shifts (
     needed_count  INTEGER NOT NULL DEFAULT 1,
     notes         TEXT,
     status        TEXT NOT NULL CHECK (status IN ('open', 'filled', 'closed')) DEFAULT 'open',
+    published_at  TEXT,                        -- NULL = Entwurf, für Mitarbeiter unsichtbar
     created_by    INTEGER NOT NULL REFERENCES users(id),
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -62,6 +63,16 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     email       TEXT NOT NULL,
     ip_address  TEXT NOT NULL,
     success     INTEGER NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Sammelt, wer über eine noch unveröffentlichte Änderung an einer Schicht (Zu-/Abweisung,
+-- Bewerbung angenommen) informiert werden muss. Wird beim nächsten Publish pro Nutzer zu
+-- einer einzigen, unspezifischen Sammel-Mail geleert statt einzeln sofort zu verschicken.
+CREATE TABLE IF NOT EXISTS pending_notifications (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    shift_id    INTEGER NOT NULL REFERENCES shifts(id) ON DELETE CASCADE,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

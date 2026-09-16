@@ -85,6 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'move'
             db()->prepare('UPDATE shifts SET status = :st WHERE id = :id')->execute(['st' => $newStatus, 'id' => $shiftId]);
         }
 
+        // Jede Verschiebung/Umbesetzung zieht die Schicht zurück in den Entwurf und merkt die
+        // betroffenen Personen für die nächste Sammel-Mail vor - keine sofortige Benachrichtigung.
+        db()->prepare('UPDATE shifts SET published_at = NULL WHERE id = :id')->execute(['id' => $shiftId]);
+        if ($fromUserId !== null && $fromUserId !== $toUserId) {
+            queuePendingNotification($shiftId, $fromUserId);
+        }
+        if ($toUserId !== null && $toUserId !== $fromUserId) {
+            queuePendingNotification($shiftId, $toUserId);
+        }
+
         db()->commit();
     } catch (Throwable $e) {
         db()->rollBack();
@@ -153,6 +163,7 @@ foreach ($weekShifts as $sh) {
             'shift_id' => (int)$sh['id'], 'title' => $sh['title'],
             'start' => $sh['start_time'], 'end' => $sh['end_time'],
             'user_id' => $person['id'], 'remaining' => null,
+            'draft' => $sh['published_at'] === null,
         ];
     }
     if ($remaining > 0) {
@@ -160,10 +171,27 @@ foreach ($weekShifts as $sh) {
             'shift_id' => (int)$sh['id'], 'title' => $sh['title'],
             'start' => $sh['start_time'], 'end' => $sh['end_time'],
             'user_id' => null, 'remaining' => $remaining,
+            'draft' => $sh['published_at'] === null,
         ];
     }
 }
 $hasOpenRow = !empty($grid['open']);
+
+$draftCount = 0;
+foreach ($weekShifts as $sh) {
+    if ($sh['published_at'] === null) {
+        $draftCount++;
+    }
+}
+$pendingNotifyCount = 0;
+if ($weekShifts) {
+    $pnStmt = db()->prepare(
+        "SELECT COUNT(DISTINCT pn.user_id || '-' || pn.shift_id) FROM pending_notifications pn
+         JOIN shifts sh ON sh.id = pn.shift_id WHERE sh.shift_date BETWEEN :start AND :end"
+    );
+    $pnStmt->execute(['start' => $weekStart, 'end' => $weekEnd]);
+    $pendingNotifyCount = (int)$pnStmt->fetchColumn();
+}
 
 $mainWide = true;
 require __DIR__ . '/../partials/header.php';
@@ -181,6 +209,21 @@ require __DIR__ . '/../partials/header.php';
   </div>
   <a class="btn secondary small" href="?date=<?= e($nextWeek) ?>">&rsaquo;</a>
 </div>
+
+<?php if ($draftCount > 0 || $pendingNotifyCount > 0): ?>
+<form method="post" action="/admin/shifts.php" class="publish-bar">
+  <?= csrfField() ?>
+  <input type="hidden" name="action" value="publish">
+  <input type="hidden" name="week_date" value="<?= e($weekStart) ?>">
+  <input type="hidden" name="return_to" value="/admin/calendar.php">
+  <span class="publish-bar-summary">
+    <?php if ($draftCount > 0): ?><strong><?= $draftCount ?></strong> Entwurf<?= $draftCount === 1 ? '' : 'e' ?><?php endif; ?>
+    <?php if ($draftCount > 0 && $pendingNotifyCount > 0): ?> &middot; <?php endif; ?>
+    <?php if ($pendingNotifyCount > 0): ?><strong><?= $pendingNotifyCount ?></strong> ausstehende Benachrichtigung<?= $pendingNotifyCount === 1 ? '' : 'en' ?><?php endif; ?>
+  </span>
+  <button type="submit" class="btn">Woche veröffentlichen</button>
+</form>
+<?php endif; ?>
 
 <div class="grid-scroll">
   <table class="week-grid" id="calendar-grid" data-csrf="<?= e(csrfToken()) ?>">
@@ -217,7 +260,7 @@ require __DIR__ . '/../partials/header.php';
           <td class="calendar-cell <?= $d === $todayDate ? 'today' : '' ?> <?= $i >= 5 ? 'weekend' : '' ?>" data-day="<?= $i ?>" data-employee="<?= (int)$emp['id'] ?>">
             <?php foreach ($grid[$emp['id']][$i] ?? [] as $chip): ?>
               <div class="shift-chip" draggable="true" data-shift-id="<?= $chip['shift_id'] ?>" data-user-id="<?= (int)$emp['id'] ?>">
-                <span class="chip-title"><?= e($chip['title']) ?></span>
+                <span class="chip-title"><?= e($chip['title']) ?><?php if ($chip['draft']): ?> <span class="chip-draft">Entwurf</span><?php endif; ?></span>
                 <span class="chip-time mono"><?= e($chip['start']) ?>&ndash;<?= e($chip['end']) ?></span>
               </div>
             <?php endforeach; ?>

@@ -71,7 +71,7 @@ function statusLabelDe(string $status): string
         'pending' => 'Ausstehend',
         'approved' => 'Angenommen',
         'rejected' => 'Abgelehnt',
-        'withdrawn' => 'Zurueckgezogen',
+        'withdrawn' => 'Zurückgezogen',
         default => $status,
     };
 }
@@ -86,7 +86,7 @@ function formatDurationHm(int $seconds): string
 
 function monthNameDe(string $yearMonthDay): string
 {
-    $months = ['Januar', 'Februar', 'Maerz', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    $months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
     $ts = strtotime($yearMonthDay);
     if (!$ts) {
         return '';
@@ -99,4 +99,19 @@ function monthBounds(string $yearMonth): array
     $start = $yearMonth . '-01';
     $end = date('Y-m-d', strtotime($start . ' +1 month'));
     return [$start, $end];
+}
+
+/** Zieht eine Schicht zurück in den Entwurf, damit sie für Mitarbeiter unsichtbar wird,
+ * bis der Admin sie erneut veröffentlicht (siehe admin/shifts.php, Aktion 'publish'). */
+function markShiftUnpublished(int $shiftId): void
+{
+    db()->prepare('UPDATE shifts SET published_at = NULL WHERE id = :id')->execute(['id' => $shiftId]);
+}
+
+/** Merkt vor, dass $userId beim nächsten Publish über eine Änderung an $shiftId
+ * informiert werden muss (Sammel-Mail ohne Schicht-Details). */
+function queuePendingNotification(int $shiftId, int $userId): void
+{
+    db()->prepare('INSERT INTO pending_notifications (shift_id, user_id) VALUES (:s, :u)')
+        ->execute(['s' => $shiftId, 'u' => $userId]);
 }

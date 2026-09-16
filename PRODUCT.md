@@ -30,7 +30,7 @@ Where SaaS scheduling tools (e.g. edtime.de) require a subscription and hand the
 
 ## Capabilities and Constraints
 
-- **Confirmed today:** browse/apply for open shifts, admin approve/reject/direct-assign, a Mo–Su admin scheduling grid, a per-employee "Meine Woche" view, opt-in-per-employee clock-in/out with a monthly hours view for the admin, email + webhook notifications, account lockout after repeated failed logins.
+- **Confirmed today:** browse/apply for open shifts, admin approve/reject/direct-assign, a Mo–Su admin scheduling grid, a desktop drag-and-drop calendar view, a draft/publish workflow (new shifts and assignment changes stay invisible to staff and unnotified until the admin explicitly publishes a week, batching everything into one generic "your schedule changed" email per affected person), a per-employee "Meine Woche" view, opt-in-per-employee clock-in/out with a monthly hours view for the admin, email + webhook notifications, account lockout after repeated failed logins.
 - **Hard technical constraint:** plain PHP + SQLite, no framework, no JS build step, no heavy client-side framework — the whole app must keep running comfortably on a shared, memory-constrained Pi (well under 1GB RAM total, shared with other services on the box). Any new GUI direction must stay light: no large JS bundles, no heavy animation libraries, no asset-heavy pages that would strain either the Pi or a phone on mobile data.
 - **Undecided:** shift "codes"/short labels and employee skill tags (seen in a competitor reference screenshot) were explicitly deferred, not built — today's data model is title/date/time/location/needed-count, nothing more granular.
 

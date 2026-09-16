@@ -148,6 +148,12 @@ function navActive(string $path, array $matches): bool
   .notice-board .badge { margin-bottom: 0.5rem; }
   .notice-board-text { margin: 0; color: var(--ink); font-weight: 600; line-height: 1.45; white-space: pre-wrap; }
 
+  /* Publish-Leiste: Entwürfe/ausstehende Änderungen für die Woche, gebündelt statt sofort
+     verschickt (siehe admin/shifts.php Aktion 'publish'). Card-artig, damit ink/ink-soft passen. */
+  .publish-bar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; background: var(--paper); border: 1px solid var(--ink-line); border-radius: 3px; padding: 0.75rem 1rem; margin-bottom: 1rem; }
+  .publish-bar-summary { font-size: 0.85rem; color: var(--ink-soft); }
+  .publish-bar-summary strong { color: var(--ink); }
+
   .flash { padding: 0.7rem 1rem; border-radius: 3px; margin-bottom: 1rem; font-size: 0.9rem; border: 1.5px solid; }
   .flash.success { background: var(--confirm-wash); border-color: var(--ink-line-strong); color: var(--ink); }
   .flash.error { background: var(--stamp-wash); border-color: var(--stamp); color: #7a2213; }
@@ -281,6 +287,7 @@ function navActive(string $path, array $matches): bool
   .calendar-cell .shift-chip { display: block; padding: 0.3rem 0.4rem; cursor: grab; }
   .calendar-cell .shift-chip .chip-title { display: block; font-weight: 600; line-height: 1.2; }
   .calendar-cell .shift-chip .chip-time { display: block; font-size: 0.7rem; color: var(--ink-soft); }
+  .chip-draft { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink-soft); }
   .calendar-cell .shift-chip.dragging { opacity: 0.4; }
   .calendar-cell.today { background: var(--stamp-wash); }
   .calendar-cell { min-height: 3.2rem; }

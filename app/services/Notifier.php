@@ -108,6 +108,25 @@ final class Notifier
         ]);
     }
 
+    /**
+     * Die gebündelte, unspezifische Sammel-Mail beim Publish: bewusst ohne Schichtdetails
+     * (Titel, Zeit, Ort), nur ein Verweis auf den Plan - genau ein Mail pro betroffener Person
+     * statt einer einzelnen Mail pro einzelner Änderung.
+     */
+    public function scheduleChanged(array $user): bool
+    {
+        if (empty($user['notify_email'])) {
+            return false;
+        }
+        $appName = setting('app_name', 'Schichtplaner');
+        $subject = "Änderungen an deinem Schichtplan";
+        $body = "Hallo {$user['name']},\n\n"
+            . "es gibt Änderungen an deinem Schichtplan in $appName. "
+            . "Bitte melde dich an und sieh in \"Mein Plan\" nach, um die Details zu sehen.";
+
+        return $this->mailer->send($user['email'], $user['name'], $subject, $body);
+    }
+
     private function shiftPayload(array $shift): array
     {
         return [

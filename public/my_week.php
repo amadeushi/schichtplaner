@@ -24,7 +24,7 @@ $stmt = db()->prepare(
         (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sh.id AND a.status = 'approved') AS approved_count,
         (SELECT status FROM shift_applications a WHERE a.shift_id = sh.id AND a.user_id = :uid) AS my_status
      FROM shifts sh
-     WHERE sh.shift_date BETWEEN :start AND :end
+     WHERE sh.shift_date BETWEEN :start AND :end AND sh.published_at IS NOT NULL
      ORDER BY sh.shift_date, sh.start_time"
 );
 $stmt->execute(['uid' => $user['id'], 'start' => $weekStart, 'end' => $weekEnd]);

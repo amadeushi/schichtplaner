@@ -38,15 +38,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $createdShifts[] = (int)db()->lastInsertId();
         }
 
-        $notifier = new Notifier($config['smtp']);
-        foreach ($createdShifts as $sid) {
-            $s = db()->prepare('SELECT * FROM shifts WHERE id = :id');
-            $s->execute(['id' => $sid]);
-            $notifier->shiftPublished($s->fetch());
-        }
-
+        // Startet als Entwurf (published_at bleibt NULL) - erst beim nächsten Publish für
+        // Mitarbeiter sichtbar und über den Webhook gemeldet, siehe Aktion 'publish' unten.
         $count = count($createdShifts);
-        flash('success', $count > 1 ? "$count Schichten wurden angelegt und freigegeben." : 'Schicht wurde angelegt und freigegeben.');
+        flash('success', $count > 1
+            ? "$count Schichten als Entwurf angelegt. Über \"Veröffentlichen\" für Mitarbeiter freigeben."
+            : 'Schicht als Entwurf angelegt. Über "Veröffentlichen" für Mitarbeiter freigeben.');
         redirect('/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : ''));
     }
 
@@ -69,13 +66,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         db()->prepare(
             'UPDATE shifts SET title = :title, shift_date = :date, start_time = :start, end_time = :end,
-                location = :loc, needed_count = :needed, notes = :notes WHERE id = :id'
+                location = :loc, needed_count = :needed, notes = :notes, published_at = NULL WHERE id = :id'
         )->execute([
             'title' => $title, 'date' => $date, 'start' => $start, 'end' => $end,
             'loc' => $location ?: null, 'needed' => $needed, 'notes' => $notes ?: null, 'id' => $id,
         ]);
 
-        flash('success', 'Schicht wurde aktualisiert.');
+        flash('success', 'Schicht wurde aktualisiert und ist wieder Entwurf, bis erneut veröffentlicht wird.');
         redirect($backTo);
     }
 
@@ -84,8 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = (string)($_POST['status'] ?? '');
         $returnDate = (string)($_POST['return_date'] ?? '');
         if (in_array($status, ['open', 'filled', 'closed'], true)) {
-            db()->prepare('UPDATE shifts SET status = :s WHERE id = :id')->execute(['s' => $status, 'id' => $id]);
-            flash('success', 'Status aktualisiert.');
+            db()->prepare('UPDATE shifts SET status = :s, published_at = NULL WHERE id = :id')->execute(['s' => $status, 'id' => $id]);
+            flash('success', 'Status aktualisiert. Schicht ist wieder Entwurf, bis erneut veröffentlicht wird.');
         }
         redirect('/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : ''));
     }
@@ -149,10 +146,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db()->prepare("UPDATE shifts SET status = 'filled' WHERE id = :id")->execute(['id' => $shiftId]);
         }
 
-        $notifier = new Notifier($config['smtp']);
-        $notifier->applicationDecided($shift, $employee, 'approved');
+        // Keine sofortige Mail: die Zuweisung wird erst beim nächsten Publish gemeldet,
+        // damit Änderungen sich bündeln statt einzeln zu fluten.
+        markShiftUnpublished($shiftId);
+        queuePendingNotification($shiftId, $employeeId);
 
-        flash('success', $employee['name'] . ' wurde der Schicht zugewiesen.');
+        flash('success', $employee['name'] . ' wurde der Schicht zugewiesen. Schicht ist wieder Entwurf, bis erneut veröffentlicht wird.');
         redirect('/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : ''));
     }
 
@@ -187,10 +186,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             db()->prepare("UPDATE shifts SET status = 'open' WHERE id = :id")->execute(['id' => $shiftId]);
         }
 
-        $notifier = new Notifier($config['smtp']);
-        $notifier->assignmentRemoved($shift, $employee);
+        markShiftUnpublished($shiftId);
+        queuePendingNotification($shiftId, $employeeId);
 
-        flash('success', $employee['name'] . ' wurde von der Schicht entfernt.');
+        flash('success', $employee['name'] . ' wurde von der Schicht entfernt. Schicht ist wieder Entwurf, bis erneut veröffentlicht wird.');
         redirect('/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : ''));
     }
 
@@ -235,12 +234,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 db()->prepare("UPDATE shifts SET status = 'filled' WHERE id = :id")->execute(['id' => $shift['id']]);
             }
 
-            $notifier = new Notifier($config['smtp']);
-            $notifier->applicationDecided($shift, $applicant, $decision);
-
-            flash('success', 'Bewerbung wurde ' . statusLabelDe($decision) . '.');
+            if ($decision === 'approved') {
+                // Eine Annahme ist eine finale Zuweisung - bündelt sich wie 'assign' in den
+                // nächsten Publish statt sofort zu mailen.
+                markShiftUnpublished($shift['id']);
+                queuePendingNotification($shift['id'], $applicant['id']);
+                flash('success', 'Bewerbung wurde angenommen. Schicht ist wieder Entwurf, bis erneut veröffentlicht wird.');
+            } else {
+                // Eine Ablehnung ist eine direkte, persönliche Antwort auf die eigene Bewerbung
+                // der Person - bleibt sofort, damit sie zeitnah anderswo suchen kann.
+                $notifier = new Notifier($config['smtp']);
+                $notifier->applicationDecided($shift, $applicant, $decision);
+                flash('success', 'Bewerbung wurde ' . statusLabelDe($decision) . '.');
+            }
         }
         redirect($backTo);
+    }
+
+    if ($action === 'publish') {
+        $refDate = (string)($_POST['week_date'] ?? '');
+        $refTs = ($refDate !== '' && strtotime($refDate) !== false) ? strtotime($refDate) : time();
+        $isoDow = (int)date('N', $refTs);
+        $wStart = date('Y-m-d', strtotime('-' . ($isoDow - 1) . ' days', $refTs));
+        $wEnd = date('Y-m-d', strtotime('+6 days', strtotime($wStart)));
+
+        $draftStmt = db()->prepare(
+            'SELECT * FROM shifts WHERE shift_date BETWEEN :start AND :end AND published_at IS NULL'
+        );
+        $draftStmt->execute(['start' => $wStart, 'end' => $wEnd]);
+        $drafts = $draftStmt->fetchAll();
+
+        $notifier = new Notifier($config['smtp']);
+        foreach ($drafts as $sh) {
+            db()->prepare("UPDATE shifts SET published_at = datetime('now') WHERE id = :id")->execute(['id' => $sh['id']]);
+            $notifier->shiftPublished($sh);
+        }
+
+        // Betroffene Personen für diese Woche einsammeln, je genau EINE unspezifische
+        // Sammel-Mail pro Person verschicken, dann die Warteschlange für diese Woche leeren.
+        $notifyStmt = db()->prepare(
+            "SELECT DISTINCT pn.user_id, u.name, u.email, u.notify_email
+             FROM pending_notifications pn
+             JOIN shifts sh ON sh.id = pn.shift_id
+             JOIN users u ON u.id = pn.user_id
+             WHERE sh.shift_date BETWEEN :start AND :end"
+        );
+        $notifyStmt->execute(['start' => $wStart, 'end' => $wEnd]);
+        $affected = $notifyStmt->fetchAll();
+
+        $emailedCount = 0;
+        foreach ($affected as $person) {
+            if ($notifier->scheduleChanged($person)) {
+                $emailedCount++;
+            }
+        }
+
+        db()->prepare(
+            'DELETE FROM pending_notifications WHERE shift_id IN (
+                SELECT id FROM shifts WHERE shift_date BETWEEN :start AND :end
+            )'
+        )->execute(['start' => $wStart, 'end' => $wEnd]);
+
+        $draftCount = count($drafts);
+        $affectedCount = count($affected);
+        flash('success', "Woche veröffentlicht: $draftCount Entwurf(-e) freigegeben, $affectedCount betroffene Mitarbeiter ($emailedCount E-Mails verschickt).");
+        $returnTo = (string)($_POST['return_to'] ?? '/admin/shifts.php');
+        $returnTo = in_array($returnTo, ['/admin/shifts.php', '/admin/calendar.php'], true) ? $returnTo : '/admin/shifts.php';
+        redirect($returnTo . '?date=' . urlencode($wStart));
     }
 }
 
@@ -308,6 +368,22 @@ if ($weekShifts) {
     }
 }
 
+$draftCount = 0;
+foreach ($weekShifts as $sh) {
+    if ($sh['published_at'] === null) {
+        $draftCount++;
+    }
+}
+$pendingNotifyCount = 0;
+if ($weekShifts) {
+    $pnStmt = db()->prepare(
+        "SELECT COUNT(DISTINCT pn.user_id || '-' || pn.shift_id) FROM pending_notifications pn
+         JOIN shifts sh ON sh.id = pn.shift_id WHERE sh.shift_date BETWEEN :start AND :end"
+    );
+    $pnStmt->execute(['start' => $weekStart, 'end' => $weekEnd]);
+    $pendingNotifyCount = (int)$pnStmt->fetchColumn();
+}
+
 require __DIR__ . '/../partials/header.php';
 
 $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
@@ -325,6 +401,20 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
   </div>
   <a class="btn secondary small" href="?date=<?= e($nextWeek) ?>">&rsaquo;</a>
 </div>
+
+<?php if ($draftCount > 0 || $pendingNotifyCount > 0): ?>
+<form method="post" class="publish-bar">
+  <?= csrfField() ?>
+  <input type="hidden" name="action" value="publish">
+  <input type="hidden" name="week_date" value="<?= e($weekStart) ?>">
+  <span class="publish-bar-summary">
+    <?php if ($draftCount > 0): ?><strong><?= $draftCount ?></strong> Entwurf<?= $draftCount === 1 ? '' : 'e' ?><?php endif; ?>
+    <?php if ($draftCount > 0 && $pendingNotifyCount > 0): ?> &middot; <?php endif; ?>
+    <?php if ($pendingNotifyCount > 0): ?><strong><?= $pendingNotifyCount ?></strong> ausstehende Benachrichtigung<?= $pendingNotifyCount === 1 ? '' : 'en' ?><?php endif; ?>
+  </span>
+  <button type="submit" class="btn">Woche veröffentlichen</button>
+</form>
+<?php endif; ?>
 
 <?php if ($editShift): ?>
 <div class="card" id="edit-shift">
@@ -398,6 +488,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem;">
             <div>
               <strong><?= e($sh['title']) ?></strong>
+              <?php if ($sh['published_at'] === null): ?><span class="badge pending">Entwurf</span><?php endif; ?>
               <span class="ticket-meta mono"> <?= e($sh['start_time']) ?>&ndash;<?= e($sh['end_time']) ?></span>
               <?php if ($sh['location']): ?><span class="ticket-meta"> &middot; <?= e($sh['location']) ?></span><?php endif; ?>
             </div>
@@ -528,7 +619,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
     <textarea id="notes" name="notes" rows="2"></textarea>
     <label for="repeat_weeks">Wiederholen (Anzahl Wochen, wöchentlich ab Datum)</label>
     <input type="number" id="repeat_weeks" name="repeat_weeks" min="1" max="26" value="1">
-    <button type="submit" class="btn" style="margin-top:1rem;">Schicht anlegen &amp; freigeben</button>
+    <button type="submit" class="btn" style="margin-top:1rem;">Als Entwurf anlegen</button>
   </form>
 </div>
 
