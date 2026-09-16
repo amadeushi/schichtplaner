@@ -272,6 +272,15 @@ function navActive(string $path, array $matches): bool
   table.week-grid th.today, table.week-grid td.today { outline: 2px solid var(--stamp); outline-offset: -2px; }
   .shift-chip { background: var(--paper); border: 1px solid var(--ink-line-strong); border-radius: 3px; padding: 0.3rem 1.3rem 0.3rem 0.4rem; margin-bottom: 0.3rem; font-size: 0.78rem; position: relative; }
   .shift-chip.pending { background: transparent; border: 1px dashed var(--ink-line-strong); }
+  /* Als ziehbarer Kalender-Chip: kompaktes Padding (kein Platz für chip-remove reserviert),
+     Titel/Zeit gestapelt, Greifhand-Cursor signalisiert die Drag-Fähigkeit. */
+  .calendar-cell .shift-chip { display: block; padding: 0.3rem 0.4rem; cursor: grab; }
+  .calendar-cell .shift-chip .chip-title { display: block; font-weight: 600; line-height: 1.2; }
+  .calendar-cell .shift-chip .chip-time { display: block; font-size: 0.7rem; color: var(--ink-soft); }
+  .calendar-cell .shift-chip.dragging { opacity: 0.4; }
+  .calendar-cell.today { background: var(--stamp-wash); }
+  .calendar-cell { min-height: 3.2rem; }
+  .calendar-cell.drag-over { outline: 2px dashed var(--stamp); outline-offset: -2px; background: var(--stamp-wash); }
   .chip-remove { position: absolute; top: 0.15rem; right: 0.3rem; background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0.1rem; }
   .cell-assign select { font-size: 0.78rem; padding: 0.3rem; width: auto; }
   .day-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; }

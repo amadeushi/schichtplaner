@@ -50,6 +50,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : ''));
     }
 
+    if ($action === 'edit') {
+        $id = (int)($_POST['shift_id'] ?? 0);
+        $title = trim((string)($_POST['title'] ?? ''));
+        $date = (string)($_POST['shift_date'] ?? '');
+        $start = (string)($_POST['start_time'] ?? '');
+        $end = (string)($_POST['end_time'] ?? '');
+        $location = trim((string)($_POST['location'] ?? ''));
+        $needed = max(1, (int)($_POST['needed_count'] ?? 1));
+        $notes = trim((string)($_POST['notes'] ?? ''));
+        $returnDate = (string)($_POST['return_date'] ?? '');
+        $backTo = '/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : '');
+
+        if ($title === '' || !$date || !strtotime($date) || !$start || !$end) {
+            flash('error', 'Bitte Titel, Datum sowie Start- und Endzeit angeben.');
+            redirect($backTo);
+        }
+
+        db()->prepare(
+            'UPDATE shifts SET title = :title, shift_date = :date, start_time = :start, end_time = :end,
+                location = :loc, needed_count = :needed, notes = :notes WHERE id = :id'
+        )->execute([
+            'title' => $title, 'date' => $date, 'start' => $start, 'end' => $end,
+            'loc' => $location ?: null, 'needed' => $needed, 'notes' => $notes ?: null, 'id' => $id,
+        ]);
+
+        flash('success', 'Schicht wurde aktualisiert.');
+        redirect($backTo);
+    }
+
     if ($action === 'status') {
         $id = (int)($_POST['shift_id'] ?? 0);
         $status = (string)($_POST['status'] ?? '');
@@ -250,6 +279,14 @@ foreach ($weekShifts as $sh) {
 
 $employees = db()->query("SELECT id, name FROM users WHERE active = 1 ORDER BY name")->fetchAll();
 
+$editId = (int)($_GET['edit'] ?? 0);
+$editShift = null;
+if ($editId) {
+    $editStmt = db()->prepare('SELECT * FROM shifts WHERE id = :id');
+    $editStmt->execute(['id' => $editId]);
+    $editShift = $editStmt->fetch() ?: null;
+}
+
 $approvedByShiftId = [];
 $pendingByShiftId = [];
 if ($weekShifts) {
@@ -276,6 +313,7 @@ require __DIR__ . '/../partials/header.php';
 $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 ?>
 <h1>Schichtplan</h1>
+<p class="muted" style="color:var(--surround-ink-soft);"><a href="/admin/calendar.php?date=<?= e($weekStart) ?>" style="color:var(--surround-ink);text-decoration:underline;">Kalenderansicht &rsaquo;</a> (nur am Desktop, zum Umsortieren per Drag &amp; Drop)</p>
 
 <?php require __DIR__ . '/../partials/urgent_notice.php'; ?>
 
@@ -287,6 +325,52 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
   </div>
   <a class="btn secondary small" href="?date=<?= e($nextWeek) ?>">&rsaquo;</a>
 </div>
+
+<?php if ($editShift): ?>
+<div class="card" id="edit-shift">
+  <h2>Schicht bearbeiten</h2>
+  <form method="post">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="edit">
+    <input type="hidden" name="shift_id" value="<?= (int)$editShift['id'] ?>">
+    <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
+    <div class="grid-2">
+      <div>
+        <label for="edit_title">Titel</label>
+        <input type="text" id="edit_title" name="title" required value="<?= e($editShift['title']) ?>">
+      </div>
+      <div>
+        <label for="edit_location">Ort</label>
+        <input type="text" id="edit_location" name="location" value="<?= e((string)$editShift['location']) ?>">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div>
+        <label for="edit_shift_date">Datum</label>
+        <input type="date" id="edit_shift_date" name="shift_date" required value="<?= e($editShift['shift_date']) ?>">
+      </div>
+      <div>
+        <label for="edit_needed_count">Benötigte Personen</label>
+        <input type="number" id="edit_needed_count" name="needed_count" min="1" required value="<?= (int)$editShift['needed_count'] ?>">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div>
+        <label for="edit_start_time">Startzeit</label>
+        <input type="time" id="edit_start_time" name="start_time" required value="<?= e($editShift['start_time']) ?>">
+      </div>
+      <div>
+        <label for="edit_end_time">Endzeit</label>
+        <input type="time" id="edit_end_time" name="end_time" required value="<?= e($editShift['end_time']) ?>">
+      </div>
+    </div>
+    <label for="edit_notes">Notiz (optional)</label>
+    <textarea id="edit_notes" name="notes" rows="2"><?= e((string)$editShift['notes']) ?></textarea>
+    <button type="submit" class="btn" style="margin-top:1rem;">Speichern</button>
+    <a href="/admin/shifts.php?date=<?= e($weekStart) ?>" class="btn secondary">Abbrechen</a>
+  </form>
+</div>
+<?php endif; ?>
 
 <div class="rail">
 <?php foreach ($days as $i => $d): ?>
@@ -376,6 +460,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
               <span></span>
             <?php endif; ?>
             <span style="display:flex;gap:0.4rem;align-items:center;">
+              <a class="btn small secondary" href="?edit=<?= (int)$sh['id'] ?>&date=<?= e($weekStart) ?>#edit-shift">Bearbeiten</a>
               <form class="inline" method="post">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="status">

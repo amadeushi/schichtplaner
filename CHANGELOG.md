@@ -6,6 +6,18 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.5.0] - 2026-09-16
+
+### Hinzugefügt
+- Neue Kalenderansicht für den Admin (`admin/calendar.php`, nur Desktop):
+  Wochenraster mit Mitarbeiter-Zeilen und Tag-Spalten, Schichten per Drag &
+  Drop verschieben (Datum) oder umverteilen (Mitarbeiter). Reine
+  Ergänzung zum bestehenden Bon-Strang, keine eigene
+  Annehmen/Ablehnen-Oberfläche.
+- "Bearbeiten"-Funktion für Schichten im Schichtplan (Titel, Ort, Datum,
+  Zeiten, benötigte Anzahl, Notiz) — bisher nur Anlegen/Löschen/Status
+  möglich.
+
 ## [1.4.0] - 2026-09-16
 
 ### Geändert
