@@ -6,6 +6,23 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.7.1] - 2026-09-16
+
+### Behoben
+- Tabellen mit mehreren Aktions-Buttons in einer Zelle (z.B. "Passwort
+  zurücksetzen" + "Deaktivieren" in Mitarbeiter verwalten, oder
+  "Bearbeiten" + "Löschen" in der Zeiterfassung) konnten am Desktop die
+  Tabelle über die Kartenbreite hinaus zwingen — die Buttons rutschten
+  sichtbar über den Kartenrand auf den dunklen Tresen-Hintergrund. Neue
+  `.table-actions`-Klasse lässt mehrere Buttons in einer Zelle kontrolliert
+  umbrechen; lange, ungebrochene Inhalte (z.B. E-Mail-Adressen) dürfen jetzt
+  innerhalb ihrer Spalte umbrechen statt die Tabelle in die Breite zu
+  ziehen; als Sicherheitsnetz bekommt jede Tabelle zusätzlich `overflow-x:
+  auto`, falls trotzdem einmal nicht genug Platz ist — dann scrollt die
+  Tabelle innerhalb der Karte, statt sichtbar über den Rand zu laufen.
+  Betroffen und behoben: Mitarbeiter verwalten, Zeiterfassung (Admin und
+  Mitarbeiter-Ansicht).
+
 ## [1.7.0] - 2026-09-16
 
 ### Hinzugefügt

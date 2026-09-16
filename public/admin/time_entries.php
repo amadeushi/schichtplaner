@@ -195,15 +195,17 @@ require __DIR__ . '/../partials/header.php';
       <td data-label="Bis"><?= $en['clock_out'] ? e(date('H:i', strtotime($en['clock_out']))) : '-' ?></td>
       <td data-label="Dauer"><?= e($duration) ?></td>
       <td data-label="Aktion">
-        <a href="?user_id=<?= $employeeId ?>&month=<?= e($monthKey) ?>&edit=<?= (int)$en['id'] ?>" class="btn small secondary">Bearbeiten</a>
-        <form class="inline" method="post" onsubmit="return confirm('Eintrag löschen?');">
-          <?= csrfField() ?>
-          <input type="hidden" name="action" value="delete">
-          <input type="hidden" name="entry_id" value="<?= (int)$en['id'] ?>">
-          <input type="hidden" name="employee_id" value="<?= $employeeId ?>">
-          <input type="hidden" name="month" value="<?= e($monthKey) ?>">
-          <button type="submit" class="btn small danger">Löschen</button>
-        </form>
+        <div class="table-actions">
+          <a href="?user_id=<?= $employeeId ?>&month=<?= e($monthKey) ?>&edit=<?= (int)$en['id'] ?>" class="btn small secondary">Bearbeiten</a>
+          <form class="inline" method="post" onsubmit="return confirm('Eintrag löschen?');">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="entry_id" value="<?= (int)$en['id'] ?>">
+            <input type="hidden" name="employee_id" value="<?= $employeeId ?>">
+            <input type="hidden" name="month" value="<?= e($monthKey) ?>">
+            <button type="submit" class="btn small danger">Löschen</button>
+          </form>
+        </div>
       </td>
     </tr>
   <?php endforeach; ?>

@@ -140,20 +140,22 @@ require __DIR__ . '/../partials/header.php';
         </form>
       </td>
       <td data-label="Aktion">
-        <form class="inline" method="post">
-          <?= csrfField() ?>
-          <input type="hidden" name="action" value="reset_password">
-          <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
-          <button type="submit" class="btn small secondary">Passwort zurücksetzen</button>
-        </form>
-        <?php if ((int)$u['id'] !== (int)$user['id']): ?>
-        <form class="inline" method="post">
-          <?= csrfField() ?>
-          <input type="hidden" name="action" value="toggle_active">
-          <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
-          <button type="submit" class="btn small <?= $u['active'] ? 'danger' : '' ?>"><?= $u['active'] ? 'Deaktivieren' : 'Aktivieren' ?></button>
-        </form>
-        <?php endif; ?>
+        <div class="table-actions">
+          <form class="inline" method="post">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="reset_password">
+            <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
+            <button type="submit" class="btn small secondary">Passwort zurücksetzen</button>
+          </form>
+          <?php if ((int)$u['id'] !== (int)$user['id']): ?>
+          <form class="inline" method="post">
+            <?= csrfField() ?>
+            <input type="hidden" name="action" value="toggle_active">
+            <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
+            <button type="submit" class="btn small <?= $u['active'] ? 'danger' : '' ?>"><?= $u['active'] ? 'Deaktivieren' : 'Aktivieren' ?></button>
+          </form>
+          <?php endif; ?>
+        </div>
       </td>
     </tr>
   <?php endforeach; ?>

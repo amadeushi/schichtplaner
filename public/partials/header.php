@@ -92,9 +92,15 @@ function navActive(string $path, array $matches): bool
     box-shadow: 0 1px 0 rgba(28,25,23,0.04);
   }
 
-  table { width: 100%; border-collapse: collapse; }
+  /* overflow-x als Sicherheitsnetz: erzwingt bei zu vielen/zu breiten Spalten (z.B. lange
+     E-Mail-Adressen plus mehrere Aktions-Buttons) einen Scrollbalken innerhalb der Karte statt
+     dass die Tabelle sichtbar über den Kartenrand auf den dunklen Tresen-Hintergrund hinausläuft. */
+  table { width: 100%; border-collapse: collapse; overflow-x: auto; }
   th, td { text-align: left; padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--ink-line); font-size: 0.9rem; vertical-align: middle; }
-  th { color: var(--ink-soft); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  /* Nur Zelleninhalt (E-Mail-Adressen etc.) darf hart umbrechen, damit eine Spalte nicht die ganze
+     Tabelle in die Breite zieht; die kurzen Großbuchstaben-Spaltenköpfe bleiben unangetastet. */
+  td { overflow-wrap: break-word; word-break: break-word; }
+  th { color: var(--ink-soft); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
   td.mono, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
   .btn {
@@ -104,6 +110,9 @@ function navActive(string $path, array $matches): bool
     cursor: pointer; font-size: 0.88rem; font-weight: 600; text-decoration: none;
     font-family: var(--font-sans); letter-spacing: 0.01em;
     -webkit-tap-highlight-color: transparent;
+    /* nie mitten im Wort brechen (z.B. eine Tabellenzelle, die sonst Umbruch erzwingt) -
+       ein Button-Label bricht höchstens zwischen Wörtern, wie "zurücksetzen" ungeteilt. */
+    overflow-wrap: normal; word-break: normal;
   }
   .btn:hover { background: #000; }
   .btn:active { transform: translateY(1px); }
@@ -117,6 +126,9 @@ function navActive(string $path, array $matches): bool
   .btn.small { min-height: 2.25rem; min-width: 2.25rem; padding: 0.4rem 0.75rem; font-size: 0.8rem; }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
   form.inline { display: inline; }
+  /* Für Tabellenzellen mit mehreren Aktions-Buttons (z.B. "Passwort zurücksetzen" +
+     "Deaktivieren"): umbricht kontrolliert statt die Spalte/Tabelle in die Breite zu zwingen. */
+  .table-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
 
   input, select, textarea {
     width: 100%; padding: 0.55rem 0.6rem; border: 1.5px solid var(--ink-line-strong);
