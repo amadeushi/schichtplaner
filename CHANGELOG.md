@@ -6,6 +6,14 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.5.1] - 2026-09-16
+
+### Behoben
+- Kalenderansicht war weiterhin auf die mobile 640px-Spaltenbreite
+  begrenzt und zeigte deshalb selbst auf einem echten Desktop-Bildschirm
+  einen unnötigen Scrollbalken. `main` bekommt jetzt ein `.wide`-Modifier
+  (bis 1200px), nur für diese eine Seite gesetzt.
+
 ## [1.5.0] - 2026-09-16
 
 ### Hinzugefügt
