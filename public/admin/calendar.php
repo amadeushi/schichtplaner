@@ -165,6 +165,7 @@ foreach ($weekShifts as $sh) {
 }
 $hasOpenRow = !empty($grid['open']);
 
+$mainWide = true;
 require __DIR__ . '/../partials/header.php';
 ?>
 <h1>Kalender</h1>

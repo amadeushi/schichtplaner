@@ -70,6 +70,10 @@ function navActive(string $path, array $matches): bool
   header.topbar .who { font-size: 0.8rem; color: var(--ink-soft); text-decoration: none; }
 
   main { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 1.5rem; }
+  /* Ausnahme für admin/calendar.php: 7 Tagspalten + Namensspalte brauchen mehr als die
+     mobile-first 640px-Spalte, sonst erzwingt die Tabelle einen Scrollbalken, den es auf
+     einem echten Desktop-Bildschirm gar nicht braucht. */
+  main.wide { max-width: 1200px; }
 
   .site-footer { margin-top: 1.5rem; text-align: center; font-size: 0.72rem; color: var(--surround-ink-soft); letter-spacing: 0.02em; }
   .site-footer a { color: var(--surround-ink); text-decoration: underline; text-underline-offset: 2px; }
@@ -311,7 +315,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <a href="/more.php" class="who"><?= e($user['name']) ?></a>
   <?php endif; ?>
 </header>
-<main>
+<main<?= !empty($mainWide) ? ' class="wide"' : '' ?>>
 <?php foreach (getFlashes() as $f): ?>
   <div class="flash <?= e($f['type']) ?>"><?= e($f['message']) ?></div>
 <?php endforeach; ?>
