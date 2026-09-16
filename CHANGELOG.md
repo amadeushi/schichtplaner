@@ -6,6 +6,20 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.6.0] - 2026-09-16
+
+### Hinzugefügt
+- Vorläufige Passwörter (Neuanlage und Zurücksetzen durch den Admin)
+  werden jetzt per E-Mail an den Mitarbeiter verschickt, unabhängig von
+  dessen Benachrichtigungseinstellung — ohne dieses Passwort kann er sich
+  gar nicht anmelden. Schlägt der Versand fehl oder ist SMTP nicht
+  konfiguriert, zeigt die Oberfläche dem Admin das Passwort weiterhin
+  zur manuellen Weitergabe an.
+- `must_change_password` wird jetzt tatsächlich durchgesetzt: Ein Nutzer
+  mit vorläufigem Passwort wird von jeder Seite außer dem Profil zurück
+  dorthin geleitet, bis er ein eigenes Passwort gesetzt hat. Vorher war
+  das Feld nur in der Datenbank gesetzt, aber nirgends geprüft.
+
 ## [1.5.1] - 2026-09-16
 
 ### Behoben

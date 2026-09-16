@@ -20,7 +20,7 @@ function recentFailedLoginCount(string $column, string $value): int
 {
     $allowedColumns = ['email', 'ip_address'];
     if (!in_array($column, $allowedColumns, true)) {
-        throw new InvalidArgumentException('Ungueltige Spalte.');
+        throw new InvalidArgumentException('Ungültige Spalte.');
     }
     $since = date('Y-m-d H:i:s', strtotime('-' . LOGIN_LOCKOUT_MINUTES . ' minutes'));
     $stmt = db()->prepare(
@@ -60,6 +60,14 @@ function requireLogin(): array
     if (!$user) {
         redirect('/login.php');
     }
+    // Ein vorläufiges Passwort (Neuanlage oder Reset durch den Admin) blockiert jede andere
+    // Seite, bis im Profil ein eigenes Passwort gesetzt wurde - sonst bliebe das Feld reine
+    // Dateninfrastruktur ohne tatsächliche Durchsetzung.
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    if (!empty($user['must_change_password']) && !str_ends_with($scriptName, '/profile.php')) {
+        flash('error', 'Bitte zuerst dein vorläufiges Passwort ändern, bevor du fortfährst.');
+        redirect('/profile.php');
+    }
     return $user;
 }
 
@@ -68,7 +76,7 @@ function requireAdmin(): array
     $user = requireLogin();
     if ($user['role'] !== 'admin') {
         http_response_code(403);
-        die('Kein Zugriff. Diese Seite ist nur fuer Administratoren.');
+        die('Kein Zugriff. Diese Seite ist nur für Administratoren.');
     }
     return $user;
 }

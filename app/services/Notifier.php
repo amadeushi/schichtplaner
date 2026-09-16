@@ -2,10 +2,10 @@
 declare(strict_types=1);
 
 /**
- * Buendelt E-Mail- und Webhook-Benachrichtigungen fuer die fachlichen
- * Ereignisse der Anwendung. Ein Ereignis kann ueber beide, einen, oder
+ * Bündelt E-Mail- und Webhook-Benachrichtigungen für die fachlichen
+ * Ereignisse der Anwendung. Ein Ereignis kann über beide, einen, oder
  * keinen Kanal ausgeliefert werden - steuerbar in admin/settings.php
- * bzw. je Nutzer ueber users.notify_email.
+ * bzw. je Nutzer über users.notify_email.
  */
 final class Notifier
 {
@@ -21,7 +21,7 @@ final class Notifier
     public function newApplication(array $shift, array $applicant): void
     {
         $subject = "Neue Bewerbung: {$shift['title']} am " . formatDateDe($shift['shift_date']);
-        $body = "{$applicant['name']} hat sich fuer die Schicht \"{$shift['title']}\" "
+        $body = "{$applicant['name']} hat sich für die Schicht \"{$shift['title']}\" "
             . "am " . formatDateDe($shift['shift_date']) . " ({$shift['start_time']}-{$shift['end_time']}) beworben.\n\n"
             . "Bitte im Adminbereich freigeben oder ablehnen.";
 
@@ -41,7 +41,7 @@ final class Notifier
     {
         $label = statusLabelDe($status);
         $subject = "Deine Bewerbung wurde $label: {$shift['title']} am " . formatDateDe($shift['shift_date']);
-        $body = "Deine Bewerbung fuer die Schicht \"{$shift['title']}\" "
+        $body = "Deine Bewerbung für die Schicht \"{$shift['title']}\" "
             . "am " . formatDateDe($shift['shift_date']) . " ({$shift['start_time']}-{$shift['end_time']}) wurde $label.";
 
         if ($applicant['notify_email']) {
@@ -60,10 +60,42 @@ final class Notifier
         $this->webhook->send('shift.published', ['shift' => $this->shiftPayload($shift)]);
     }
 
+    /**
+     * Verschickt das vorläufige Passwort per E-Mail. Läuft unabhängig von notify_email,
+     * da dieses Feld reine Komfort-Benachrichtigungen steuert - ohne dieses Passwort kann sich
+     * der Mitarbeiter überhaupt nicht anmelden, es ist also kein optionaler Hinweis.
+     * Gibt zurück, ob der Mailversand erfolgreich war, damit der Aufrufer dem Admin sagen kann,
+     * ob er das Passwort trotzdem manuell weitergeben muss.
+     */
+    public function accountCreated(array $user, string $tempPassword): bool
+    {
+        $appName = setting('app_name', 'Schichtplaner');
+        $subject = "Dein Zugang zu $appName";
+        $body = "Hallo {$user['name']},\n\n"
+            . "für dich wurde ein Konto in $appName angelegt.\n\n"
+            . "E-Mail: {$user['email']}\n"
+            . "Vorläufiges Passwort: $tempPassword\n\n"
+            . "Bitte melde dich an und ändere dein Passwort beim ersten Login unter Profil.";
+
+        return $this->mailer->send($user['email'], $user['name'], $subject, $body);
+    }
+
+    public function passwordWasReset(array $user, string $tempPassword): bool
+    {
+        $appName = setting('app_name', 'Schichtplaner');
+        $subject = "Dein Passwort für $appName wurde zurückgesetzt";
+        $body = "Hallo {$user['name']},\n\n"
+            . "dein Passwort für $appName wurde von einem Admin zurückgesetzt.\n\n"
+            . "Vorläufiges Passwort: $tempPassword\n\n"
+            . "Bitte melde dich an und ändere dein Passwort beim ersten Login unter Profil.";
+
+        return $this->mailer->send($user['email'], $user['name'], $subject, $body);
+    }
+
     public function assignmentRemoved(array $shift, array $employee): void
     {
         $subject = "Zuweisung entfernt: {$shift['title']} am " . formatDateDe($shift['shift_date']);
-        $body = "Deine Zuweisung fuer die Schicht \"{$shift['title']}\" "
+        $body = "Deine Zuweisung für die Schicht \"{$shift['title']}\" "
             . "am " . formatDateDe($shift['shift_date']) . " ({$shift['start_time']}-{$shift['end_time']}) wurde vom Admin entfernt.";
 
         if ($employee['notify_email']) {

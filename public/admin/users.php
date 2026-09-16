@@ -32,7 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'h' => password_hash($tempPassword, PASSWORD_DEFAULT), 'r' => $role,
             ]);
             $generatedPassword = ['email' => $email, 'password' => $tempPassword];
-            flash('success', "Mitarbeiter angelegt. Vorläufiges Passwort für $email: $tempPassword (jetzt notieren, wird nicht erneut angezeigt).");
+            $notifier = new Notifier($config['smtp']);
+            $emailed = $notifier->accountCreated(['name' => $name, 'email' => $email], $tempPassword);
+            flash('success', ($emailed
+                ? "Mitarbeiter angelegt. Zugangsdaten wurden an $email verschickt."
+                : "Mitarbeiter angelegt. E-Mail-Versand ist nicht aktiv oder fehlgeschlagen — bitte manuell mitteilen.")
+                . " Vorläufiges Passwort (nur zur Sicherheit hier vermerkt): $tempPassword");
         } catch (PDOException $e) {
             flash('error', str_contains($e->getMessage(), 'UNIQUE') ? 'Diese E-Mail ist bereits vergeben.' : 'Fehler beim Anlegen.');
         }
@@ -61,15 +66,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'reset_password') {
         $id = (int)($_POST['user_id'] ?? 0);
-        $tempPassword = generatePassword();
-        $stmt = db()->prepare('UPDATE users SET password_hash = :h, must_change_password = 1 WHERE id = :id');
-        $stmt->execute(['h' => password_hash($tempPassword, PASSWORD_DEFAULT), 'id' => $id]);
+        $targetStmt = db()->prepare('SELECT name, email FROM users WHERE id = :id');
+        $targetStmt->execute(['id' => $id]);
+        $target = $targetStmt->fetch();
 
-        if ($stmt->rowCount() > 0) {
-            flash('success', "Neues vorläufiges Passwort: $tempPassword (jetzt notieren, wird nicht erneut angezeigt).");
-        } else {
+        if (!$target) {
             flash('error', 'Mitarbeiter nicht gefunden.');
+            redirect('/admin/users.php');
         }
+
+        $tempPassword = generatePassword();
+        db()->prepare('UPDATE users SET password_hash = :h, must_change_password = 1 WHERE id = :id')
+            ->execute(['h' => password_hash($tempPassword, PASSWORD_DEFAULT), 'id' => $id]);
+
+        $notifier = new Notifier($config['smtp']);
+        $emailed = $notifier->passwordWasReset($target, $tempPassword);
+        flash('success', ($emailed
+            ? "Passwort zurückgesetzt. Neue Zugangsdaten wurden an {$target['email']} verschickt."
+            : 'Passwort zurückgesetzt. E-Mail-Versand ist nicht aktiv oder fehlgeschlagen — bitte manuell mitteilen.')
+            . " Vorläufiges Passwort (nur zur Sicherheit hier vermerkt): $tempPassword");
         redirect('/admin/users.php');
     }
 }
@@ -102,7 +117,7 @@ require __DIR__ . '/../partials/header.php';
     </select>
     <button type="submit" class="btn" style="margin-top:1rem;">Anlegen</button>
   </form>
-  <p class="muted" style="margin-top:0.75rem;">Es wird ein vorläufiges Passwort generiert und einmalig angezeigt. Der Mitarbeiter sollte es nach der ersten Anmeldung im Profil ändern.</p>
+  <p class="muted" style="margin-top:0.75rem;">Es wird ein vorläufiges Passwort generiert und per E-Mail verschickt (zur Sicherheit auch hier einmalig angezeigt, falls der Versand fehlschlägt). Der Mitarbeiter muss es bei der ersten Anmeldung ändern, bevor er die App weiter nutzen kann.</p>
 </div>
 
 <div class="card">
