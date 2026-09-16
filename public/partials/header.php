@@ -131,7 +131,13 @@ function navActive(string $path, array $matches): bool
   .badge.pending { color: var(--ink-soft); background: transparent; border-style: dashed; }
   .badge.declined, .badge.rejected, .badge.withdrawn, .badge.closed { color: var(--ink-soft); background: transparent; text-decoration: line-through; opacity: 0.75; }
   .badge.filled { color: var(--ink); background: var(--confirm-wash); }
-  .badge.today, .badge.active-duty { color: var(--stamp); background: var(--stamp-wash); border-color: var(--stamp); }
+  .badge.today, .badge.active-duty, .badge.urgent { color: var(--stamp); background: var(--stamp-wash); border-color: var(--stamp); }
+
+  /* Aushang: dringende Admin-Mitteilung über der Wochenansicht. Bewusst ein Card-, kein Ticket-Bauteil -
+     Perforation/Risskante bleibt ein Signal ausschließlich für echte Schichten. */
+  .notice-board { background: var(--stamp-wash); border: 1.5px solid var(--stamp); border-radius: 3px; padding: 0.9rem 1.1rem; margin-bottom: 1rem; }
+  .notice-board .badge { margin-bottom: 0.5rem; }
+  .notice-board-text { margin: 0; color: var(--ink); font-weight: 600; line-height: 1.45; white-space: pre-wrap; }
 
   .flash { padding: 0.7rem 1rem; border-radius: 3px; margin-bottom: 1rem; font-size: 0.9rem; border: 1.5px solid; }
   .flash.success { background: var(--confirm-wash); border-color: var(--ink-line-strong); color: var(--ink); }

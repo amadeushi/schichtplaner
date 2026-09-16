@@ -148,7 +148,7 @@ The palette is a near-monochrome thermal-receipt paper stock (cream tickets and 
 - **Confirm Wash** (`#eee8d8`, token `confirm-wash`): the background for settled/confirmed states (confirmed badges, filled-shift badges) *and*, doing double duty, the weekend-column tint in the admin week grid. One token, two roles — both read as "this cell is not a plain workday."
 
 ### Named Rules
-**The One Stamp Rule.** Stamp red appears in exactly one register: *today, on duty, or "yes."* A destructive action (delete, remove assignment, logout, decline) never borrows it — that is `danger` (`#b3261e`), a separate, visually adjacent but distinct token. If a new screen needs emphasis, reach for weight, a dashed border, or uppercase tracking before reaching for a second red.
+**The One Stamp Rule.** Stamp red appears in exactly one register: *today, on duty, "yes," or an admin-posted urgent notice.* All four read as the same thing in the physical metaphor — a manager stamping something onto the order rail that needs immediate attention — so the notice board (`.notice-board`, see Components) reuses the token rather than introducing a fifth. A destructive action (delete, remove assignment, logout, decline) never borrows it — that is `danger` (`#b3261e`), a separate, visually adjacent but distinct token. If a new screen needs emphasis outside these four registers, reach for weight, a dashed border, or uppercase tracking before reaching for a second red.
 
 **The Achromatic Badge Rule.** Status badges (confirmed, pending, declined, filled, open) stay on the ink/paper/confirm-wash axis. Only `.badge.today` and `.badge.active-duty` earn the stamp. A badge's color is not how you tell states apart — its border style (solid vs. dashed vs. strike-through) is.
 
@@ -223,10 +223,13 @@ The system's one true custom component; every shift, on every surface, staff or 
 ### Duty Stamp (signature component)
 The Stempeln (clock-in/out) screen's entire primary control: a 10rem circle. **Off-duty** is a dashed `ink-line-strong` ring with muted text ("Nicht im Dienst"). **On-duty** is a solid 4px stamp-red ring, rotated -6°, with `mix-blend-mode: multiply` so it reads as pressed ink rather than a flat red circle, showing the clock-in time in mono beneath the label. The smaller `stamp-mark` badge (today's hero card, "IM DIENST") is the same rotated-stamp device at 2.6rem.
 
+### Notice Board (`.notice-board`)
+An admin-authored, site-wide urgent message, shown above the week view on both "Mein Plan" (staff) and "Schichtplan" (admin) — the physical equivalent of a manager clipping an urgent note above the order rail. Toggled and edited from `admin/settings.php` ("Dringende Mitteilung"), stored as two `settings` rows (`urgent_notice_enabled`, `urgent_notice_text`) rather than a new table, since it is a single global flag/value, not a record type. Deliberately a **card**-family component, not a **ticket**-family one — no perforation or torn edge — so the perforated-ticket silhouette stays a signal exclusively for real shifts. `stamp-wash` background, 1.5px `stamp`-red border, 3px radius; a `.badge.urgent` label ("Wichtig") sits above the message text; the message itself renders in bold sans with `white-space: pre-wrap` so an admin's line breaks survive. Persists across week navigation by construction — it reads from a global setting, not from the `?date=` query, so paging weeks never re-evaluates or hides it. See the One Stamp Rule for why it earns the stamp-red accent rather than a new color.
+
 ### Badges
 - **Style:** pill (999px), 1.5px `border: currentColor`, uppercase 0.72rem label type.
 - **Achromatic states:** confirmed/approved/open → ink on confirm-wash; pending → ink-soft, dashed border, transparent; declined/rejected/withdrawn/closed → ink-soft, strike-through, 0.75 opacity.
-- **Stamp state:** today/active-duty → stamp-red text and border on stamp-wash. The only chromatic badge.
+- **Stamp state:** today/active-duty/urgent → stamp-red text and border on stamp-wash. The only chromatic badge family.
 
 ### Inputs / Fields
 - **Style:** 1.5px `ink-line-strong` border, 3px radius, cream background, full width, `min-height: 2.75rem` (same 44px floor as a primary button; checkboxes/radios are exempt and stay their native size).

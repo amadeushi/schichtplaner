@@ -274,7 +274,7 @@
     "rules": [
       {
         "name": "The One Stamp Rule",
-        "body": "Stamp red appears in exactly one register: today, on duty, or \"yes.\" A destructive action (delete, remove assignment, logout, decline) never borrows it — that is danger (#b3261e), a separate, visually adjacent but distinct token.",
+        "body": "Stamp red appears in exactly one register: today, on duty, \"yes,\" or an admin-posted urgent notice (.notice-board) — all four read as the order rail getting something stamped onto it that needs immediate attention. A destructive action (delete, remove assignment, logout, decline) never borrows it — that is danger (#b3261e), a separate, visually adjacent but distinct token.",
         "section": "colors"
       },
       {

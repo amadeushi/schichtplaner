@@ -14,6 +14,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/admin/settings.php');
     }
 
+    if ($action === 'save_notice') {
+        setSetting('urgent_notice_enabled', isset($_POST['urgent_notice_enabled']) ? '1' : '0');
+        setSetting('urgent_notice_text', trim((string)($_POST['urgent_notice_text'] ?? '')));
+        flash('success', 'Mitteilung gespeichert.');
+        redirect('/admin/settings.php');
+    }
+
     if ($action === 'test_webhook') {
         $webhook = new Webhook();
         $ok = $webhook->send('webhook.test', ['message' => 'Testnachricht vom Schichtplaner', 'triggered_by' => $user['email']]);
@@ -27,6 +34,22 @@ $logs = db()->query('SELECT * FROM notification_log ORDER BY id DESC LIMIT 25')-
 require __DIR__ . '/../partials/header.php';
 ?>
 <h1>Einstellungen</h1>
+
+<div class="card">
+  <h2>Dringende Mitteilung</h2>
+  <p class="muted">Wird farblich hervorgehoben über dem Wochenplan angezeigt (Mein Plan und Schichtplan) — sichtbar für alle Mitarbeiter, bleibt beim Wechseln der Kalenderwoche stehen.</p>
+  <form method="post">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="save_notice">
+    <label style="display:flex;align-items:center;gap:0.5rem;">
+      <input type="checkbox" name="urgent_notice_enabled" style="width:auto;" <?= setting('urgent_notice_enabled', '0') === '1' ? 'checked' : '' ?>>
+      Mitteilung anzeigen
+    </label>
+    <label for="urgent_notice_text">Text</label>
+    <textarea id="urgent_notice_text" name="urgent_notice_text" placeholder="z.B. Küche heute wegen Wasserschaden geschlossen."><?= e(setting('urgent_notice_text', '')) ?></textarea>
+    <button type="submit" class="btn" style="margin-top:1rem;">Speichern</button>
+  </form>
+</div>
 
 <div class="card">
   <h2>Allgemein</h2>

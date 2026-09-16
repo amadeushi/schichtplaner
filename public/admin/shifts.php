@@ -277,6 +277,8 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
 ?>
 <h1>Schichtplan</h1>
 
+<?php require __DIR__ . '/../partials/urgent_notice.php'; ?>
+
 <div class="week-nav">
   <a class="btn secondary small" href="?date=<?= e($prevWeek) ?>">&lsaquo;</a>
   <div class="week-nav-label">
