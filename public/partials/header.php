@@ -343,6 +343,17 @@ function navActive(string $path, array $matches): bool
      bzw. 0.62rem, zwei uneinheitliche Ad-hoc-Werte statt eines gemeinsamen Schritts der Skala. */
   .calendar-cell .shift-chip .chip-time { display: block; font-size: 0.72rem; color: var(--ink-soft); }
   .chip-draft { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink-soft); }
+  /* Auslastung im Kalender: Anzahl unentschiedener Bewerbungen je Schicht, dieselbe gestrichelte
+     "nicht final"-Sprache wie .badge.pending. Verlinkt auf die eine Entscheidungs-Oberfläche
+     (admin/shifts.php) statt hier eine zweite anzulegen - "Admin decision surface"-Regel bleibt.
+     "Bew." ist die im System bereits etablierte Abkürzung (siehe Tab-Leiste "BEWERB."). */
+  .chip-pending {
+    display: inline-flex; align-items: center; margin-top: 0.2rem; padding: 0.05rem 0.35rem;
+    border: 1px dashed var(--ink-line-strong); border-radius: 999px; font-size: 0.72rem;
+    font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink-soft);
+    text-decoration: none; cursor: pointer;
+  }
+  .chip-pending:hover { background: var(--confirm-wash); border-color: var(--ink-soft); }
   .calendar-cell .shift-chip.dragging { opacity: 0.4; }
   .calendar-cell.today { background: var(--stamp-wash); }
   .calendar-cell { min-height: 3.2rem; }

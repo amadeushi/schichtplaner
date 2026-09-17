@@ -134,6 +134,7 @@ $weekShifts = $weekShiftsStmt->fetchAll();
 $employees = db()->query("SELECT id, name FROM users WHERE active = 1 ORDER BY name")->fetchAll();
 
 $assignedByShift = [];
+$pendingCountByShift = [];
 if ($weekShifts) {
     $ids = array_column($weekShifts, 'id');
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
@@ -146,6 +147,18 @@ if ($weekShifts) {
     foreach ($appStmt as $row) {
         $assignedByShift[(int)$row['shift_id']][] = ['id' => (int)$row['user_id'], 'name' => $row['name']];
     }
+
+    // Auslastung sichtbar machen: wie viele noch unentschiedene Bewerbungen eine Schicht hat.
+    // Nur eine Anzahl, keine Namen/Entscheidung hier - das bleibt admin/shifts.php vorbehalten
+    // (siehe "Admin decision surface" in DESIGN.md, ein Klick auf den Bon verlinkt dorthin).
+    $pendingStmt = db()->prepare(
+        "SELECT shift_id, COUNT(*) AS pending_count FROM shift_applications
+         WHERE shift_id IN ($placeholders) AND status = 'pending' GROUP BY shift_id"
+    );
+    $pendingStmt->execute($ids);
+    foreach ($pendingStmt as $row) {
+        $pendingCountByShift[(int)$row['shift_id']] = (int)$row['pending_count'];
+    }
 }
 
 // grid[rowKey][dayIndex] = [chip, ...] - rowKey ist 'open' oder eine Mitarbeiter-ID
@@ -157,13 +170,14 @@ foreach ($weekShifts as $sh) {
     }
     $assigned = $assignedByShift[(int)$sh['id']] ?? [];
     $remaining = (int)$sh['needed_count'] - count($assigned);
+    $pendingCount = $pendingCountByShift[(int)$sh['id']] ?? 0;
 
     foreach ($assigned as $person) {
         $grid[$person['id']][$dayIndex][] = [
             'shift_id' => (int)$sh['id'], 'title' => $sh['title'],
             'start' => $sh['start_time'], 'end' => $sh['end_time'],
             'user_id' => $person['id'], 'remaining' => null,
-            'draft' => $sh['published_at'] === null,
+            'draft' => $sh['published_at'] === null, 'pending_count' => $pendingCount,
         ];
     }
     if ($remaining > 0) {
@@ -171,7 +185,7 @@ foreach ($weekShifts as $sh) {
             'shift_id' => (int)$sh['id'], 'title' => $sh['title'],
             'start' => $sh['start_time'], 'end' => $sh['end_time'],
             'user_id' => null, 'remaining' => $remaining,
-            'draft' => $sh['published_at'] === null,
+            'draft' => $sh['published_at'] === null, 'pending_count' => $pendingCount,
         ];
     }
 }
@@ -247,6 +261,9 @@ require __DIR__ . '/../partials/header.php';
               <div class="shift-chip pending" draggable="true" data-shift-id="<?= $chip['shift_id'] ?>" data-user-id="">
                 <span class="chip-title"><?= e($chip['title']) ?><?php if ($chip['remaining'] > 1): ?> <span class="mono">&times;<?= $chip['remaining'] ?></span><?php endif; ?></span>
                 <span class="chip-time mono"><?= e($chip['start']) ?>&ndash;<?= e($chip['end']) ?></span>
+                <?php if ($chip['pending_count'] > 0): ?>
+                  <a class="chip-pending" href="/admin/shifts.php?date=<?= e($weekStart) ?>#shift-<?= $chip['shift_id'] ?>" draggable="false" title="<?= $chip['pending_count'] ?> unentschiedene Bewerbung<?= $chip['pending_count'] === 1 ? '' : 'en' ?> &ndash; im Schichtplan entscheiden"><?= $chip['pending_count'] ?> Bew.</a>
+                <?php endif; ?>
               </div>
             <?php endforeach; ?>
           </td>
@@ -262,6 +279,9 @@ require __DIR__ . '/../partials/header.php';
               <div class="shift-chip<?= $chip['draft'] ? ' draft-chip' : '' ?>" draggable="true" data-shift-id="<?= $chip['shift_id'] ?>" data-user-id="<?= (int)$emp['id'] ?>">
                 <span class="chip-title"><?= e($chip['title']) ?><?php if ($chip['draft']): ?> <span class="chip-draft">Entwurf</span><?php endif; ?></span>
                 <span class="chip-time mono"><?= e($chip['start']) ?>&ndash;<?= e($chip['end']) ?></span>
+                <?php if ($chip['pending_count'] > 0): ?>
+                  <a class="chip-pending" href="/admin/shifts.php?date=<?= e($weekStart) ?>#shift-<?= $chip['shift_id'] ?>" draggable="false" title="<?= $chip['pending_count'] ?> unentschiedene Bewerbung<?= $chip['pending_count'] === 1 ? '' : 'en' ?> &ndash; im Schichtplan entscheiden"><?= $chip['pending_count'] ?> Bew.</a>
+                <?php endif; ?>
               </div>
             <?php endforeach; ?>
           </td>
@@ -283,6 +303,12 @@ require __DIR__ . '/../partials/header.php';
   var dragged = null;
 
   grid.addEventListener('dragstart', function (e) {
+    if (e.target.closest('.chip-pending')) {
+      // Bewerbungs-Zähler ist ein Link, kein Ziehgriff - Drag hier immer verhindern,
+      // damit ein Klick zuverlässig als Klick ankommt statt als (Fehl-)Ziehen.
+      e.preventDefault();
+      return;
+    }
     var chip = e.target.closest('.shift-chip');
     if (!chip) return;
     dragged = chip;

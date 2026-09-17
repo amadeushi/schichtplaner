@@ -484,7 +484,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
           $assignable = array_filter($employees, fn($e) => !in_array((int)$e['id'], $assignedIds, true));
           $full = (int)$sh['approved_count'] >= (int)$sh['needed_count'];
         ?>
-        <div class="ticket-row" style="flex-direction:column;align-items:stretch;gap:0.5rem;">
+        <div class="ticket-row" id="shift-<?= (int)$sh['id'] ?>" style="flex-direction:column;align-items:stretch;gap:0.5rem;scroll-margin-top:5rem;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem;">
             <div>
               <strong><?= e($sh['title']) ?></strong>

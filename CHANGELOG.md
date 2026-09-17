@@ -6,6 +6,19 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.9.0] - 2026-09-17
+
+### Hinzugefügt
+- Kalenderansicht: jeder Bon einer Schicht mit noch unentschiedenen
+  Bewerbungen zeigt jetzt eine kleine Markierung "N Bew." — auch wenn die
+  Schicht bereits voll besetzt ist, eine Bewerbung aber noch offen ist.
+  Damit lässt sich die Auslastung/Nachfrage einer Schicht direkt im
+  Drag-&-Drop-Kalender einschätzen, ohne extra ins Schichtplan-Formular
+  zu wechseln. Ein Klick auf die Markierung springt direkt zum
+  entsprechenden Bon im Schichtplan, wo wie gewohnt angenommen/abgelehnt
+  wird — der Kalender bekommt bewusst keine eigene Entscheidungsfläche,
+  das bleibt admin/shifts.php vorbehalten.
+
 ## [1.8.1] - 2026-09-17
 
 ### Hinzugefügt
