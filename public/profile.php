@@ -14,6 +14,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/profile.php');
     }
 
+    if ($action === 'regenerate_calendar_token') {
+        $token = bin2hex(random_bytes(24));
+        db()->prepare('UPDATE users SET calendar_token = :t WHERE id = :id')->execute(['t' => $token, 'id' => $user['id']]);
+        flash('success', 'Neue Kalender-Adresse erzeugt. Die alte funktioniert ab jetzt nicht mehr.');
+        redirect('/profile.php');
+    }
+
     if ($action === 'password') {
         $current = (string)($_POST['current_password'] ?? '');
         $new = (string)($_POST['new_password'] ?? '');
@@ -34,6 +41,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$calendarToken = ensureCalendarToken((int)$user['id'], $user['calendar_token'] ?? null);
+$calendarFeedUrl = rtrim((string)($config['app_url'] ?? ''), '/') . '/calendar_feed.php?token=' . $calendarToken;
+$calendarWebcalUrl = preg_replace('/^https?:/', 'webcal:', $calendarFeedUrl);
+// Googles eigener "per URL abonnieren"-Weg über den Browser statt webcal:// - wichtig für
+// Android, dessen Google-Kalender-App (anders als die Web-Version) kein "Kalender per URL
+// hinzufügen" kennt und auch keinen webcal://-Handler mitbringt. Dieser Link öffnet Googles
+// Abonnieren-Dialog im Browser; das Konto übernimmt die Synchronisation in die App danach von selbst.
+$googleCalendarUrl = 'https://calendar.google.com/calendar/render?cid=' . rawurlencode($calendarWebcalUrl);
+
 require __DIR__ . '/partials/header.php';
 ?>
 <h1>Profil</h1>
@@ -48,6 +64,24 @@ require __DIR__ . '/partials/header.php';
       E-Mail-Benachrichtigungen erhalten
     </label>
     <button type="submit" class="btn" style="margin-top:1rem;">Speichern</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Kalender-Abo</h2>
+  <p class="muted">Deine angenommenen und bereits veröffentlichten Schichten als Kalender — einmal hinzufügen, danach hält sich dein Kalender von selbst aktuell (wie oft er sich neu holt, entscheidet deine Kalender-App).</p>
+  <label for="calendar_url">Kalender-Adresse</label>
+  <input type="text" id="calendar_url" value="<?= e($calendarFeedUrl) ?>" readonly onclick="this.select()">
+  <div class="table-actions" style="margin-top:0.75rem;">
+    <a class="btn" href="<?= e($calendarWebcalUrl) ?>">Zum Kalender hinzufügen</a>
+    <a class="btn secondary" href="<?= e($googleCalendarUrl) ?>">Zu Google Kalender hinzufügen</a>
+    <a class="btn secondary" href="<?= e($calendarFeedUrl) ?>">Jetzt herunterladen</a>
+  </div>
+  <p class="muted" style="margin-top:0.5rem;">iPhone/iPad/Mac: "Zum Kalender hinzufügen". Android/Google Kalender: "Zu Google Kalender hinzufügen" — Androids Google-Kalender-App unterstützt den ersten Weg oft nicht direkt.</p>
+  <form method="post" style="margin-top:0.75rem;" onsubmit="return confirm('Neue Adresse erzeugen? Die alte funktioniert danach nicht mehr und muss in der Kalender-App neu eingetragen werden.');">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="regenerate_calendar_token">
+    <button type="submit" class="btn danger small">Adresse neu erzeugen</button>
   </form>
 </div>
 

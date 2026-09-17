@@ -176,3 +176,21 @@ function decideApplication(int $appId, string $decision, int $adminUserId, array
     $notifier->applicationDecided($shift, $applicant, $decision);
     return ['ok' => true, 'message' => 'Bewerbung wurde ' . statusLabelDe($decision) . '.'];
 }
+
+/**
+ * Liefert das persönliche Kalender-Token eines Nutzers, erzeugt es beim ersten Aufruf
+ * (lazy statt bei jeder Kontoanlage - so bekommen auch längst bestehende Konten eins,
+ * sobald sie die Kalender-Abo-Karte in profile.php zum ersten Mal öffnen). Kryptografisch
+ * zufällig und lang genug, um als alleiniger Auth-Faktor für public/calendar_feed.php zu
+ * dienen, da Kalender-Apps keine Login-Session nutzen können.
+ */
+function ensureCalendarToken(int $userId, ?string $existingToken): string
+{
+    if ($existingToken) {
+        return $existingToken;
+    }
+    $token = bin2hex(random_bytes(24));
+    db()->prepare('UPDATE users SET calendar_token = :t WHERE id = :id')->execute(['t' => $token, 'id' => $userId]);
+    return $token;
+}
+

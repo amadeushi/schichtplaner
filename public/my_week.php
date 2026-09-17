@@ -42,6 +42,11 @@ if ($user['time_tracking_enabled']) {
     $openEntry = $openStmt->fetch() ?: null;
 }
 
+// Fürs Herunterladen der Woche bzw. einzelner Schichten unten im Bon-Strang (siehe
+// calendar_feed.php) - dieselbe Kalender-Adresse wie im Profil, nur hier schon mit
+// shift_id/start+end eingegrenzt statt des vollen laufenden Abos.
+$calendarToken = ensureCalendarToken((int)$user['id'], $user['calendar_token'] ?? null);
+
 function dayRows(array $dayShifts): array
 {
     $rows = [];
@@ -74,6 +79,9 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
     <span class="muted"><?= e(formatDateDe($weekStart)) ?> &ndash; <?= e(formatDateDe($weekEnd)) ?></span>
   </div>
   <a class="btn secondary small" href="?date=<?= e($nextWeek) ?>">&rsaquo;</a>
+</div>
+<div style="text-align:right;margin:-0.5rem 0 1rem;">
+  <a href="/calendar_feed.php?token=<?= e($calendarToken) ?>&amp;start=<?= e($weekStart) ?>&amp;end=<?= e($weekEnd) ?>" class="btn small secondary">Diese Woche exportieren (.ics)</a>
 </div>
 
 <?php if ($todayInThisWeek): ?>
@@ -111,7 +119,8 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <?php if ($row['kind'] === 'confirmed'): ?>
-              <span class="badge confirmed">Bestätigt</span>
+              <span class="badge confirmed" style="margin-bottom:0.4rem;">Bestätigt</span><br>
+              <a href="/calendar_feed.php?token=<?= e($calendarToken) ?>&amp;shift_id=<?= (int)$sh['id'] ?>" class="btn small secondary">Kalender</a>
             <?php elseif ($row['kind'] === 'pending'): ?>
               <div class="badge pending" style="margin-bottom:0.4rem;">Angefragt</div><br>
               <form class="inline" method="post" action="/withdraw.php" onsubmit="return confirm('Bewerbung zurückziehen?');">
@@ -163,7 +172,8 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <?php if ($row['kind'] === 'confirmed'): ?>
-              <span class="badge confirmed">Bestätigt</span>
+              <span class="badge confirmed" style="margin-bottom:0.4rem;">Bestätigt</span><br>
+              <a href="/calendar_feed.php?token=<?= e($calendarToken) ?>&amp;shift_id=<?= (int)$sh['id'] ?>" class="btn small secondary">Kalender</a>
             <?php elseif ($row['kind'] === 'pending'): ?>
               <div class="badge pending" style="margin-bottom:0.4rem;">Angefragt</div><br>
               <form class="inline" method="post" action="/withdraw.php" onsubmit="return confirm('Bewerbung zurückziehen?');">

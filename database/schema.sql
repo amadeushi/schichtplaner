@@ -13,8 +13,10 @@ CREATE TABLE IF NOT EXISTS users (
     notify_email  INTEGER NOT NULL DEFAULT 1,
     must_change_password INTEGER NOT NULL DEFAULT 0,
     time_tracking_enabled INTEGER NOT NULL DEFAULT 0,
+    calendar_token TEXT,                       -- unratbares Token für das persönliche Kalender-Abo (public/calendar_feed.php), lazy erzeugt
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_calendar_token ON users(calendar_token);
 
 CREATE TABLE IF NOT EXISTS shifts (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,

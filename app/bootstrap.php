@@ -31,6 +31,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/services/Mailer.php';
 require_once __DIR__ . '/services/Webhook.php';
 require_once __DIR__ . '/services/Notifier.php';
+require_once __DIR__ . '/services/IcsBuilder.php';
 
 $pdo = db($config['db_path']);
 

@@ -6,6 +6,22 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.12.0] - 2026-09-17
+
+### Hinzugefügt
+- Persönliches Kalender-Abo: unter Profil lässt sich die eigene Kalender-Adresse
+  einmal zum Kalender hinzufügen (iOS/macOS per `webcal://`, Android/Google
+  Kalender über einen eigenen Google-Abonnieren-Link, da Android keinen
+  `webcal://`-Handler mitbringt) — danach zeigt der Kalender automatisch alle
+  angenommenen und bereits veröffentlichten Schichten, ohne erneutes manuelles
+  Aktualisieren. Die Adresse lässt sich bei Bedarf neu erzeugen (macht die
+  alte ungültig). Zugriff läuft über ein eigenes, unratbares Token statt einer
+  Login-Session, da Kalender-Apps keine Cookies mitschicken.
+- "Mein Plan": ein "Diese Woche exportieren (.ics)"-Link exportiert nur die
+  angezeigte Woche, und jede bestätigte Schicht hat einen eigenen
+  "Kalender"-Link für den Download der einzelnen Schicht — beide nutzen
+  denselben Kalender-Feed, nur eingegrenzt auf Zeitraum bzw. Schicht-ID.
+
 ## [1.11.0] - 2026-09-17
 
 ### Hinzugefügt
