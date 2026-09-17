@@ -18,6 +18,9 @@ function navActive(string $path, array $matches): bool
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title><?= e($appName) ?></title>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 <style>
   :root {
     --paper-surround: #332b1c;
@@ -65,8 +68,18 @@ function navActive(string $path, array $matches): bool
     display: flex; align-items: center; justify-content: space-between;
     position: sticky; top: 0; z-index: 20;
   }
-  header.topbar .brand { display: flex; align-items: center; text-decoration: none; }
-  header.topbar .brand img { height: 20px; width: auto; display: block; }
+  header.topbar .brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+  header.topbar .brand .brand-logo { height: 20px; width: auto; display: block; }
+  /* Zeus-Emblem in der Kopfleiste: dieselbe Bon-Strang-Ausnahme wie der Zeus-Ring auf der
+     Login-Seite (siehe .zeus-frame) - Stempelrot ist hier bewusst ein zweites Mal fuer
+     dasselbe Motiv erlaubt, nicht fuer Branding allgemein (One-Stamp-Rule). Eigene, engere
+     Kopf-Ausschnitt-Variante (zeus-emblem.png) statt des Login-Fotos, da 26px kaum Spielraum
+     fuer die Papierraender des Originalfotos laesst. */
+  .brand-emblem {
+    display: block; flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    border: 1.5px solid var(--stamp); overflow: hidden;
+  }
+  .brand-emblem img { width: 100%; height: 100%; object-fit: cover; display: block; }
   header.topbar .who { font-size: 0.8rem; color: var(--ink-soft); text-decoration: none; }
 
   main { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 1.5rem; }
@@ -362,7 +375,10 @@ FORM: Der Bon-Strang, Impeccable's Pick aus der Direction-Runde, Seed f185dc6b.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 -->
 <header class="topbar">
-  <a href="/index.php" class="brand"><img src="/assets/logo.png" alt="<?= e($appName) ?>"></a>
+  <a href="/index.php" class="brand">
+    <span class="brand-emblem"><img src="/assets/zeus-emblem.png" alt=""></span>
+    <img class="brand-logo" src="/assets/logo.png" alt="<?= e($appName) ?>">
+  </a>
   <?php if (!empty($user)): ?>
     <a href="/more.php" class="who"><?= e($user['name']) ?></a>
   <?php endif; ?>

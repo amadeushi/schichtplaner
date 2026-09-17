@@ -41,7 +41,7 @@ The business is "Amadeus Delivery" (AMDS). A real wordmark logo and a mascot pho
 ## Evidence on Hand
 
 - A screenshot of a competitor tool (edtime.de-style) was shared earlier as a structural reference for a Mo–Su grid, KW/week navigation, and colored day columns — informative for layout patterns, not a binding visual direction.
-- The AMDS wordmark (`amds.png`, used in the app as `public/assets/logo.png`) and a mascot photo of Zeus, the business's dog (`zeus_amadeusdelivery.png`, used as `public/assets/zeus.webp`/`.png`), were provided directly by the user and are now integrated: the logo in the header on every screen, and Zeus's photo on the login screen.
+- The AMDS wordmark (`amds.png`, used in the app as `public/assets/logo.png`) and a mascot photo of Zeus, the business's dog (`zeus_amadeusdelivery.png`, used as `public/assets/zeus.webp`/`.png`), were provided directly by the user and are now integrated: the logo in the header on every screen, Zeus's photo on the login screen, a small Zeus emblem next to the header wordmark, and a cropped Zeus head as the browser favicon/apple-touch-icon (all cropped from the same source photo).
 
 ## Product Principles
 

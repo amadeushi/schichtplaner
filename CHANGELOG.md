@@ -6,6 +6,17 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.8.1] - 2026-09-17
+
+### Hinzugefügt
+- Browser-Favicon und Apple-Touch-Icon: ein eng zugeschnittener Zeus-Kopf
+  (`public/assets/favicon.png`/`favicon-16.png`/`apple-touch-icon.png`),
+  aus demselben Originalfoto geschnitten wie das Login-Bild, aber enger
+  auf das Gesicht fokussiert, damit es auch bei 16px noch erkennbar bleibt.
+- Kleines Zeus-Emblem (`public/assets/zeus-emblem.png`, `.brand-emblem`)
+  in der Kopfleiste links neben dem AMDS-Schriftzug, im selben
+  stempelroten Ring wie das Zeus-Foto auf der Login-Seite.
+
 ## [1.8.0] - 2026-09-17
 
 ### Hinzugefügt
