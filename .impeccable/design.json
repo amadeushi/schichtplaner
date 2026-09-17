@@ -193,9 +193,9 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Default low-emphasis action button, solid ink fill.",
+      "description": "Default low-emphasis action button, solid ink fill. Uppercase/tracked label — the same printed \"Label\" voice as badges, headings, and the tab bar, now extended to buttons.",
       "html": "<button class=\"ds-btn ds-btn-primary\">Speichern</button>",
-      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px; border: 1.5px solid; cursor: pointer; font-size: 0.88rem; font-weight: 600; text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: 0.01em; } .ds-btn-primary { background: #1c1917; border-color: #1c1917; color: #faf3e3; } .ds-btn-primary:hover { background: #000; } .ds-btn-primary:active { transform: translateY(1px); }"
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px; border: 1.5px solid; cursor: pointer; font-size: 0.88rem; font-weight: 700; text-transform: uppercase; text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: 0.04em; } .ds-btn-primary { background: #1c1917; border-color: #1c1917; color: #faf3e3; } .ds-btn-primary:hover { background: #000000; } .ds-btn-primary:active { transform: translateY(1px); }"
     },
     {
       "name": "Stamp Button",
@@ -203,7 +203,7 @@
       "refersTo": "button-stamp",
       "description": "The system's one affirmative/'yes' action — Bewerben (apply), Annehmen (approve). The only button that carries the stamp accent.",
       "html": "<button class=\"ds-btn ds-btn-stamp\">Bewerben</button>",
-      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px; border: 1.5px solid; cursor: pointer; font-size: 0.88rem; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: 0.01em; } .ds-btn-stamp { background: #c8391f; border-color: #c8391f; color: #fff8f4; } .ds-btn-stamp:hover { background: #a92c17; } .ds-btn-stamp:active { transform: translateY(1px); }"
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px; border: 1.5px solid; cursor: pointer; font-size: 0.88rem; font-weight: 700; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: 0.04em; } .ds-btn-stamp { background: #c8391f; border-color: #c8391f; color: #fff8f4; } .ds-btn-stamp:hover { background: #a92c17; } .ds-btn-stamp:active { transform: translateY(1px); }"
     },
     {
       "name": "Secondary Button",
@@ -211,7 +211,7 @@
       "refersTo": "button-secondary",
       "description": "Paper-filled, ink-line-bordered secondary action. Filled (not transparent) so it stays legible where it sits directly on the dark paper-surround background.",
       "html": "<button class=\"ds-btn ds-btn-secondary\">Abbrechen</button>",
-      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px; border: 1.5px solid; cursor: pointer; font-size: 0.88rem; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: 0.01em; } .ds-btn-secondary { background: #faf3e3; color: #1c1917; border-color: #b9ad91; } .ds-btn-secondary:hover { background: #eee8d8; } .ds-btn-secondary:active { transform: translateY(1px); }"
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px; border: 1.5px solid; cursor: pointer; font-size: 0.88rem; font-weight: 700; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; letter-spacing: 0.04em; } .ds-btn-secondary { background: #faf3e3; color: #1c1917; border-color: #b9ad91; } .ds-btn-secondary:hover { background: #eee8d8; } .ds-btn-secondary:active { transform: translateY(1px); }"
     },
     {
       "name": "Shift Ticket",
@@ -240,9 +240,9 @@
       "name": "Badge",
       "kind": "custom",
       "refersTo": "badge-today",
-      "description": "Pill status badge. Achromatic by default; only the today/active-duty variant carries stamp red.",
+      "description": "Boxless \"register mark\": a small glyph (✓ / – / ×) plus a rule under the line, no container shape. Only the today/active-duty/urgent variant is filled, boxed, and carries stamp red.",
       "html": "<span class=\"ds-badge ds-badge-today\">Heute</span> <span class=\"ds-badge ds-badge-confirmed\">Bestätigt</span> <span class=\"ds-badge ds-badge-pending\">Angefragt</span>",
-      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.18rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; border: 1.5px solid currentColor; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; } .ds-badge-today { color: #c8391f; background: #f7e3dc; } .ds-badge-confirmed { color: #1c1917; background: #eee8d8; border-color: #b9ad91; } .ds-badge-pending { color: #6b6459; background: transparent; border-style: dashed; }"
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.5; border-bottom: 1.5px solid transparent; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; } .ds-badge-today { color: #c8391f; background: #f7e3dc; border: 1.5px solid #c8391f; border-radius: 3px; padding: 0.15rem 0.5rem; } .ds-badge-confirmed { color: #1c1917; border-bottom-color: #b9ad91; } .ds-badge-confirmed::before { content: '\\2713'; } .ds-badge-pending { color: #6b6459; border-bottom-style: dashed; border-bottom-color: #b9ad91; } .ds-badge-pending::before { content: '\\2013'; }"
     },
     {
       "name": "Input Field",
@@ -316,7 +316,7 @@
     ],
     "donts": [
       "Don't introduce a second chromatic accent. danger (#b3261e) already covers destructive actions and must not be blended into \"emphasis\" or \"today\" contexts, even though its hex sits close to stamp.",
-      "Don't round any rectangular surface past 3px (buttons/cards/inputs) or 2px (tickets) — the geometry stays close to cut paper, not soft app-chrome. Circles (duty-stamp, stamp-mark, badge pills) are the sanctioned exception, not a precedent for other rounded shapes.",
+      "Don't round any rectangular surface past 3px (buttons/cards/inputs) or 2px (tickets) — the geometry stays close to cut paper, not soft app-chrome. Circles (duty-stamp, stamp-mark) are the sanctioned exception, not a precedent for other rounded shapes. Badges (outside the stamp state) have no box to round in the first place.",
       "Don't add elevation on hover/focus. State changes through color, rotation, or scale — never through a bigger shadow.",
       "Don't ship a heavy animation library, icon font, or client-side JS framework/bundle; the product's hard technical constraint is a memory-limited Raspberry Pi serving other services, and the entire visual system is built from plain CSS for exactly this reason.",
       "Don't add a second place to approve or reject a shift application. One decision surface, the ticket rail, is a confirmed system rule, not a page-specific convenience.",

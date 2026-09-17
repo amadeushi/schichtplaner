@@ -15,6 +15,7 @@ colors:
   confirm-wash: "#eee8d8"
   surround-ink: "#f3e8d3"
   surround-ink-soft: "#a8967a"
+  ink-press: "#000000"
 typography:
   headline:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
@@ -64,7 +65,7 @@ components:
     rounded: "{rounded.sm}"
     padding: "0.55rem 1rem"
   button-primary-hover:
-    backgroundColor: "#000000"
+    backgroundColor: "{colors.ink-press}"
     textColor: "{colors.paper}"
   button-stamp:
     backgroundColor: "{colors.stamp}"
@@ -97,13 +98,11 @@ components:
   badge-today:
     backgroundColor: "{colors.stamp-wash}"
     textColor: "{colors.stamp}"
-    rounded: "{rounded.pill}"
-    padding: "0.18rem 0.55rem"
+    rounded: "{rounded.sm}"
+    padding: "0.15rem 0.5rem"
   badge-neutral:
-    backgroundColor: "{colors.confirm-wash}"
+    backgroundColor: "transparent"
     textColor: "{colors.ink}"
-    rounded: "{rounded.pill}"
-    padding: "0.18rem 0.55rem"
   input:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.ink}"
@@ -142,6 +141,7 @@ The palette is a near-monochrome thermal-receipt paper stock (cream tickets and 
 - **Espresso Counter** (`#332b1c`, token `paper-surround`): the page background the paper sits on — a dark umber sampled from Zeus's fur/mask, one shade dramatically darker than the ticket so tickets read as objects clipped above a real counter, not a card on a lighter tint of itself.
 - **Counter Ink** (`#f3e8d3`, token `surround-ink`) and **Counter Ink Soft** (`#a8967a`, token `surround-ink-soft`): the text pair reserved for anything sitting directly on `paper-surround` rather than inside a `paper`-backed card or ticket — page `<h1>`s, the week navigator's label, and the rail's "Diese Woche" divider. `ink`/`ink-soft` remain correct *inside* any paper-colored surface; `surround-ink`/`surround-ink-soft` exist specifically so bare-on-counter text stays legible against the dark ground. When adding new bare-on-body text, reach for this pair rather than `ink`/`ink-soft`.
 - **Printer Black** (`#1c1917`, token `ink`): primary text and borders *inside* paper-colored surfaces (cards, tickets, inputs) — not on the bare page background.
+- **Ink Press** (`#000000`, token `ink-press`): the one shade darker than `ink`, used only for `.btn:hover`'s fill — the moment of pressing a printed key slightly deeper into the ribbon. Not a general-purpose color; never used for text or borders.
 - **Soft Ink** (`#6b6459`, token `ink-soft`): secondary/meta text inside paper-colored surfaces — dates under headings, muted captions, uppercase eyebrow labels.
 - **Hairline** (`#ddd4bf`, token `ink-line`): 1px dividers, table rules, dashed ticket-row separators.
 - **Strong Hairline** (`#b9ad91`, token `ink-line-strong`): input borders, secondary-button borders, dashed states (off-duty ring, pending shift-chip border), the rail's dashed connector, the scrollbar thumb.
@@ -192,7 +192,7 @@ The system is almost flat. Cards carry only a 1px hairline shadow (`0 1px 0 rgba
 
 ## Shapes
 
-Corners stay close to the right angle: `3px` on cards, buttons, and inputs; `2px` on tickets, the tightest radius in the system, reinforcing that a ticket is cut paper, not a rounded app-chrome card. The one full-circle exceptions are deliberate and load-bearing: the `duty-stamp` control (10rem diameter, the Stempeln screen's entire primary interaction) and the small `stamp-mark` indicator (2.6rem, "IM DIENST" on today's hero card) — both round because they are literally a stamp, not a button. Pills (`border-radius: 999px`) are reserved for badges only.
+Corners stay close to the right angle: `3px` on cards, buttons, and inputs; `2px` on tickets, the tightest radius in the system, reinforcing that a ticket is cut paper, not a rounded app-chrome card. The one full-circle exceptions are deliberate and load-bearing: the `duty-stamp` control (10rem diameter, the Stempeln screen's entire primary interaction) and the small `stamp-mark` indicator (2.6rem, "IM DIENST" on today's hero card) — both round because they are literally a stamp, not a button. Badges used to be the system's one `border-radius: 999px` pill exception, which read as a generic UI-kit status chip; a flat 3px-radius box fixed that but still stacked a second bordered frame directly against a real button (e.g. "Bestätigt" over "Kalender" on `my_week.php`). Badges now carry no box at all outside the stamp state — see Badges under Components for the glyph-plus-rule treatment that replaced both. The `chip-pending` counter pill in the admin calendar (`admin/calendar.php`) is the one remaining small pill in the system — a tiny always-dashed, never-filled utilization indicator inside a data-dense grid, not a status badge, so it keeps its own shape.
 
 The ticket's signature silhouette is built from two CSS pseudo-elements rather than an image: `::before` paints a repeating radial-gradient row of cream-colored punch holes along the top edge (scalloped, 24px × 16px tile), and `::after` paints a repeating pair of 45°-opposed linear gradients along the bottom edge to fake a torn zigzag tear. Dashed 1px borders (`border-top: 1px dashed`) separate rows within a ticket and mark anything provisional: pending badges, the off-duty ring, unclaimed shift chips, and the rail's own connecting line.
 
@@ -200,8 +200,8 @@ The ticket's signature silhouette is built from two CSS pseudo-elements rather t
 
 ### Buttons
 - **Shape:** 3px radius, 1.5px solid border, small horizontal padding (`0.55rem 1.1rem`; `.small` variant `0.4rem 0.75rem`).
-- **Touch target:** every `.btn` is a flex box centering its own label/glyph, `min-height: 2.75rem` (44px) for full-size buttons and `min-height`/`min-width: 2.25rem` (36px) for `.small` — the floor for a one-handed, kitchen-counter tap target, including icon-only buttons (the ticket rail's "×" remove control, the week-navigator's "‹"/"›" arrows), which get a genuinely square hit area rather than shrinking to their glyph's own size.
-- **Primary** (`.btn`): solid ink-black fill, cream text — the default, low-emphasis-by-contrast action.
+- **Voice:** uppercase, 700 weight, 0.04em tracking — the same printed "Label" voice already used for section headings, form labels, badges, and the bottom tab bar, now extended to the one interactive element that used to be the odd one out in plain sentence case. This is deliberately the same move as the badge rework: reuse an already-established system voice in a place it was missing, rather than invent a new one. Glyph-only buttons (`×`, `‹`, `›`) are untouched by this — `text-transform` has no effect on symbols.
+- **Primary** (`.btn`): solid ink-black fill, cream text, hovers to `ink-press` (`#000000`, one shade past `ink`) — the default, low-emphasis-by-contrast action.
 - **Stamp** (`.btn.stamp-btn`): solid stamp-red fill — reserved for "Bewerben" (apply) and "Annehmen" (approve), the system's two yes-actions.
 - **Secondary** (`.btn.secondary`): `paper` fill, ink text, `ink-line-strong` border; hovers to `confirm-wash`. Filled rather than transparent so it stays legible wherever it sits directly on the dark `paper-surround` (e.g. the week-navigator arrows, today's "Stempeln" shortcut).
 - **Danger** (`.btn.danger`): transparent fill, `danger`-red text and border; used only for delete/remove/logout — never shares a screen role with the stamp button.
@@ -241,10 +241,11 @@ Die Ziel-Schicht ist immer der exakte Bon unter dem Mauszeiger im Moment des Dro
 ### Notice Board (`.notice-board`)
 An admin-authored, site-wide urgent message, shown above the week view on both "Mein Plan" (staff) and "Schichtplan" (admin) — the physical equivalent of a manager clipping an urgent note above the order rail. Toggled and edited from `admin/settings.php` ("Dringende Mitteilung"), stored as two `settings` rows (`urgent_notice_enabled`, `urgent_notice_text`) rather than a new table, since it is a single global flag/value, not a record type. Deliberately a **card**-family component, not a **ticket**-family one — no perforation or torn edge — so the perforated-ticket silhouette stays a signal exclusively for real shifts. `stamp-wash` background, 1.5px `stamp`-red border, 3px radius; a `.badge.urgent` label ("Wichtig") sits above the message text; the message itself renders in bold sans with `white-space: pre-wrap` so an admin's line breaks survive. Persists across week navigation by construction — it reads from a global setting, not from the `?date=` query, so paging weeks never re-evaluates or hides it. See the One Stamp Rule for why it earns the stamp-red accent rather than a new color.
 
-### Badges
-- **Style:** pill (999px), 1.5px `border: currentColor`, uppercase 0.72rem label type.
-- **Achromatic states:** confirmed/approved/open → ink on confirm-wash; pending → ink-soft, dashed border, transparent; declined/rejected/withdrawn/closed → ink-soft, strike-through, 0.75 opacity.
-- **Stamp state:** today/active-duty/urgent → stamp-red text and border on stamp-wash. The only chromatic badge family.
+### Badges — "Kassenbon-Vermerk" (register mark)
+No box at all for the everyday states — badges went through two iterations before landing here. First a filled pill (the system's one `border-radius: 999px` exception), which read as a generic UI-kit status chip. Then a flat 3px-radius outline tag, which fixed the pill but still put a bordered box directly above a bordered button (e.g. "Bestätigt" over "Kalender" on `my_week.php`) — legible, but still two competing frames stacked on each other, and not distinctive enough for a system built around printed thermal-receipt paper. The current version drops the box entirely: a leading glyph plus a rule under the line, exactly like a hand-marked line item on a receipt.
+- **Style:** uppercase 0.72rem label type, a small leading glyph from the system's existing sanctioned set (✓ × › ‹ — see Shapes), no fill, no border-box. State is read from the glyph plus a rule directly under the text, not from a container shape, so a badge never visually competes with a real button sitting next to or beneath it.
+- **Achromatic states:** confirmed/approved/open/filled → `✓` + ink text + solid `ink-line-strong` rule underneath (the "settled, ruled-off" line of a receipt). Pending → `–` (the same en dash the system already uses everywhere else for "not yet settled") + ink-soft text + dashed rule underneath. Declined/rejected/withdrawn/closed → `×` + ink-soft text + strike-through + 0.75 opacity, no rule (the strike-through alone already reads as voided; a rule under struck-through text would be redundant).
+- **Stamp state:** today/active-duty/urgent → stamp-red text and border on stamp-wash, still filled and still 3px-radius boxed. The one deliberately loud, boxed badge family, since it is meant to read as an actual ink stamp mark pressed onto the paper (see the One Stamp Rule), not a routine register line.
 
 ### Inputs / Fields
 - **Style:** 1.5px `ink-line-strong` border, 3px radius, cream background, full width, `min-height: 2.75rem` (same 44px floor as a primary button; checkboxes/radios are exempt and stay their native size).
@@ -273,7 +274,7 @@ Jede System-Mail (Konto angelegt, Passwort zurückgesetzt, neue Bewerbung, Bewer
 
 ### Don't:
 - **Don't** introduce a second chromatic accent. `danger` (`#b3261e`) already covers destructive actions and must not be blended into "emphasis" or "today" contexts, even though its hex sits close to `stamp`.
-- **Don't** round any rectangular surface past 3px (buttons/cards/inputs) or 2px (tickets) — the geometry stays close to cut paper, not soft app-chrome. Circles (duty-stamp, stamp-mark, badge pills) are the sanctioned exception, not a precedent for other rounded shapes.
+- **Don't** round any rectangular surface past 3px (buttons/cards/inputs) or 2px (tickets) — the geometry stays close to cut paper, not soft app-chrome. Circles (duty-stamp, stamp-mark) are the sanctioned exception, not a precedent for other rounded shapes. Badges (outside the stamp state) don't have a box to round in the first place — see Badges under Components.
 - **Don't** add elevation on hover/focus. State changes through color, rotation, or scale — never through a bigger shadow.
 - **Don't** ship a heavy animation library, icon font, or client-side JS framework/bundle; the product's hard technical constraint is a memory-limited Raspberry Pi serving other services, and the entire visual system (ticket perforation, stamp rotation, dashed rails) is built from plain CSS for exactly this reason.
 - **Don't** implement application decisions independently in a third place. Two surfaces (`admin/shifts.php`'s rail, `admin/calendar.php`'s `.chip-pending` dialog) already share one `decideApplication()` — route any new entry point through that same function rather than writing the capacity/notification/status rules a third time.

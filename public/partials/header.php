@@ -119,18 +119,24 @@ function navActive(string $path, array $matches): bool
   th { color: var(--ink-soft); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
   td.mono, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
+  /* Buttons sprechen jetzt dieselbe gedruckte Etikett-Stimme wie Labels/Badges/Tab-Leiste
+     (Großbuchstaben, 700, weiter getrackt) statt als einziges Interaktions-Element in
+     normaler Groß-/Kleinschreibung zu stehen - derselbe "Kassenbon"-Gedanke wie bei den
+     Badges, nur auf Handlungen statt Zustände angewandt: kein neues Element, sondern eine
+     bereits im System etablierte Stimme (siehe DESIGN.md "The Register-Tape Rule"-Nachbarn)
+     endlich auch dort, wo eine echte Aktion ausgelöst wird. */
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;
     box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px;
     border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper);
-    cursor: pointer; font-size: 0.88rem; font-weight: 600; text-decoration: none;
-    font-family: var(--font-sans); letter-spacing: 0.01em;
+    cursor: pointer; font-size: 0.88rem; font-weight: 700; text-decoration: none;
+    text-transform: uppercase; font-family: var(--font-sans); letter-spacing: 0.04em;
     -webkit-tap-highlight-color: transparent;
     /* nie mitten im Wort brechen (z.B. eine Tabellenzelle, die sonst Umbruch erzwingt) -
-       ein Button-Label bricht höchstens zwischen Wörtern, wie "zurücksetzen" ungeteilt. */
+       ein Button-Label bricht höchstens zwischen Wörtern, wie "ZURÜCKSETZEN" ungeteilt. */
     overflow-wrap: normal; word-break: normal;
   }
-  .btn:hover { background: #000; }
+  .btn:hover { background: #000000; }
   .btn:active { transform: translateY(1px); }
   .btn.secondary { background: var(--paper); color: var(--ink); border-color: var(--ink-line-strong); }
   .btn.secondary:hover { background: var(--confirm-wash); }
@@ -172,20 +178,35 @@ function navActive(string $path, array $matches): bool
   label { display: block; font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 0.3rem; margin-top: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-  /* Zustands-Badges: achromatisch, nur "heute/aktiv" bekommt die Stempelfarbe */
+  /* Zustands-Badges ("Kassenbon-Vermerk"): kein Chip/Kasten mehr, sondern ein bedruckter
+     Vermerk wie auf einem Kassenbon - Glyphe + Wort, Zustand über eine Regel unter der Zeile
+     (durchgezogen = erledigt, gestrichelt = offen/"nicht final", nichts = storniert, dafür
+     durchgestrichen). Kein zweiter Kasten mehr, der mit einem echten Button darunter
+     konkurriert (siehe "Bestätigt" über "Kalender" auf my_week.php), und die Glyphen (✓ – ×)
+     sind dieselbe bereits sanktionierte Zeichen-Sprache wie sonst im System (✓ × › ‹). Der
+     Gedankenstrich vor "offenen" Zuständen ist derselbe, der im System bereits "noch nicht
+     final" bedeutet (siehe gestrichelte Ränder). */
   .badge {
     display: inline-flex; align-items: center; gap: 0.3rem;
-    padding: 0.18rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.03em; border: 1.5px solid currentColor;
-    /* eine Pille bricht nie mitten im Wort - in einer engen Zelle lieber leicht breiter als
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+    line-height: 1.5; border-bottom: 1.5px solid transparent;
+    /* ein Vermerk bricht nie mitten im Wort - in einer engen Zelle lieber leicht breiter als
        kaputt aussehen (siehe .btn, dieselbe Regel). */
     white-space: nowrap; overflow-wrap: normal; word-break: normal;
   }
-  .badge.confirmed, .badge.approved, .badge.open { color: var(--ink); background: var(--confirm-wash); border-color: var(--ink-line-strong); }
-  .badge.pending { color: var(--ink-soft); background: transparent; border-style: dashed; }
-  .badge.declined, .badge.rejected, .badge.withdrawn, .badge.closed { color: var(--ink-soft); background: transparent; text-decoration: line-through; opacity: 0.75; }
-  .badge.filled { color: var(--ink); background: var(--confirm-wash); }
-  .badge.today, .badge.active-duty, .badge.urgent { color: var(--stamp); background: var(--stamp-wash); border-color: var(--stamp); }
+  .badge::before { font-weight: 700; }
+  .badge.confirmed, .badge.approved, .badge.open, .badge.filled { color: var(--ink); border-bottom-color: var(--ink-line-strong); }
+  .badge.confirmed::before, .badge.approved::before, .badge.open::before, .badge.filled::before { content: "\2713"; }
+  .badge.pending { color: var(--ink-soft); border-bottom-style: dashed; border-bottom-color: var(--ink-line-strong); }
+  .badge.pending::before { content: "\2013"; }
+  .badge.declined, .badge.rejected, .badge.withdrawn, .badge.closed { color: var(--ink-soft); text-decoration: line-through; opacity: 0.75; }
+  .badge.declined::before, .badge.rejected::before, .badge.withdrawn::before, .badge.closed::before { content: "\00d7"; }
+  /* Der Stempel-Zustand bleibt die eine gefüllte Ausnahme - der soll wie ein echter
+     Stempelabdruck wirken, nicht wie ein Kassenbon-Vermerk (siehe "The One Stamp Rule"). */
+  .badge.today, .badge.active-duty, .badge.urgent {
+    color: var(--stamp); background: var(--stamp-wash); border: 1.5px solid var(--stamp);
+    border-radius: 3px; padding: 0.15rem 0.5rem; line-height: normal;
+  }
 
   /* Aushang: dringende Admin-Mitteilung über der Wochenansicht. Bewusst ein Card-, kein Ticket-Bauteil -
      Perforation/Risskante bleibt ein Signal ausschließlich für echte Schichten. */

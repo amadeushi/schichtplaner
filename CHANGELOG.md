@@ -6,6 +6,22 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.13.0] - 2026-09-17
+
+### Geändert
+- Badges (Bestätigt/Angefragt/Abgelehnt/…) sind kein gerundeter Pillen-Chip
+  mehr — das war die einzige `border-radius: 999px`-Ausnahme im sonst
+  durchgehend kantigen "Bon-Strang"-System und wirkte dadurch wie ein
+  generisches UI-Kit-Element statt wie ein bedruckter Kassenbon-Vermerk.
+  Jetzt: eine kleine Glyphe (✓/–/×, dieselbe Zeichen-Sprache wie sonst im
+  System) plus eine Linie unter dem Wort statt eines Kastens — konkurriert
+  dadurch nicht mehr optisch mit einem direkt darunterliegenden Button (z.B.
+  "Bestätigt" über "Kalender" in Mein Plan). Der rote Stempel-Zustand
+  (Heute/Im Dienst/Wichtig) bleibt die eine bewusst gefüllte Ausnahme.
+- Buttons sprechen jetzt dieselbe gedruckte Großbuchstaben-Stimme wie
+  Badges, Formularlabels und die Tab-Leiste (700 Gewicht, weiter getrackt),
+  statt als einziges Interaktionselement in normaler Schreibweise zu stehen.
+
 ## [1.12.0] - 2026-09-17
 
 ### Hinzugefügt
