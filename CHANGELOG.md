@@ -6,6 +6,23 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.11.0] - 2026-09-17
+
+### Hinzugefügt
+- Kalenderansicht: jede unentschiedene Bewerbung erscheint jetzt zusätzlich
+  als eigener, ziehbarer Bon in der Zeile der bewerbenden Person (getaggt
+  "BEWERBUNG"). Zieht man diesen Bon auf eine andere Schicht (egal welcher
+  Tag), hängt sich die Bewerbung auf diese Schicht um — z.B. wenn jemand am
+  selben Tag versehentlich die falsche Startzeit erwischt hat, ohne dass
+  die Bewerbung abgelehnt und neu gestellt werden muss.
+- Während des Ziehens markiert sich die exakte Ziel-Schicht unter dem
+  Mauszeiger live (derselbe stempelrote Rahmen wie beim Verschieben einer
+  Zuweisung, hier auf den einzelnen Bon verengt) - wichtig, sobald mehrere
+  Schichten am selben Tag liegen: nicht mehr "die erste Schicht gewinnt",
+  sondern immer genau die, auf die tatsächlich gezogen wurde. Ein zu
+  ungenauer Drop bei mehreren möglichen Zielen zeigt jetzt eine klare
+  Fehlermeldung statt eines stillen Fehlgriffs.
+
 ## [1.10.0] - 2026-09-17
 
 ### Geändert

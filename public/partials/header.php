@@ -342,11 +342,11 @@ function navActive(string $path, array $matches): bool
   /* Chip-Zeit und Entwurf-Label auf dieselbe Label-Untergrenze (0.72rem) gehoben - vorher 0.7rem
      bzw. 0.62rem, zwei uneinheitliche Ad-hoc-Werte statt eines gemeinsamen Schritts der Skala. */
   .calendar-cell .shift-chip .chip-time { display: block; font-size: 0.72rem; color: var(--ink-soft); }
-  .chip-draft { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink-soft); }
+  .chip-draft, .chip-applicant-tag { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink-soft); }
   /* Auslastung im Kalender: Anzahl unentschiedener Bewerbungen je Schicht, dieselbe gestrichelte
-     "nicht final"-Sprache wie .badge.pending. Verlinkt auf die eine Entscheidungs-Oberfläche
-     (admin/shifts.php) statt hier eine zweite anzulegen - "Admin decision surface"-Regel bleibt.
-     "Bew." ist die im System bereits etablierte Abkürzung (siehe Tab-Leiste "BEWERB."). */
+     "nicht final"-Sprache wie .badge.pending. Öffnet dialog.decide-dialog direkt im Kalender
+     (siehe unten) statt zu admin/shifts.php zu verlinken. "Bew." ist die im System bereits
+     etablierte Abkürzung (siehe Tab-Leiste "BEWERB."). */
   .chip-pending {
     display: inline-flex; align-items: center; margin-top: 0.2rem; padding: 0.05rem 0.35rem;
     border: 1px dashed var(--ink-line-strong); border-radius: 999px; font-size: 0.72rem;
@@ -355,6 +355,11 @@ function navActive(string $path, array $matches): bool
     text-decoration: none; cursor: pointer;
   }
   .chip-pending:hover { background: var(--confirm-wash); border-color: var(--ink-soft); }
+  /* Bewerbungs-Bon (.applicant-chip): dieselbe Schicht wie jeder andere Kalender-Bon, aber in
+     der Zeile der bewerbenden Person statt einer zugewiesenen - ziehbar auf eine andere
+     Schicht, um die Bewerbung dorthin umzuhängen (siehe retarget_application in
+     admin/calendar.php), z.B. wenn jemand die falsche Startzeit am selben Tag erwischt hat.
+     Nutzt bereits .shift-chip.pending (gestrichelt) + den vorhandenen Greifhand-Cursor. */
 
   /* Entscheidungs-Dialog im Kalender: natives <dialog> statt Popover-Positionierung im
      scrollenden Raster oder einer zweiten Seite - zentriert sich selbst, Backdrop/Fokus/ESC
@@ -377,6 +382,10 @@ function navActive(string $path, array $matches): bool
   .calendar-cell.today { background: var(--stamp-wash); }
   .calendar-cell { min-height: 3.2rem; }
   .calendar-cell.drag-over { outline: 2px dashed var(--stamp); outline-offset: -2px; background: var(--stamp-wash); }
+  /* Live-Ziel beim Umhängen einer Bewerbung: derselbe stempelrote Gestrichelt-Look wie
+     .drag-over, aber auf dem exakten Ziel-Bon statt der ganzen Zelle - zeigt in Echtzeit,
+     welche Schicht ein Drop genau träfe (siehe findRetargetChip() im Kalender-Skript). */
+  .shift-chip.retarget-target { outline: 2px dashed var(--stamp); outline-offset: -2px; background: var(--stamp-wash); }
   .chip-remove { position: absolute; top: 0.15rem; right: 0.3rem; background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0.1rem; }
   .cell-assign select { font-size: 0.78rem; padding: 0.3rem; width: auto; }
   .day-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; }

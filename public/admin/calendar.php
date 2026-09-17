@@ -121,6 +121,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'decid
     exit;
 }
 
+// Eine unentschiedene Bewerbung auf eine andere Schicht umhängen (z.B. falsche Startzeit
+// erwischt) - per Drag&Drop des eigenen Bewerbungs-Bons auf eine andere Schicht am selben
+// oder einem anderen Tag. Ändert nur shift_id der Bewerbung, keine Kapazitäts-/Entwurf-/
+// Benachrichtigungs-Logik, da eine reine Bewerbung (noch nicht angenommen) niemandes
+// tatsächlichen Dienstplan berührt - das passiert erst bei der Entscheidung.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'retarget_application') {
+    header('Content-Type: application/json; charset=utf-8');
+    checkCsrf();
+
+    $appId = (int)($_POST['application_id'] ?? 0);
+    $toShiftId = (int)($_POST['to_shift_id'] ?? 0);
+
+    $appStmt = db()->prepare("SELECT * FROM shift_applications WHERE id = :id AND status = 'pending'");
+    $appStmt->execute(['id' => $appId]);
+    $app = $appStmt->fetch();
+
+    if (!$app) {
+        echo json_encode(['ok' => false, 'error' => 'Bewerbung wurde bereits bearbeitet oder existiert nicht.']);
+        exit;
+    }
+
+    if ($toShiftId === (int)$app['shift_id']) {
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    $targetStmt = db()->prepare('SELECT id FROM shifts WHERE id = :id');
+    $targetStmt->execute(['id' => $toShiftId]);
+    if (!$targetStmt->fetch()) {
+        echo json_encode(['ok' => false, 'error' => 'Zielschicht nicht gefunden.']);
+        exit;
+    }
+
+    $dupStmt = db()->prepare('SELECT id FROM shift_applications WHERE shift_id = :s AND user_id = :u');
+    $dupStmt->execute(['s' => $toShiftId, 'u' => $app['user_id']]);
+    if ($dupStmt->fetch()) {
+        echo json_encode(['ok' => false, 'error' => 'Diese Person hat für die Zielschicht bereits eine Bewerbung oder Zuweisung.']);
+        exit;
+    }
+
+    db()->prepare('UPDATE shift_applications SET shift_id = :s WHERE id = :id')->execute(['s' => $toShiftId, 'id' => $appId]);
+
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
 // --- Wochennavigation (identisch zu admin/shifts.php) ---
 $refDateParam = (string)($_GET['date'] ?? '');
 $refTs = ($refDateParam !== '' && strtotime($refDateParam) !== false) ? strtotime($refDateParam) : time();
@@ -170,14 +216,18 @@ if ($weekShifts) {
     // Auslastung sichtbar machen UND direkt entscheidbar machen: Name + application_id je
     // unentschiedener Bewerbung, damit der Kalender-Dialog Annehmen/Ablehnen anbieten kann,
     // ohne zu admin/shifts.php wechseln zu müssen (siehe .chip-pending/dialog.decide-dialog).
+    // user_id zusätzlich, um dieselbe Bewerbung als eigenen ziehbaren Bon in der Zeile der
+    // bewerbenden Person darzustellen (siehe applicant-chip weiter unten).
     $pendingStmt = db()->prepare(
-        "SELECT sa.id AS application_id, sa.shift_id, u.name
+        "SELECT sa.id AS application_id, sa.shift_id, sa.user_id, u.name
          FROM shift_applications sa JOIN users u ON u.id = sa.user_id
          WHERE sa.shift_id IN ($placeholders) AND sa.status = 'pending' ORDER BY u.name"
     );
     $pendingStmt->execute($ids);
     foreach ($pendingStmt as $row) {
-        $pendingByShift[(int)$row['shift_id']][] = ['application_id' => (int)$row['application_id'], 'name' => $row['name']];
+        $pendingByShift[(int)$row['shift_id']][] = [
+            'application_id' => (int)$row['application_id'], 'user_id' => (int)$row['user_id'], 'name' => $row['name'],
+        ];
     }
 }
 
@@ -190,11 +240,12 @@ foreach ($weekShifts as $sh) {
     }
     $assigned = $assignedByShift[(int)$sh['id']] ?? [];
     $remaining = (int)$sh['needed_count'] - count($assigned);
-    $pendingCount = count($pendingByShift[(int)$sh['id']] ?? []);
+    $pending = $pendingByShift[(int)$sh['id']] ?? [];
+    $pendingCount = count($pending);
 
     foreach ($assigned as $person) {
         $grid[$person['id']][$dayIndex][] = [
-            'shift_id' => (int)$sh['id'], 'title' => $sh['title'],
+            'kind' => 'assignment', 'shift_id' => (int)$sh['id'], 'title' => $sh['title'],
             'start' => $sh['start_time'], 'end' => $sh['end_time'],
             'user_id' => $person['id'], 'remaining' => null,
             'draft' => $sh['published_at'] === null, 'pending_count' => $pendingCount,
@@ -202,10 +253,21 @@ foreach ($weekShifts as $sh) {
     }
     if ($remaining > 0) {
         $grid['open'][$dayIndex][] = [
-            'shift_id' => (int)$sh['id'], 'title' => $sh['title'],
+            'kind' => 'assignment', 'shift_id' => (int)$sh['id'], 'title' => $sh['title'],
             'start' => $sh['start_time'], 'end' => $sh['end_time'],
             'user_id' => null, 'remaining' => $remaining,
             'draft' => $sh['published_at'] === null, 'pending_count' => $pendingCount,
+        ];
+    }
+
+    // Jede unentschiedene Bewerbung bekommt zusätzlich einen eigenen, ziehbaren Bon in der
+    // Zeile der bewerbenden Person - so kann eine falsch adressierte Bewerbung (z.B. andere
+    // Startzeit am selben Tag gewünscht) direkt auf die richtige Schicht gezogen werden,
+    // statt sie ablehnen und die Person neu bewerben lassen zu müssen.
+    foreach ($pending as $p) {
+        $grid[$p['user_id']][$dayIndex][] = [
+            'kind' => 'application', 'shift_id' => (int)$sh['id'], 'application_id' => $p['application_id'],
+            'title' => $sh['title'], 'start' => $sh['start_time'], 'end' => $sh['end_time'],
         ];
     }
 }
@@ -296,13 +358,21 @@ require __DIR__ . '/../partials/header.php';
         <?php foreach ($days as $i => $d): ?>
           <td class="calendar-cell <?= $d === $todayDate ? 'today' : '' ?> <?= $i >= 5 ? 'weekend' : '' ?>" data-day="<?= $i ?>" data-employee="<?= (int)$emp['id'] ?>">
             <?php foreach ($grid[$emp['id']][$i] ?? [] as $chip): ?>
-              <div class="shift-chip<?= $chip['draft'] ? ' draft-chip' : '' ?>" draggable="true" data-shift-id="<?= $chip['shift_id'] ?>" data-user-id="<?= (int)$emp['id'] ?>">
-                <span class="chip-title"><?= e($chip['title']) ?><?php if ($chip['draft']): ?> <span class="chip-draft">Entwurf</span><?php endif; ?></span>
-                <span class="chip-time mono"><?= e($chip['start']) ?>&ndash;<?= e($chip['end']) ?></span>
-                <?php if ($chip['pending_count'] > 0): ?>
-                  <button type="button" class="chip-pending" draggable="false" onclick="document.getElementById('decide-<?= $chip['shift_id'] ?>').showModal()" title="<?= $chip['pending_count'] ?> unentschiedene Bewerbung<?= $chip['pending_count'] === 1 ? '' : 'en' ?> &ndash; hier direkt entscheiden"><?= $chip['pending_count'] ?> Bew.</button>
-                <?php endif; ?>
-              </div>
+              <?php if ($chip['kind'] === 'application'): ?>
+                <div class="shift-chip pending applicant-chip" draggable="true" data-kind="application" data-shift-id="<?= $chip['shift_id'] ?>" data-application-id="<?= $chip['application_id'] ?>">
+                  <span class="chip-title"><?= e($chip['title']) ?> <span class="chip-applicant-tag">Bewerbung</span></span>
+                  <span class="chip-time mono"><?= e($chip['start']) ?>&ndash;<?= e($chip['end']) ?></span>
+                  <button type="button" class="chip-pending" draggable="false" onclick="document.getElementById('decide-<?= $chip['shift_id'] ?>').showModal()" title="Bewerbung entscheiden">Entscheiden</button>
+                </div>
+              <?php else: ?>
+                <div class="shift-chip<?= $chip['draft'] ? ' draft-chip' : '' ?>" draggable="true" data-shift-id="<?= $chip['shift_id'] ?>" data-user-id="<?= (int)$emp['id'] ?>">
+                  <span class="chip-title"><?= e($chip['title']) ?><?php if ($chip['draft']): ?> <span class="chip-draft">Entwurf</span><?php endif; ?></span>
+                  <span class="chip-time mono"><?= e($chip['start']) ?>&ndash;<?= e($chip['end']) ?></span>
+                  <?php if ($chip['pending_count'] > 0): ?>
+                    <button type="button" class="chip-pending" draggable="false" onclick="document.getElementById('decide-<?= $chip['shift_id'] ?>').showModal()" title="<?= $chip['pending_count'] ?> unentschiedene Bewerbung<?= $chip['pending_count'] === 1 ? '' : 'en' ?> &ndash; hier direkt entscheiden"><?= $chip['pending_count'] ?> Bew.</button>
+                  <?php endif; ?>
+                </div>
+              <?php endif; ?>
             <?php endforeach; ?>
           </td>
         <?php endforeach; ?>
@@ -371,12 +441,55 @@ require __DIR__ . '/../partials/header.php';
   grid.addEventListener('dragend', function () {
     if (dragged) dragged.classList.remove('dragging');
     dragged = null;
+    clearRetargetHighlight();
   });
+
+  // Ermittelt, welcher Bon in $cell das Ziel für ein Umhängen von $dragged wäre - exakter
+  // Treffer unter dem Mauszeiger zuerst, sonst nur bei genau einem eindeutigen Kandidaten in
+  // der Zelle. Dieselbe Logik für die Live-Markierung (dragover) UND die tatsächliche Aktion
+  // (drop), damit niemals markiert wird, was am Ende nicht auch tatsächlich passiert.
+  function findRetargetChip(e, cell) {
+    var targetChip = e.target.closest('.shift-chip');
+    if (targetChip === dragged || (targetChip && targetChip.dataset.shiftId === dragged.dataset.shiftId)) {
+      targetChip = null;
+    }
+    if (!targetChip) {
+      var others = [];
+      cell.querySelectorAll('.shift-chip').forEach(function (c) {
+        if (c !== dragged && c.dataset.shiftId !== dragged.dataset.shiftId) others.push(c);
+      });
+      if (others.length === 1) targetChip = others[0];
+    }
+    return targetChip;
+  }
+
+  var highlightedChip = null;
+  function clearRetargetHighlight() {
+    if (highlightedChip) highlightedChip.classList.remove('retarget-target');
+    highlightedChip = null;
+  }
 
   grid.addEventListener('dragover', function (e) {
     var cell = e.target.closest('.calendar-cell');
     if (!cell || !dragged) return;
     e.preventDefault();
+
+    if (dragged.dataset.kind === 'application') {
+      // Beim Umhängen einer Bewerbung markiert sich der exakte Ziel-Bon selbst (stempelroter
+      // Rahmen wie sonst die ganze Zelle) statt der ganzen Tageszelle - zeigt in Echtzeit
+      // genau, wohin der Drop tatsächlich träfe, auch wenn mehrere Schichten in der Zelle
+      // liegen. Ist der aktuelle Hover-Punkt kein gültiges Ziel, bleibt nichts markiert.
+      var candidate = (dragged.parentElement === cell) ? null : findRetargetChip(e, cell);
+      if (candidate !== highlightedChip) {
+        clearRetargetHighlight();
+        if (candidate) {
+          candidate.classList.add('retarget-target');
+          highlightedChip = candidate;
+        }
+      }
+      return;
+    }
+
     cell.classList.add('drag-over');
   });
 
@@ -390,12 +503,36 @@ require __DIR__ . '/../partials/header.php';
     if (!cell || !dragged) return;
     e.preventDefault();
     cell.classList.remove('drag-over');
+    clearRetargetHighlight();
+
+    if (dragged.parentElement === cell) return; // gleiche Zelle, nichts zu tun
+
+    if (dragged.dataset.kind === 'application') {
+      // Bewerbungs-Bon auf eine andere Schicht gezogen: Zielschicht ist zuerst der exakte
+      // Bon unter dem Mauszeiger beim Drop (Treffgenauigkeit statt Raten) - wichtig, sobald
+      // mehrere verschiedene Schichten in derselben Tageszelle liegen (z.B. 3 offene an
+      // einem Tag), sonst würde immer dieselbe (die erste im DOM) gewinnen, egal wohin
+      // gezogen wurde. Nur wenn der Drop keinen Bon exakt trifft UND es in der Zelle genau
+      // eine einzige andere Schicht gibt, wird das noch als eindeutiger Fall akzeptiert.
+      var targetChip = findRetargetChip(e, cell);
+      if (!targetChip) {
+        errorBox.textContent = 'Bitte genau auf die Ziel-Schicht ziehen, um die Bewerbung dorthin umzuhängen.';
+        errorBox.hidden = false;
+        return;
+      }
+
+      var retargetBody = new URLSearchParams();
+      retargetBody.set('action', 'retarget_application');
+      retargetBody.set('csrf_token', csrfToken);
+      retargetBody.set('application_id', dragged.dataset.applicationId);
+      retargetBody.set('to_shift_id', targetChip.dataset.shiftId);
+      postAction(retargetBody);
+      return;
+    }
 
     var fromUserId = dragged.dataset.userId || '';
     var toUserId = cell.dataset.employee || '';
     var toDate = dayDates[parseInt(cell.dataset.day, 10)];
-
-    if (dragged.parentElement === cell) return; // gleiche Zelle, nichts zu tun
 
     var body = new URLSearchParams();
     body.set('action', 'move');
