@@ -106,6 +106,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'move'
     exit;
 }
 
+// Bewerbung direkt aus dem Kalender-Dialog annehmen/ablehnen - dieselbe Logik wie das
+// Formular in admin/shifts.php (siehe decideApplication() in app/helpers.php), nur als
+// JSON-Antwort statt Redirect+Flash, damit der Dialog ohne Seitenwechsel reagieren kann.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'decide') {
+    header('Content-Type: application/json; charset=utf-8');
+    checkCsrf();
+
+    $appId = (int)($_POST['application_id'] ?? 0);
+    $decision = (string)($_POST['decision'] ?? '');
+    $result = decideApplication($appId, $decision, $user['id'], $config['smtp']);
+
+    echo json_encode(['ok' => $result['ok'], 'error' => $result['ok'] ? null : $result['message']]);
+    exit;
+}
+
 // --- Wochennavigation (identisch zu admin/shifts.php) ---
 $refDateParam = (string)($_GET['date'] ?? '');
 $refTs = ($refDateParam !== '' && strtotime($refDateParam) !== false) ? strtotime($refDateParam) : time();
@@ -134,7 +149,11 @@ $weekShifts = $weekShiftsStmt->fetchAll();
 $employees = db()->query("SELECT id, name FROM users WHERE active = 1 ORDER BY name")->fetchAll();
 
 $assignedByShift = [];
-$pendingCountByShift = [];
+$pendingByShift = [];
+$shiftById = [];
+foreach ($weekShifts as $sh) {
+    $shiftById[(int)$sh['id']] = $sh;
+}
 if ($weekShifts) {
     $ids = array_column($weekShifts, 'id');
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
@@ -148,16 +167,17 @@ if ($weekShifts) {
         $assignedByShift[(int)$row['shift_id']][] = ['id' => (int)$row['user_id'], 'name' => $row['name']];
     }
 
-    // Auslastung sichtbar machen: wie viele noch unentschiedene Bewerbungen eine Schicht hat.
-    // Nur eine Anzahl, keine Namen/Entscheidung hier - das bleibt admin/shifts.php vorbehalten
-    // (siehe "Admin decision surface" in DESIGN.md, ein Klick auf den Bon verlinkt dorthin).
+    // Auslastung sichtbar machen UND direkt entscheidbar machen: Name + application_id je
+    // unentschiedener Bewerbung, damit der Kalender-Dialog Annehmen/Ablehnen anbieten kann,
+    // ohne zu admin/shifts.php wechseln zu müssen (siehe .chip-pending/dialog.decide-dialog).
     $pendingStmt = db()->prepare(
-        "SELECT shift_id, COUNT(*) AS pending_count FROM shift_applications
-         WHERE shift_id IN ($placeholders) AND status = 'pending' GROUP BY shift_id"
+        "SELECT sa.id AS application_id, sa.shift_id, u.name
+         FROM shift_applications sa JOIN users u ON u.id = sa.user_id
+         WHERE sa.shift_id IN ($placeholders) AND sa.status = 'pending' ORDER BY u.name"
     );
     $pendingStmt->execute($ids);
     foreach ($pendingStmt as $row) {
-        $pendingCountByShift[(int)$row['shift_id']] = (int)$row['pending_count'];
+        $pendingByShift[(int)$row['shift_id']][] = ['application_id' => (int)$row['application_id'], 'name' => $row['name']];
     }
 }
 
@@ -170,7 +190,7 @@ foreach ($weekShifts as $sh) {
     }
     $assigned = $assignedByShift[(int)$sh['id']] ?? [];
     $remaining = (int)$sh['needed_count'] - count($assigned);
-    $pendingCount = $pendingCountByShift[(int)$sh['id']] ?? 0;
+    $pendingCount = count($pendingByShift[(int)$sh['id']] ?? []);
 
     foreach ($assigned as $person) {
         $grid[$person['id']][$dayIndex][] = [
@@ -262,7 +282,7 @@ require __DIR__ . '/../partials/header.php';
                 <span class="chip-title"><?= e($chip['title']) ?><?php if ($chip['remaining'] > 1): ?> <span class="mono">&times;<?= $chip['remaining'] ?></span><?php endif; ?></span>
                 <span class="chip-time mono"><?= e($chip['start']) ?>&ndash;<?= e($chip['end']) ?></span>
                 <?php if ($chip['pending_count'] > 0): ?>
-                  <a class="chip-pending" href="/admin/shifts.php?date=<?= e($weekStart) ?>#shift-<?= $chip['shift_id'] ?>" draggable="false" title="<?= $chip['pending_count'] ?> unentschiedene Bewerbung<?= $chip['pending_count'] === 1 ? '' : 'en' ?> &ndash; im Schichtplan entscheiden"><?= $chip['pending_count'] ?> Bew.</a>
+                  <button type="button" class="chip-pending" draggable="false" onclick="document.getElementById('decide-<?= $chip['shift_id'] ?>').showModal()" title="<?= $chip['pending_count'] ?> unentschiedene Bewerbung<?= $chip['pending_count'] === 1 ? '' : 'en' ?> &ndash; hier direkt entscheiden"><?= $chip['pending_count'] ?> Bew.</button>
                 <?php endif; ?>
               </div>
             <?php endforeach; ?>
@@ -280,7 +300,7 @@ require __DIR__ . '/../partials/header.php';
                 <span class="chip-title"><?= e($chip['title']) ?><?php if ($chip['draft']): ?> <span class="chip-draft">Entwurf</span><?php endif; ?></span>
                 <span class="chip-time mono"><?= e($chip['start']) ?>&ndash;<?= e($chip['end']) ?></span>
                 <?php if ($chip['pending_count'] > 0): ?>
-                  <a class="chip-pending" href="/admin/shifts.php?date=<?= e($weekStart) ?>#shift-<?= $chip['shift_id'] ?>" draggable="false" title="<?= $chip['pending_count'] ?> unentschiedene Bewerbung<?= $chip['pending_count'] === 1 ? '' : 'en' ?> &ndash; im Schichtplan entscheiden"><?= $chip['pending_count'] ?> Bew.</a>
+                  <button type="button" class="chip-pending" draggable="false" onclick="document.getElementById('decide-<?= $chip['shift_id'] ?>').showModal()" title="<?= $chip['pending_count'] ?> unentschiedene Bewerbung<?= $chip['pending_count'] === 1 ? '' : 'en' ?> &ndash; hier direkt entscheiden"><?= $chip['pending_count'] ?> Bew.</button>
                 <?php endif; ?>
               </div>
             <?php endforeach; ?>
@@ -292,6 +312,38 @@ require __DIR__ . '/../partials/header.php';
   </table>
 </div>
 <p id="calendar-error" class="flash error" hidden></p>
+
+<?php foreach ($pendingByShift as $shiftId => $applicants): ?>
+  <?php $sh = $shiftById[$shiftId]; ?>
+  <dialog class="decide-dialog" id="decide-<?= $shiftId ?>">
+    <h3><?= e($sh['title']) ?></h3>
+    <p class="muted mono"><?= e(formatDateDe($sh['shift_date'])) ?> &middot; <?= e($sh['start_time']) ?>&ndash;<?= e($sh['end_time']) ?><?= $sh['location'] ? ' &middot; ' . e($sh['location']) : '' ?></p>
+    <div class="decide-list">
+      <?php foreach ($applicants as $p): ?>
+        <div class="decide-row">
+          <span><span class="badge pending" style="border:none;padding:0;">Bewerbung</span> <?= e($p['name']) ?></span>
+          <span class="table-actions">
+            <form method="post" class="inline decide-form">
+              <?= csrfField() ?>
+              <input type="hidden" name="action" value="decide">
+              <input type="hidden" name="application_id" value="<?= $p['application_id'] ?>">
+              <input type="hidden" name="decision" value="approved">
+              <button type="submit" class="btn small stamp-btn">Annehmen</button>
+            </form>
+            <form method="post" class="inline decide-form">
+              <?= csrfField() ?>
+              <input type="hidden" name="action" value="decide">
+              <input type="hidden" name="application_id" value="<?= $p['application_id'] ?>">
+              <input type="hidden" name="decision" value="rejected">
+              <button type="submit" class="btn small secondary">Ablehnen</button>
+            </form>
+          </span>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <button type="button" class="btn secondary small" style="margin-top:0.85rem;" onclick="this.closest('dialog').close()">Schließen</button>
+  </dialog>
+<?php endforeach; ?>
 
 <script>
 (function () {
@@ -353,6 +405,10 @@ require __DIR__ . '/../partials/header.php';
     body.set('to_user_id', toUserId);
     body.set('to_date', toDate);
 
+    postAction(body);
+  });
+
+  function postAction(body) {
     errorBox.hidden = true;
     fetch(window.location.pathname + window.location.search, {
       method: 'POST', body: body, headers: { 'X-Requested-With': 'fetch' },
@@ -370,6 +426,25 @@ require __DIR__ . '/../partials/header.php';
         errorBox.textContent = 'Verbindung fehlgeschlagen.';
         errorBox.hidden = false;
       });
+  }
+
+  // Annehmen/Ablehnen im Dialog: derselbe fetch()-statt-Formular-Submit-Pfad wie beim
+  // Verschieben, damit die Seite nach einer Entscheidung konsistent neu lädt und das
+  // Raster (Offen-Zeile, Zuweisungen, verbleibende Bewerbungen) sich selbst korrekt
+  // neu aufbaut, statt das per JS nachzubilden.
+  document.querySelectorAll('.decide-form').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      postAction(new URLSearchParams(new FormData(form)));
+    });
+  });
+
+  // Klick auf den Dialog-Hintergrund (außerhalb der Karte) schließt ihn - <dialog> tut das
+  // nicht von selbst; ESC schließt bereits nativ.
+  document.querySelectorAll('dialog.decide-dialog').forEach(function (dlg) {
+    dlg.addEventListener('click', function (e) {
+      if (e.target === dlg) dlg.close();
+    });
   });
 })();
 </script>

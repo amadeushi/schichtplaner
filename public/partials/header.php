@@ -351,9 +351,28 @@ function navActive(string $path, array $matches): bool
     display: inline-flex; align-items: center; margin-top: 0.2rem; padding: 0.05rem 0.35rem;
     border: 1px dashed var(--ink-line-strong); border-radius: 999px; font-size: 0.72rem;
     font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink-soft);
+    background: transparent; font-family: inherit; line-height: normal;
     text-decoration: none; cursor: pointer;
   }
   .chip-pending:hover { background: var(--confirm-wash); border-color: var(--ink-soft); }
+
+  /* Entscheidungs-Dialog im Kalender: natives <dialog> statt Popover-Positionierung im
+     scrollenden Raster oder einer zweiten Seite - zentriert sich selbst, Backdrop/Fokus/ESC
+     kommen vom Browser gratis. Kartenartige Bon-Strang-Optik, keine Perforation (das bleibt
+     Signal für echte Schichten, siehe Notice Board). */
+  dialog.decide-dialog {
+    border: 1px solid var(--ink-line); border-radius: 3px; padding: 1.1rem;
+    background: var(--paper); color: var(--ink); max-width: 420px; width: calc(100% - 2rem);
+    box-shadow: 0 8px 16px -12px rgba(28,25,23,0.4);
+  }
+  dialog.decide-dialog::backdrop { background: rgba(28,25,23,0.5); }
+  dialog.decide-dialog h3 { margin: 0 0 0.2rem; }
+  .decide-list { margin-top: 0.85rem; display: flex; flex-direction: column; gap: 0.65rem; }
+  .decide-row {
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+    gap: 0.5rem; padding-top: 0.65rem; border-top: 1px dashed var(--ink-line);
+  }
+  .decide-row:first-child { padding-top: 0; border-top: none; }
   .calendar-cell .shift-chip.dragging { opacity: 0.4; }
   .calendar-cell.today { background: var(--stamp-wash); }
   .calendar-cell { min-height: 3.2rem; }

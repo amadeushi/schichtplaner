@@ -6,6 +6,17 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.10.0] - 2026-09-17
+
+### Geändert
+- Kalenderansicht: die "N Bew."-Markierung öffnet jetzt einen Dialog direkt im
+  Kalender mit Name und Annehmen/Ablehnen je Bewerbung, statt nur zum
+  Schichtplan zu verlinken — Bewerbungen lassen sich damit ohne
+  Seitenwechsel direkt aus dem Drag-&-Drop-Kalender entscheiden. Beide
+  Oberflächen (Schichtplan-Formular und Kalender-Dialog) nutzen dieselbe
+  Entscheidungs-Logik (`decideApplication()`), damit Kapazitätsprüfung,
+  Benachrichtigungen und Entwurf-Rückstufung überall identisch bleiben.
+
 ## [1.9.0] - 2026-09-17
 
 ### Hinzugefügt

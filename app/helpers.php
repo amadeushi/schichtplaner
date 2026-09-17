@@ -115,3 +115,64 @@ function queuePendingNotification(int $shiftId, int $userId): void
     db()->prepare('INSERT INTO pending_notifications (shift_id, user_id) VALUES (:s, :u)')
         ->execute(['s' => $shiftId, 'u' => $userId]);
 }
+
+/**
+ * Entscheidet eine ausstehende Bewerbung (Annehmen/Ablehnen) - die eine gemeinsame
+ * Entscheidungs-Logik für admin/shifts.php (Formular im Bon-Strang) UND admin/calendar.php
+ * (Dialog direkt im Kalender-Bon), damit beide Oberflächen exakt dieselben Regeln anwenden
+ * statt zweier Kopien, die mit der Zeit auseinanderlaufen könnten. Gibt ['ok' => bool,
+ * 'message' => string] zurück statt selbst zu flashen/redirecten oder JSON auszugeben -
+ * das bleibt Sache des jeweiligen Aufrufers (Redirect+Flash bzw. JSON-Antwort für fetch()).
+ */
+function decideApplication(int $appId, string $decision, int $adminUserId, array $smtpConfig): array
+{
+    if (!in_array($decision, ['approved', 'rejected'], true)) {
+        return ['ok' => false, 'message' => 'Ungültige Entscheidung.'];
+    }
+
+    $stmt = db()->prepare(
+        "SELECT sa.*, sh.needed_count,
+            (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sh.id AND a.status = 'approved') AS approved_count
+         FROM shift_applications sa JOIN shifts sh ON sh.id = sa.shift_id
+         WHERE sa.id = :id AND sa.status = 'pending'"
+    );
+    $stmt->execute(['id' => $appId]);
+    $app = $stmt->fetch();
+
+    if (!$app) {
+        return ['ok' => false, 'message' => 'Bewerbung wurde bereits bearbeitet oder existiert nicht.'];
+    }
+
+    if ($decision === 'approved' && (int)$app['approved_count'] >= (int)$app['needed_count']) {
+        return ['ok' => false, 'message' => 'Diese Schicht ist bereits voll besetzt.'];
+    }
+
+    db()->prepare('UPDATE shift_applications SET status = :s, decided_at = datetime(\'now\'), decided_by = :by WHERE id = :id')
+        ->execute(['s' => $decision, 'by' => $adminUserId, 'id' => $appId]);
+
+    $shiftStmt = db()->prepare('SELECT * FROM shifts WHERE id = :id');
+    $shiftStmt->execute(['id' => $app['shift_id']]);
+    $shift = $shiftStmt->fetch();
+
+    $applicantStmt = db()->prepare('SELECT * FROM users WHERE id = :id');
+    $applicantStmt->execute(['id' => $app['user_id']]);
+    $applicant = $applicantStmt->fetch();
+
+    if ($decision === 'approved' && (int)$app['approved_count'] + 1 >= (int)$app['needed_count']) {
+        db()->prepare("UPDATE shifts SET status = 'filled' WHERE id = :id")->execute(['id' => $shift['id']]);
+    }
+
+    if ($decision === 'approved') {
+        // Eine Annahme ist eine finale Zuweisung - bündelt sich wie 'assign' in den
+        // nächsten Publish statt sofort zu mailen.
+        markShiftUnpublished($shift['id']);
+        queuePendingNotification($shift['id'], $applicant['id']);
+        return ['ok' => true, 'message' => 'Bewerbung wurde angenommen. Schicht ist wieder Entwurf, bis erneut veröffentlicht wird.'];
+    }
+
+    // Eine Ablehnung ist eine direkte, persönliche Antwort auf die eigene Bewerbung der
+    // Person - bleibt sofort, damit sie zeitnah anderswo suchen kann.
+    $notifier = new Notifier($smtpConfig);
+    $notifier->applicationDecided($shift, $applicant, $decision);
+    return ['ok' => true, 'message' => 'Bewerbung wurde ' . statusLabelDe($decision) . '.'];
+}
