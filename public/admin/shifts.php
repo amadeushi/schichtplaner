@@ -292,6 +292,11 @@ foreach ($weekShifts as $sh) {
 
 $employees = db()->query("SELECT id, name FROM users WHERE active = 1 ORDER BY name")->fetchAll();
 
+// Abwesenheiten der angezeigten Woche - macht im Bon-Strang sichtbar, wer gerade nicht zur
+// Verfügung steht (siehe absences.php/admin/absences.php), ohne die Zuweisung technisch zu
+// verhindern - der Admin entscheidet weiterhin selbst, das ist hier nur ein Hinweis.
+$absencesByUser = absencesOverlapping($weekStart, $weekEnd);
+
 $editId = (int)($_GET['edit'] ?? 0);
 $editShift = null;
 if ($editId) {
@@ -417,7 +422,27 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
 
 <div class="rail">
 <?php foreach ($days as $i => $d): ?>
-  <?php $isToday = $d === $todayDate; $dayShifts = $shiftsByDate[$d] ?? []; ?>
+  <?php
+    $isToday = $d === $todayDate;
+    $dayShifts = $shiftsByDate[$d] ?? [];
+    $absentToday = [];
+    foreach ($absencesByUser as $absUserId => $absList) {
+        foreach ($absList as $abs) {
+            if ($d >= $abs['start_date'] && $d <= $abs['end_date']) {
+                $absentToday[] = $abs['user_name'] . ' (' . absenceTypeLabelDe($abs['type']) . ')';
+                break;
+            }
+        }
+    }
+    $isAbsentOnDay = function (int $uid) use ($absencesByUser, $d): bool {
+        foreach ($absencesByUser[$uid] ?? [] as $abs) {
+            if ($d >= $abs['start_date'] && $d <= $abs['end_date']) {
+                return true;
+            }
+        }
+        return false;
+    };
+  ?>
   <div class="ticket <?= $isToday ? 'today' : '' ?>">
     <div class="ticket-head">
       <div>
@@ -425,6 +450,9 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
         <div class="ticket-date"><?= e(formatDateDe($d)) ?></div>
       </div>
     </div>
+    <?php if ($absentToday): ?>
+      <p class="muted" style="font-size:0.85rem;margin:-0.3rem 0 0.7rem;">Abwesend: <?= e(implode(', ', $absentToday)) ?></p>
+    <?php endif; ?>
 
     <?php if (!$dayShifts): ?>
       <p class="ticket-empty">Keine Schicht geplant.</p>
@@ -450,7 +478,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
 
           <?php foreach ($assigned as $person): ?>
             <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
-              <span>&#10003; <?= e($person['name']) ?></span>
+              <span>&#10003; <?= e($person['name']) ?><?php if ($isAbsentOnDay((int)$person['id'])): ?> <span class="muted">(abwesend)</span><?php endif; ?></span>
               <form class="inline" method="post" onsubmit="return confirm('<?= e($person['name']) ?> von \'<?= e($sh['title']) ?>\' entfernen?');">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="unassign">
@@ -464,7 +492,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
 
           <?php foreach ($pending as $p): ?>
             <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.4rem;font-size:0.85rem;">
-              <span><span class="badge pending" style="border:none;padding:0;margin-right:0.4rem;">Bewerbung</span><?= e($p['name']) ?></span>
+              <span><span class="badge pending" style="margin-right:0.4rem;">Bewerbung</span><?= e($p['name']) ?></span>
               <span style="display:flex;gap:0.4rem;">
                 <form class="inline" method="post">
                   <?= csrfField() ?>
@@ -496,7 +524,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
                 <select name="employee_id" onchange="this.form.submit()">
                   <option value="">+ zuweisen</option>
                   <?php foreach ($assignable as $e): ?>
-                    <option value="<?= (int)$e['id'] ?>"><?= e($e['name']) ?></option>
+                    <option value="<?= (int)$e['id'] ?>"><?= e($e['name']) ?><?= $isAbsentOnDay((int)$e['id']) ? ' (abwesend)' : '' ?></option>
                   <?php endforeach; ?>
                 </select>
               </form>

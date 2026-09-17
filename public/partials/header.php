@@ -403,6 +403,12 @@ function navActive(string $path, array $matches): bool
   .calendar-cell.today { background: var(--stamp-wash); }
   .calendar-cell { min-height: 3.2rem; }
   .calendar-cell.drag-over { outline: 2px dashed var(--stamp); outline-offset: -2px; background: var(--stamp-wash); }
+  /* Abwesenheit im Kalender-Grid (siehe absences.php/admin/absences.php): die Zelle wird
+     ausgegraut statt die Schicht-Zuweisung technisch zu sperren - der Admin sieht die
+     Nichtverfügbarkeit, entscheidet aber weiterhin selbst (z.B. bewusste Ausnahme). */
+  .calendar-cell.absent { background: var(--ink-line); }
+  .cell-absent-label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink-soft); margin-bottom: 0.2rem; }
+  .sticky-col.absent-full { color: var(--ink-soft); }
   /* Live-Ziel beim Umhängen einer Bewerbung: derselbe stempelrote Gestrichelt-Look wie
      .drag-over, aber auf dem exakten Ziel-Bon statt der ganzen Zelle - zeigt in Echtzeit,
      welche Schicht ein Drop genau träfe (siehe findRetargetChip() im Kalender-Skript). */

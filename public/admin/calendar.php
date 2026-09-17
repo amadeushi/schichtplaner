@@ -194,6 +194,26 @@ $weekShifts = $weekShiftsStmt->fetchAll();
 
 $employees = db()->query("SELECT id, name FROM users WHERE active = 1 ORDER BY name")->fetchAll();
 
+// Abwesenheiten der angezeigten Woche - für die Zellenmarkierung im Grid weiter unten
+// (siehe .calendar-cell.absent), dieselbe Quelle wie admin/shifts.php.
+$absencesByUser = absencesOverlapping($weekStart, $weekEnd);
+$isAbsentOnDate = function (int $uid, string $date) use ($absencesByUser): bool {
+    foreach ($absencesByUser[$uid] ?? [] as $abs) {
+        if ($date >= $abs['start_date'] && $date <= $abs['end_date']) {
+            return true;
+        }
+    }
+    return false;
+};
+$absenceTypeOnDate = function (int $uid, string $date) use ($absencesByUser): ?string {
+    foreach ($absencesByUser[$uid] ?? [] as $abs) {
+        if ($date >= $abs['start_date'] && $date <= $abs['end_date']) {
+            return $abs['type'];
+        }
+    }
+    return null;
+};
+
 $assignedByShift = [];
 $pendingByShift = [];
 $shiftById = [];
@@ -353,10 +373,23 @@ require __DIR__ . '/../partials/header.php';
       </tr>
       <?php endif; ?>
       <?php foreach ($employees as $emp): ?>
+      <?php
+        $empAbsentDays = 0;
+        foreach ($days as $dd) {
+            if ($isAbsentOnDate((int)$emp['id'], $dd)) {
+                $empAbsentDays++;
+            }
+        }
+      ?>
       <tr>
-        <td class="sticky-col"><?= e($emp['name']) ?></td>
+        <td class="sticky-col<?= $empAbsentDays === count($days) ? ' absent-full' : '' ?>">
+          <?= e($emp['name']) ?>
+          <?php if ($empAbsentDays > 0 && $empAbsentDays < count($days)): ?><span class="muted" style="display:block;font-size:0.72rem;font-weight:400;text-transform:none;letter-spacing:normal;">teilw. abwesend</span><?php endif; ?>
+        </td>
         <?php foreach ($days as $i => $d): ?>
-          <td class="calendar-cell <?= $d === $todayDate ? 'today' : '' ?> <?= $i >= 5 ? 'weekend' : '' ?>" data-day="<?= $i ?>" data-employee="<?= (int)$emp['id'] ?>">
+          <?php $absentType = $absenceTypeOnDate((int)$emp['id'], $d); ?>
+          <td class="calendar-cell <?= $d === $todayDate ? 'today' : '' ?> <?= $i >= 5 ? 'weekend' : '' ?> <?= $absentType ? 'absent' : '' ?>" data-day="<?= $i ?>" data-employee="<?= (int)$emp['id'] ?>">
+            <?php if ($absentType): ?><span class="cell-absent-label"><?= e(absenceTypeLabelDe($absentType)) ?></span><?php endif; ?>
             <?php foreach ($grid[$emp['id']][$i] ?? [] as $chip): ?>
               <?php if ($chip['kind'] === 'application'): ?>
                 <div class="shift-chip pending applicant-chip" draggable="true" data-kind="application" data-shift-id="<?= $chip['shift_id'] ?>" data-application-id="<?= $chip['application_id'] ?>">
@@ -391,7 +424,7 @@ require __DIR__ . '/../partials/header.php';
     <div class="decide-list">
       <?php foreach ($applicants as $p): ?>
         <div class="decide-row">
-          <span><span class="badge pending" style="border:none;padding:0;">Bewerbung</span> <?= e($p['name']) ?></span>
+          <span><span class="badge pending">Bewerbung</span> <?= e($p['name']) ?></span>
           <span class="table-actions">
             <form method="post" class="inline decide-form">
               <?= csrfField() ?>

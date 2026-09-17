@@ -97,6 +97,23 @@ CREATE TABLE IF NOT EXISTS email_templates (
     updated_at   TEXT
 );
 
+-- Abwesenheiten (Urlaub/Krankheit/Sonstiges): von Mitarbeiter (für sich selbst) oder Admin
+-- (für jeden) eintragbar. Kein Freigabe-Workflow - direkt wirksam, siehe isUserAbsentOn() in
+-- app/helpers.php. Wirkt sich aus auf: Sichtbarkeit im Schichtplan/Kalender (admin/shifts.php,
+-- admin/calendar.php) und Unterdrückung persönlicher Plan-Benachrichtigungen (Notifier).
+CREATE TABLE IF NOT EXISTS absences (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    start_date  TEXT NOT NULL,              -- YYYY-MM-DD
+    end_date    TEXT NOT NULL,              -- YYYY-MM-DD, >= start_date
+    type        TEXT NOT NULL CHECK (type IN ('urlaub', 'krankheit', 'sonstiges')) DEFAULT 'urlaub',
+    note        TEXT,
+    created_by  INTEGER NOT NULL REFERENCES users(id),
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_absences_user ON absences(user_id);
+CREATE INDEX IF NOT EXISTS idx_absences_dates ON absences(start_date, end_date);
+
 CREATE INDEX IF NOT EXISTS idx_shifts_date ON shifts(shift_date);
 CREATE INDEX IF NOT EXISTS idx_applications_shift ON shift_applications(shift_id);
 CREATE INDEX IF NOT EXISTS idx_applications_user ON shift_applications(user_id);

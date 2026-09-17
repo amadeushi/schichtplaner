@@ -194,3 +194,39 @@ function ensureCalendarToken(int $userId, ?string $existingToken): string
     return $token;
 }
 
+function absenceTypeLabelDe(string $type): string
+{
+    return match ($type) {
+        'urlaub' => 'Urlaub',
+        'krankheit' => 'Krankheit',
+        'sonstiges' => 'Sonstiges',
+        default => $type,
+    };
+}
+
+/** Ob $userId am Kalendertag $date (YYYY-MM-DD) eine eingetragene Abwesenheit hat. */
+function isUserAbsentOn(int $userId, string $date): bool
+{
+    $stmt = db()->prepare('SELECT 1 FROM absences WHERE user_id = :u AND :d BETWEEN start_date AND end_date LIMIT 1');
+    $stmt->execute(['u' => $userId, 'd' => $date]);
+    return (bool)$stmt->fetchColumn();
+}
+
+/**
+ * Alle Abwesenheiten, die sich mit [$start, $end] überschneiden, gruppiert nach user_id -
+ * ein Abruf für eine ganze Planungswoche statt einer Einzelabfrage pro Zelle/Tag
+ * (admin/shifts.php, admin/calendar.php).
+ */
+function absencesOverlapping(string $start, string $end): array
+{
+    $stmt = db()->prepare(
+        'SELECT a.*, u.name AS user_name FROM absences a JOIN users u ON u.id = a.user_id
+         WHERE a.start_date <= :end AND a.end_date >= :start ORDER BY a.start_date'
+    );
+    $stmt->execute(['start' => $start, 'end' => $end]);
+    $byUser = [];
+    foreach ($stmt as $row) {
+        $byUser[(int)$row['user_id']][] = $row;
+    }
+    return $byUser;
+}

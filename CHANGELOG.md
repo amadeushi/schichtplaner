@@ -6,6 +6,25 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.14.0] - 2026-09-17
+
+### Hinzugefügt
+- Abwesenheiten (Urlaub/Krankheit/Sonstiges): Mitarbeiter tragen eigene
+  Abwesenheiten unter "Mehr &rsaquo; Abwesenheiten" ein, der Admin kann das
+  für jeden unter "Mehr &rsaquo; Abwesenheiten" (Admin-Ansicht) ebenfalls.
+  Kein Freigabe-Workflow — direkt wirksam.
+- Sichtbar für den Planenden: im Schichtplan erscheint eine "Abwesend: …"-
+  Zeile je betroffenem Tag, bereits zugewiesene, aber abwesende Personen
+  bekommen einen Hinweis neben ihrem Namen, und das "+ zuweisen"-Dropdown
+  markiert abwesende Mitarbeiter. In der Kalenderansicht wird die
+  betroffene Tages-Zelle grau mit Art-Etikett ("Urlaub"/…) markiert;
+  bestehende Schicht-Zuweisungen bleiben sichtbar, damit ein Konflikt
+  sofort auffällt. Die Markierung ist rein informativ — der Admin kann
+  weiterhin bewusst eine Ausnahme zuweisen.
+- Während der eingetragenen Abwesenheit verschickt das System keine
+  persönlichen E-Mails über Planänderungen (Sammel-Mail bei
+  Veröffentlichung, Bewerbung entschieden, Zuweisung entfernt).
+
 ## [1.13.0] - 2026-09-17
 
 ### Geändert

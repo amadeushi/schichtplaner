@@ -8,6 +8,7 @@ if ($user['role'] === 'admin') {
     $links[] = ['href' => '/admin/applications.php', 'label' => 'Bewerbungen', 'desc' => 'Wochenübergreifende Übersicht'];
     $links[] = ['href' => '/admin/users.php', 'label' => 'Mitarbeiter', 'desc' => 'Konten, Zeiterfassung freischalten'];
     $links[] = ['href' => '/admin/time_tracking.php', 'label' => 'Arbeitszeiten', 'desc' => 'Monatsübersicht aller Mitarbeiter'];
+    $links[] = ['href' => '/admin/absences.php', 'label' => 'Abwesenheiten', 'desc' => 'Urlaub/Krankheit aller Mitarbeiter'];
     $links[] = ['href' => '/admin/settings.php', 'label' => 'Einstellungen', 'desc' => 'Name, Webhook, Protokoll'];
     if (!empty($user['time_tracking_enabled'])) {
         $links[] = ['href' => '/time_tracking.php', 'label' => 'Meine Zeiterfassung', 'desc' => 'Ein-/Ausstempeln'];
@@ -15,6 +16,7 @@ if ($user['role'] === 'admin') {
 } else {
     $links[] = ['href' => '/my_week.php', 'label' => 'Mein Plan', 'desc' => 'Wochenübersicht'];
     $links[] = ['href' => '/my_applications.php', 'label' => 'Meine Bewerbungen', 'desc' => 'Verlauf aller Bewerbungen'];
+    $links[] = ['href' => '/absences.php', 'label' => 'Abwesenheiten', 'desc' => 'Urlaub oder Krankheit eintragen'];
     if (!empty($user['time_tracking_enabled'])) {
         $links[] = ['href' => '/time_tracking.php', 'label' => 'Zeiterfassung', 'desc' => 'Ein-/Ausstempeln'];
     }

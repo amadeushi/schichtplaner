@@ -11,6 +11,11 @@ declare(strict_types=1);
  * Admin unter Einstellungen > E-Mail-Vorlagen mit Platzhaltern wie
  * {{name}} überschreibbar (Tabelle email_templates, siehe renderTemplate()).
  * Eine leere/fehlende Zeile in email_templates bedeutet: Standard verwenden.
+ *
+ * Persönliche Plan-Benachrichtigungen (applicationDecided, assignmentRemoved,
+ * scheduleChanged) prüfen zusätzlich isUserAbsentOn() - wer heute laut eingetragener
+ * Abwesenheit (siehe absences.php) nicht verfügbar ist, bekommt währenddessen keine
+ * E-Mails über Planänderungen. Webhooks sind davon unberührt (kein persönlicher Kanal).
  */
 final class Notifier
 {
@@ -99,7 +104,7 @@ final class Notifier
             'status_label' => $label,
         ]);
 
-        if ($applicant['notify_email']) {
+        if ($applicant['notify_email'] && !isUserAbsentOn((int)$applicant['id'], date('Y-m-d'))) {
             $this->mailer->send($applicant['email'], $applicant['name'], $subject, $body);
         }
 
@@ -156,7 +161,7 @@ final class Notifier
             'shift_time' => "{$shift['start_time']}-{$shift['end_time']}",
         ]);
 
-        if ($employee['notify_email']) {
+        if ($employee['notify_email'] && !isUserAbsentOn((int)$employee['id'], date('Y-m-d'))) {
             $this->mailer->send($employee['email'], $employee['name'], $subject, $body);
         }
 
@@ -173,7 +178,7 @@ final class Notifier
      */
     public function scheduleChanged(array $user): bool
     {
-        if (empty($user['notify_email'])) {
+        if (empty($user['notify_email']) || isUserAbsentOn((int)$user['id'], date('Y-m-d'))) {
             return false;
         }
         $appName = setting('app_name', 'Schichtplaner');
