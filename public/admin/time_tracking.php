@@ -57,7 +57,10 @@ require __DIR__ . '/../partials/header.php';
 </div>
 
 <div class="card">
-<h2>Monatsübersicht</h2>
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+  <h2 style="margin:0;">Monatsübersicht</h2>
+  <a class="btn secondary small" href="/admin/export_hours.php?month=<?= e($monthKey) ?>">Alle exportieren (CSV)</a>
+</div>
 <?php if (!$summary): ?>
   <p class="muted">Für keinen Mitarbeiter ist die Zeiterfassung freigeschaltet. Das lässt sich in der Mitarbeiterverwaltung ändern.</p>
 <?php else: ?>

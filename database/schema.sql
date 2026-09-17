@@ -86,6 +86,15 @@ CREATE TABLE IF NOT EXISTS notification_log (
     created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Admin-Überschreibung von Betreff/Text einzelner Mails (siehe Notifier::TEMPLATES für die
+-- Standardwerte und verfügbaren Platzhalter). Leere/fehlende Zeile = Standard verwenden.
+CREATE TABLE IF NOT EXISTS email_templates (
+    template_key TEXT PRIMARY KEY,
+    subject      TEXT,
+    body         TEXT,
+    updated_at   TEXT
+);
+
 CREATE INDEX IF NOT EXISTS idx_shifts_date ON shifts(shift_date);
 CREATE INDEX IF NOT EXISTS idx_applications_shift ON shift_applications(shift_id);
 CREATE INDEX IF NOT EXISTS idx_applications_user ON shift_applications(user_id);
@@ -99,3 +108,4 @@ INSERT OR IGNORE INTO settings (key, value) VALUES ('webhook_url', '');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('webhook_enabled', '0');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('email_enabled', '1');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('app_name', 'Schichtplaner');
+INSERT OR IGNORE INTO settings (key, value) VALUES ('notification_log_max_entries', '1000');

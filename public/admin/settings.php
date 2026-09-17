@@ -27,9 +27,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash($ok ? 'success' : 'error', $ok ? 'Test-Webhook wurde gesendet.' : 'Test-Webhook fehlgeschlagen. Bitte URL und Erreichbarkeit prüfen (siehe Log unten).');
         redirect('/admin/settings.php');
     }
+
+    if ($action === 'save_email_template') {
+        $key = (string)($_POST['template_key'] ?? '');
+        if (!array_key_exists($key, Notifier::TEMPLATES)) {
+            flash('error', 'Unbekannte Vorlage.');
+            redirect('/admin/settings.php');
+        }
+        $subject = trim((string)($_POST['subject'] ?? ''));
+        $body = trim((string)($_POST['body'] ?? ''));
+        db()->prepare(
+            "INSERT INTO email_templates (template_key, subject, body, updated_at) VALUES (:k, :s, :b, datetime('now'))
+             ON CONFLICT(template_key) DO UPDATE SET subject = excluded.subject, body = excluded.body, updated_at = excluded.updated_at"
+        )->execute(['k' => $key, 's' => $subject, 'b' => $body]);
+        flash('success', 'Vorlage "' . Notifier::TEMPLATES[$key]['label'] . '" gespeichert.');
+        redirect('/admin/settings.php');
+    }
+
+    if ($action === 'reset_email_template') {
+        $key = (string)($_POST['template_key'] ?? '');
+        db()->prepare('DELETE FROM email_templates WHERE template_key = :k')->execute(['k' => $key]);
+        flash('success', 'Vorlage auf Standard zurückgesetzt.');
+        redirect('/admin/settings.php');
+    }
+
+    if ($action === 'save_log_max') {
+        $max = max(10, (int)($_POST['log_max_entries'] ?? 1000));
+        setSetting('notification_log_max_entries', (string)$max);
+        flash('success', "Maximale Protokolllänge auf $max Einträge gesetzt.");
+        redirect('/admin/settings.php');
+    }
+
+    if ($action === 'cleanup_log') {
+        $max = (int)setting('notification_log_max_entries', '1000');
+        $stmt = db()->prepare(
+            'DELETE FROM notification_log WHERE id NOT IN (SELECT id FROM notification_log ORDER BY id DESC LIMIT :max)'
+        );
+        $stmt->bindValue(':max', $max, PDO::PARAM_INT);
+        $stmt->execute();
+        $deleted = $stmt->rowCount();
+        flash('success', $deleted > 0 ? "$deleted alte Einträge gelöscht." : 'Keine alten Einträge zum Löschen gefunden.');
+        redirect('/admin/settings.php');
+    }
 }
 
 $logs = db()->query('SELECT * FROM notification_log ORDER BY id DESC LIMIT 25')->fetchAll();
+$totalLogCount = (int)db()->query('SELECT COUNT(*) FROM notification_log')->fetchColumn();
+$logMaxEntries = (int)setting('notification_log_max_entries', '1000');
+$overLimitCount = max(0, $totalLogCount - $logMaxEntries);
+
+$templateOverrides = [];
+foreach (db()->query('SELECT * FROM email_templates') as $row) {
+    $templateOverrides[$row['template_key']] = $row;
+}
 
 require __DIR__ . '/../partials/header.php';
 ?>
@@ -87,11 +137,63 @@ require __DIR__ . '/../partials/header.php';
 </div>
 
 <div class="card">
+  <h2>E-Mail-Vorlagen</h2>
+  <p class="muted">Betreff und Text jeder System-Mail lassen sich hier anpassen. Platzhalter wie <code>{{name}}</code> werden beim Versand automatisch durch den passenden Wert ersetzt. Änderungen gelten sofort für neu verschickte Mails.</p>
+  <?php foreach (Notifier::TEMPLATES as $key => $tpl): ?>
+    <?php $override = $templateOverrides[$key] ?? null; ?>
+    <details class="tpl-editor">
+      <summary>
+        <?= e($tpl['label']) ?>
+        <?php if ($override): ?><span class="badge confirmed">Angepasst</span><?php endif; ?>
+      </summary>
+      <form method="post">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="save_email_template">
+        <input type="hidden" name="template_key" value="<?= e($key) ?>">
+        <label for="tpl-subject-<?= e($key) ?>">Betreff</label>
+        <input type="text" id="tpl-subject-<?= e($key) ?>" name="subject" value="<?= e($override['subject'] ?? $tpl['subject']) ?>">
+        <label for="tpl-body-<?= e($key) ?>">Text</label>
+        <textarea id="tpl-body-<?= e($key) ?>" name="body" rows="6"><?= e($override['body'] ?? $tpl['body']) ?></textarea>
+        <p class="muted">Platzhalter:
+          <?php foreach ($tpl['placeholders'] as $p): ?><code>{{<?= e($p) ?>}}</code> <?php endforeach; ?>
+        </p>
+        <div class="table-actions">
+          <button type="submit" class="btn">Speichern</button>
+          <?php if ($override): ?>
+          <button type="submit" name="action" value="reset_email_template" formnovalidate class="btn secondary">Auf Standard zurücksetzen</button>
+          <?php endif; ?>
+        </div>
+      </form>
+    </details>
+  <?php endforeach; ?>
+</div>
+
+<div class="card">
   <h2>Letzte Benachrichtigungen (Protokoll)</h2>
+  <p class="muted">Zeigt die letzten 25 von insgesamt <strong><?= $totalLogCount ?></strong> Einträgen.</p>
+
+  <form method="post" style="display:flex;align-items:flex-end;gap:0.75rem;flex-wrap:wrap;">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="save_log_max">
+    <div>
+      <label for="log_max_entries">Maximale Protokolllänge (Einträge)</label>
+      <input type="number" id="log_max_entries" name="log_max_entries" min="10" step="10" value="<?= $logMaxEntries ?>" style="width:8rem;">
+    </div>
+    <button type="submit" class="btn secondary" style="margin-top:0.85rem;">Speichern</button>
+  </form>
+
+  <form method="post" style="margin-top:0.75rem;" onsubmit="return confirm('<?= $overLimitCount ?> älteste Einträge jetzt endgültig löschen?');">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="cleanup_log">
+    <button type="submit" class="btn danger" <?= $overLimitCount === 0 ? 'disabled' : '' ?>>
+      Alte Einträge löschen<?= $overLimitCount > 0 ? " ($overLimitCount über dem Limit)" : '' ?>
+    </button>
+  </form>
+
   <?php if (!$logs): ?>
-    <p class="muted">Noch keine Benachrichtigungen gesendet.</p>
+    <p class="muted" style="margin-top:1rem;">Noch keine Benachrichtigungen gesendet.</p>
   <?php else: ?>
-  <table>
+  <table style="margin-top:1rem;">
     <thead><tr><th>Zeit</th><th>Ereignis</th><th>Kanal</th><th>Empfänger</th><th>Erfolg</th></tr></thead>
     <tbody>
     <?php foreach ($logs as $l): ?>

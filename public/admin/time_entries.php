@@ -111,7 +111,10 @@ require __DIR__ . '/../partials/header.php';
 
 <div class="card">
   <p class="muted">Gesamtstunden diesen Monat: <strong><?= e(formatDurationHm($totalSeconds)) ?></strong></p>
-  <a class="btn secondary small" href="/admin/time_tracking.php">&lsaquo; Zurück zur Übersicht</a>
+  <div class="table-actions">
+    <a class="btn secondary small" href="/admin/time_tracking.php">&lsaquo; Zurück zur Übersicht</a>
+    <a class="btn secondary small" href="/admin/export_hours.php?month=<?= e($monthKey) ?>&user_id=<?= $employeeId ?>">Exportieren (CSV)</a>
+  </div>
 </div>
 
 <?php if ($editEntry): ?>

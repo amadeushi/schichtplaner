@@ -137,6 +137,16 @@ function navActive(string $path, array $matches): bool
      "Deaktivieren"): umbricht kontrolliert statt die Spalte/Tabelle in die Breite zu zwingen. */
   .table-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
 
+  /* E-Mail-Vorlagen-Editor: natives <details>/<summary> statt JS-Akkordeon - liegt genau auf
+     der "kein JS-Framework, kein Icon-System"-Linie des Projekts. Der Pfeil ist der Browser-
+     eigene Marker, kein gezeichnetes Icon. */
+  .tpl-editor { border: 1px solid var(--ink-line); border-radius: 3px; padding: 0.7rem 0.9rem; margin-bottom: 0.6rem; }
+  .tpl-editor + .tpl-editor { margin-top: 0.6rem; }
+  .tpl-editor summary { cursor: pointer; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+  .tpl-editor summary .badge { padding: 0.1rem 0.4rem; }
+  .tpl-editor form { margin-top: 0.85rem; }
+  .tpl-editor textarea { font-family: var(--font-mono); font-size: 0.82rem; }
+
   input, select, textarea {
     width: 100%; padding: 0.55rem 0.6rem; border: 1.5px solid var(--ink-line-strong);
     border-radius: 3px; font-size: 0.95rem; font-family: inherit; background: var(--paper); color: var(--ink);

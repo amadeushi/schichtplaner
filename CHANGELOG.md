@@ -6,6 +6,28 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.8.0] - 2026-09-17
+
+### Hinzugefügt
+- E-Mail-Vorlagen: Betreff und Text jeder System-Mail (Konto angelegt,
+  Passwort zurückgesetzt, neue Bewerbung, Bewerbung entschieden, Zuweisung
+  entfernt, Sammel-Mail bei Veröffentlichung) sind unter Einstellungen mit
+  Platzhaltern wie `{{name}}` anpassbar. Eine leere/zurückgesetzte Vorlage
+  verwendet automatisch den eingebauten Standardtext.
+- Protokoll-Verwaltung: konfigurierbare maximale Protokolllänge (Anzahl
+  Einträge, Standard 1000) unter Einstellungen, mit Anzeige der
+  Gesamtzahl und einem Löschen-Button für die ältesten Einträge über dem
+  Limit.
+- Arbeitszeiten-Export: CSV-Export (Excel-kompatibel, Semikolon-getrennt)
+  für einen einzelnen Mitarbeiter oder alle auf einmal, pro Monat, zur
+  Dokumentation gegenüber Steuerberater/Lohnverrechnung.
+- `bin/migrate_admin_tools.php` für bereits laufende Installationen.
+
+### Hinweis
+- Einträge in der Stundenübersicht eines Mitarbeiters bearbeiten oder
+  löschen kann der Admin bereits seit Version 1.5.0
+  (`admin/time_entries.php`) — keine neue Funktion, nur zur Klarstellung.
+
 ## [1.7.3] - 2026-09-17
 
 ### Behoben
