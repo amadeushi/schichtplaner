@@ -19,16 +19,25 @@ final class SmsClient
 {
     private const MAX_ATTEMPTS = 8;
     private const MAX_AGE_SECONDS = 21600; // 6 Stunden - danach ist eine Plan-SMS wertlos
+    private const COALESCE_SECONDS = 900; // höchstens eine Benachrichtigungs-SMS je Person in 15 Minuten
     private const BACKOFF_SECONDS = [60, 120, 300, 900, 1800, 3600];
 
     private static array $cfg = [];
     private static ?array $effective = null;
     private static bool $gatewayUnreachable = false;
+    private static string $portalUrl = '';
 
-    public static function configure(array $cfg): void
+    public static function configure(array $cfg, string $portalUrl = ''): void
     {
         self::$cfg = $cfg;
         self::$effective = null;
+        self::$portalUrl = rtrim($portalUrl, '/');
+    }
+
+    /** Adresse des Portals (app_url) für den Link in der SMS. */
+    public static function portalUrl(): string
+    {
+        return self::$portalUrl;
     }
 
     /** Nach dem Speichern der Einstellungen: Überlagerung beim nächsten Zugriff neu lesen. */
@@ -119,16 +128,46 @@ final class SmsClient
     }
 
     /** Legt die SMS in die Outbox und versucht sie sofort einmal. Gibt Status/Fehler zurück. */
-    public static function enqueue(?int $userId, string $phone, string $eventType, string $text): array
+    public static function enqueue(?int $userId, string $phone, string $eventType, string $text, int $delaySeconds = 0): array
     {
         $key = 'schichtplaner-' . bin2hex(random_bytes(12));
         db()->prepare(
-            'INSERT INTO sms_outbox (user_id, phone, event_type, text, idempotency_key) VALUES (:u, :p, :e, :t, :k)'
-        )->execute(['u' => $userId, 'p' => $phone, 'e' => $eventType, 't' => $text, 'k' => $key]);
+            "INSERT INTO sms_outbox (user_id, phone, event_type, text, idempotency_key, next_attempt_at)
+             VALUES (:u, :p, :e, :t, :k, datetime('now', :d))"
+        )->execute(['u' => $userId, 'p' => $phone, 'e' => $eventType, 't' => $text, 'k' => $key, 'd' => '+' . max(0, $delaySeconds) . ' seconds']);
         $id = (int)db()->lastInsertId();
 
-        self::attempt($id);
+        if ($delaySeconds <= 0) {
+            self::attempt($id);
+        }
         return self::status($id);
+    }
+
+    /**
+     * Benachrichtigungs-SMS mit höchstens einer Nachricht je Person in COALESCE_SECONDS. Die SMS ist
+     * immer derselbe Hinweis auf eine Änderung, mehrere kurz hintereinander wären reines Rauschen.
+     * Erste Änderung: sofort. Weitere im Zeitfenster: zusammen als eine SMS zum Fensterende (der Cron
+     * sendet sie). Ist für die Person schon eine SMS unterwegs, geht keine zweite raus - sie deckt
+     * die neue Änderung mit ab. Eine Änderung geht so nie verloren.
+     */
+    public static function enqueueCoalesced(int $userId, string $phone, string $eventType, string $text): array
+    {
+        $stmt = db()->prepare("SELECT 1 FROM sms_outbox WHERE user_id = :u AND status = 'queued' AND event_type != 'test' LIMIT 1");
+        $stmt->execute(['u' => $userId]);
+        if ($stmt->fetchColumn()) {
+            return ['status' => 'merged'];
+        }
+
+        $stmt = db()->prepare(
+            "SELECT CAST(strftime('%s','now') AS INTEGER) - CAST(strftime('%s', MAX(updated_at)) AS INTEGER)
+             FROM sms_outbox WHERE user_id = :u AND status = 'accepted' AND event_type != 'test'"
+        );
+        $stmt->execute(['u' => $userId]);
+        $sinceLast = $stmt->fetchColumn();
+        if ($sinceLast !== false && $sinceLast !== null && (int)$sinceLast < self::COALESCE_SECONDS) {
+            return self::enqueue($userId, $phone, $eventType, $text, self::COALESCE_SECONDS - (int)$sinceLast);
+        }
+        return self::enqueue($userId, $phone, $eventType, $text);
     }
 
     public static function status(int $id): array
@@ -203,7 +242,7 @@ final class SmsClient
             }
         }
 
-        // Nachrichtentexte enthalten Schichttitel - nach 30 Tagen nicht mehr aufbewahren.
+        // Erledigte Einträge (mit Telefonnummer) nach 30 Tagen nicht mehr aufbewahren.
         db()->exec("DELETE FROM sms_outbox WHERE status != 'queued' AND created_at < datetime('now', '-30 days')");
 
         return count($ids);

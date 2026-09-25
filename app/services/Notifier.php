@@ -17,7 +17,8 @@ declare(strict_types=1);
  * Abwesenheit (siehe absences.php) nicht verfügbar ist, bekommt währenddessen keine
  * E-Mails über Planänderungen. Webhooks sind davon unberührt (kein persönlicher Kanal).
  *
- * Dieselben drei Anlässe gehen zusätzlich als kurze SMS über SmsClient (höchstens 70 Zeichen),
+ * Dieselben drei Anlässe gehen zusätzlich als SMS über SmsClient - immer derselbe neutrale Hinweis
+ * mit Portal-Link (smsChangeNotice), nie mit Schichten oder Bewerbungsergebnissen,
  * unter denselben Bedingungen plus: Gateway konfiguriert, Mobilnummer vorhanden, notify_sms gesetzt.
  * Passwörter (Konto angelegt/zurückgesetzt) werden bewusst nie per SMS verschickt.
  */
@@ -92,7 +93,7 @@ final class Notifier
             return;
         }
         try {
-            SmsClient::enqueue((int)$user['id'], (string)$user['phone'], $eventType, $text);
+            SmsClient::enqueueCoalesced((int)$user['id'], (string)$user['phone'], $eventType, $text);
             $this->smsQueued++;
         } catch (Throwable) {
             // Ein SMS-Problem darf nie eine Planänderung oder das Veröffentlichen blockieren.
@@ -141,11 +142,7 @@ final class Notifier
             $this->mailer->send($applicant['email'], $applicant['name'], $subject, $body);
         }
 
-        $this->sms($applicant, 'application_decided', fitSmsText(
-            'Bewerbung ' . mb_strtolower($label) . ': ',
-            (string)$shift['title'],
-            ' am ' . date('d.m.', strtotime($shift['shift_date']))
-        ));
+        $this->sms($applicant, 'application_decided', smsChangeNotice(SmsClient::portalUrl()));
 
         $this->webhook->send('application.decided', [
             'shift' => $this->shiftPayload($shift),
@@ -204,11 +201,7 @@ final class Notifier
             $this->mailer->send($employee['email'], $employee['name'], $subject, $body);
         }
 
-        $this->sms($employee, 'assignment_removed', fitSmsText(
-            'Zuweisung entfernt: ',
-            (string)$shift['title'],
-            ' am ' . date('d.m.', strtotime($shift['shift_date']))
-        ));
+        $this->sms($employee, 'assignment_removed', smsChangeNotice(SmsClient::portalUrl()));
 
         $this->webhook->send('application.removed', [
             'shift' => $this->shiftPayload($shift),
@@ -225,7 +218,7 @@ final class Notifier
     {
         // Wie die Sammel-Mail bewusst ohne Schichtdetails. Unabhängig vom E-Mail-Schalter -
         // wer nur SMS möchte, bekommt trotzdem Bescheid.
-        $this->sms($user, 'schedule_changed', 'Schichtplan: Änderungen in deinem Plan. Bitte in der App nachsehen.');
+        $this->sms($user, 'schedule_changed', smsChangeNotice(SmsClient::portalUrl()));
 
         if (empty($user['notify_email']) || isUserAbsentOn((int)$user['id'], date('Y-m-d'))) {
             return false;

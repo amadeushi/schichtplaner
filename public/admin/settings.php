@@ -200,7 +200,7 @@ require __DIR__ . '/../partials/header.php';
 <div class="card">
   <h2>SMS-Versand</h2>
   <p class="muted">
-    SMS gehen unter denselben Bedingungen wie E-Mails an Mitarbeiter mit Mobilnummer (Profil bzw. Mitarbeiter-Verwaltung), nicht während einer Abwesenheit, und bewusst kurz (höchstens 70 Zeichen, ohne Schichtdetails bei der Sammelmeldung).
+    SMS gehen unter denselben Bedingungen wie E-Mails an Mitarbeiter mit Mobilnummer (Profil bzw. Mitarbeiter-Verwaltung), nicht während einer Abwesenheit, und ohne Schichtdetails: die SMS weist nur auf eine Änderung hin und enthält den Link ins Portal. Höchstens eine SMS je Person in 15 Minuten, weitere Änderungen werden gebündelt.
     Aktueller Status: <strong><?= $smsOn ? 'aktiviert' : (SmsClient::enabledFlag() ? 'eingeschaltet, aber ohne Schlüssel' : 'ausgeschaltet') ?></strong>.
   </p>
   <form method="post" autocomplete="off">

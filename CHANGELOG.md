@@ -6,6 +6,22 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.17.0] - 2026-09-25
+
+### Geändert
+- SMS: alle Benachrichtigungs-SMS (Planänderung, Bewerbung entschieden,
+  Zuweisung entfernt) enthalten jetzt nur noch den Hinweis auf eine Änderung im
+  Plan und den Link ins Portal (`app_url`), zum Beispiel "Schichtplaner: Es gibt
+  eine Änderung in deinem Plan. Details im Portal: https://schichtplaner.amds.at".
+  Schichttitel, Datum und Bewerbungsergebnis stehen nicht mehr in der SMS,
+  sondern erst nach dem Login. Der Text nutzt nur GSM-Zeichen (bis 160 Zeichen
+  je SMS statt bisher höchstens 70).
+- SMS: je Person geht höchstens eine Benachrichtigungs-SMS in 15 Minuten raus.
+  Die erste Änderung wird sofort gesendet, weitere im Zeitfenster werden zu einer
+  SMS zum Fensterende gebündelt (der Cron sendet sie). Keine Änderung geht
+  verloren, und wer mehrere Bewerbungen hintereinander entschieden bekommt,
+  erhält nicht mehrere gleichlautende SMS. Die Test-SMS ist ausgenommen.
+
 ## [1.16.2] - 2026-09-25
 
 ### Behoben

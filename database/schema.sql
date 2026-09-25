@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS sms_outbox (
     user_id          INTEGER REFERENCES users(id) ON DELETE SET NULL,
     phone            TEXT NOT NULL,              -- E.164, Momentaufnahme zum Zeitpunkt des Ereignisses
     event_type       TEXT NOT NULL,
-    text             TEXT NOT NULL,              -- 1-70 Zeichen, nur BMP (Vorgabe des Gateways)
+    text             TEXT NOT NULL,              -- Benachrichtigungstext (GSM-Zeichen, bis 160 Zeichen)
     idempotency_key  TEXT NOT NULL UNIQUE,
     status           TEXT NOT NULL CHECK (status IN ('queued', 'accepted', 'failed')) DEFAULT 'queued',
     attempts         INTEGER NOT NULL DEFAULT 0,

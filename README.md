@@ -136,8 +136,12 @@ unterstuetzt STARTTLS/SSL + AUTH LOGIN) — kein Composer/PHPMailer noetig.
 SMS gehen an dieselben Anlässe und unter denselben Bedingungen wie die E-Mails an Mitarbeiter
 (Sammelmeldung beim Veröffentlichen, Bewerbung entschieden, Zuweisung entfernt; nicht während
 einer eingetragenen Abwesenheit) — zusätzlich nur mit hinterlegter Mobilnummer und gesetztem
-"SMS erhalten" im Profil. Passwörter werden nie per SMS verschickt. Texte sind höchstens 70 Zeichen
-lang (Vorgabe des Gateways).
+"SMS erhalten" im Profil. Passwörter werden nie per SMS verschickt. Die SMS nennt keine Schichten oder
+Bewerbungsergebnisse, sondern weist nur auf eine Änderung hin und enthält den Link ins Portal
+(`app_url`); Details stehen erst nach dem Login. Der Text besteht nur aus GSM-Zeichen (bis 160
+Zeichen je SMS). Je Person geht höchstens eine SMS in 15 Minuten raus: die erste Änderung sofort,
+weitere im Zeitfenster gebündelt als eine SMS zum Fensterende (sendet der Cron), sodass keine
+Änderung untergeht und niemand mehrere gleichlautende SMS bekommt.
 
 1. Eigenen Schlüssel für dieses Projekt auf dem SMS-Pi erzeugen (wird einmal angezeigt):
    `sudo sms-project create-project schichtplaner 100`

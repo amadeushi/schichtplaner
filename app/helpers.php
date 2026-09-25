@@ -312,20 +312,12 @@ function maskPhone(string $phone): string
 }
 
 /**
- * Setzt eine SMS aus festem Anfang, variablem Teil (z.B. Schichttitel) und festem Ende zusammen
- * und hält sie in der Vorgabe des Gateways: höchstens 70 Zeichen, nur Unicode-BMP (keine Emojis),
- * keine Steuerzeichen. Reicht der Platz nicht, wird nur der variable Teil mit "…" gekürzt.
+ * Text jeder Benachrichtigungs-SMS: nur der Hinweis auf eine Änderung und der Link ins Portal,
+ * bewusst ohne Schichten, Titel oder Bewerbungsergebnisse (die stehen erst nach dem Login da).
+ * Nur Zeichen aus dem GSM-Zeichensatz (Umlaute erlaubt), damit bis zu 160 Zeichen gelten.
  */
-function fitSmsText(string $prefix, string $variable, string $suffix = ''): string
+function smsChangeNotice(string $portalUrl): string
 {
-    $max = 70;
-    $clean = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/[\x{10000}-\x{10FFFF}\p{Cc}]/u', ' ', $variable)));
-    $room = $max - mb_strlen($prefix) - mb_strlen($suffix);
-    if ($room < 1) {
-        return mb_substr($prefix . $suffix, 0, $max);
-    }
-    if (mb_strlen($clean) > $room) {
-        $clean = mb_substr($clean, 0, $room - 1) . '…';
-    }
-    return mb_substr($prefix . $clean . $suffix, 0, $max);
+    $text = 'Schichtplaner: Es gibt eine Änderung in deinem Plan.';
+    return $portalUrl === '' ? $text : $text . ' Details im Portal: ' . $portalUrl;
 }
