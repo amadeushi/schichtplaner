@@ -313,7 +313,7 @@ require __DIR__ . '/../partials/header.php';
     <tbody>
     <?php foreach ($logs as $l): ?>
       <tr>
-        <td data-label="Zeit"><?= e($l['created_at']) ?></td>
+        <td data-label="Zeit"><?= e(formatUtcLocal($l['created_at'])) ?></td>
         <td data-label="Ereignis"><?= e($l['event_type']) ?></td>
         <td data-label="Kanal"><?= e($l['channel']) ?></td>
         <td data-label="Empfänger"><?= e($l['recipient'] ?? '-') ?></td>

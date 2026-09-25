@@ -6,6 +6,20 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.16.2] - 2026-09-25
+
+### Behoben
+- Mobilnummer: aus Kontakte oder Nachrichten kopierte Nummern (z.B.
+  `+49 15510 442489`) wurden als ungültig abgelehnt, weil sie unsichtbare
+  Formatzeichen (U+202A/U+202C) oder geschützte Leerzeichen enthielten. Diese
+  werden jetzt vor der Prüfung entfernt. Nummern aus Deutschland (+49) und
+  anderen Ländern waren nie gesperrt.
+- Mobilnummer: deutsche Festnetznummern (`+49`) werden jetzt wie österreichische
+  abgelehnt; zugelassen sind nur Mobilfunkbereiche (015x, 016x, 017x).
+- Benachrichtigungsprotokoll (Einstellungen): die Zeit-Spalte zeigte den
+  UTC-Zeitstempel der Datenbank und ging im Sommer zwei Stunden nach. Sie wird
+  jetzt in Ortszeit angezeigt (`formatUtcLocal()`).
+
 ## [1.16.1] - 2026-09-25
 
 ### Behoben

@@ -84,6 +84,21 @@ function formatDurationHm(int $seconds): string
     return sprintf('%d:%02d Std.', $hours, $minutes);
 }
 
+/**
+ * Zeigt einen von SQLite gespeicherten Zeitstempel (datetime('now') ist immer UTC) in der
+ * Ortszeit der App (config 'timezone') an. Ohne Umrechnung stand im Benachrichtigungsprotokoll
+ * die Uhrzeit im Sommer um zwei Stunden zurück. Zeiten, die PHP selbst mit date() schreibt
+ * (z.B. time_entries), sind bereits Ortszeit und werden NICHT hierüber geleitet.
+ */
+function formatUtcLocal(?string $utc): string
+{
+    if ($utc === null || $utc === '') {
+        return '';
+    }
+    $ts = strtotime($utc . ' UTC');
+    return $ts ? date('d.m.Y H:i:s', $ts) : $utc;
+}
+
 function monthNameDe(string $yearMonthDay): string
 {
     $months = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -254,7 +269,10 @@ function shiftTimeHtml(string $start, string $end, bool $compact = false): strin
  */
 function normalizePhone(string $input): ?string
 {
-    $s = preg_replace('/\(\s*0\s*\)/', '', trim($input));
+    // Aus Kontakte/Nachrichten kopierte Nummern tragen oft unsichtbare Formatzeichen
+    // (z.B. U+202A/U+202C) und geschützte Leerzeichen; beides würde sonst die Prüfung kippen.
+    $s = preg_replace('/[\p{Cf}\x{00A0}\x{2007}\x{202F}]/u', '', $input) ?? $input;
+    $s = preg_replace('/\(\s*0\s*\)/', '', trim($s));
     $s = preg_replace('/[\s\-\/.()]/', '', (string)$s);
     if ($s === '' || !preg_match('/^\+?\d+$/', $s)) {
         return null;
@@ -276,6 +294,9 @@ function normalizePhone(string $input): ?string
     }
     if (str_starts_with($s, '+43') && !preg_match('/^\+436\d{7,11}$/', $s)) {
         return null;
+    }
+    if (str_starts_with($s, '+49') && !preg_match('/^\+491[567]\d{8,9}$/', $s)) {
+        return null; // Deutschland: Mobilfunk liegt bei 015x, 016x, 017x - alles andere ist Festnetz o.ä.
     }
     return $s;
 }
