@@ -6,6 +6,16 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.17.1] - 2026-09-25
+
+### Geändert
+- SMS: die Ablehnung einer Bewerbung hat jetzt einen eigenen neutralen Text
+  ("Schichtplaner: Es gibt Neuigkeiten zu deiner Bewerbung. Details im Portal:
+  ..."), Änderungen beim Veröffentlichen behalten "Es gibt eine Änderung in
+  deinem Plan". Weiterhin ohne Schichtdetails oder Ergebnis. Überschneiden sich
+  beide Anlässe im 15-Minuten-Fenster, geht die eine gebündelte SMS mit dem
+  allgemeinen Plan-Text raus.
+
 ## [1.17.0] - 2026-09-25
 
 ### Geändert

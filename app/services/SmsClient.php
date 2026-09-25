@@ -150,11 +150,18 @@ final class SmsClient
      * sendet sie). Ist für die Person schon eine SMS unterwegs, geht keine zweite raus - sie deckt
      * die neue Änderung mit ab. Eine Änderung geht so nie verloren.
      */
-    public static function enqueueCoalesced(int $userId, string $phone, string $eventType, string $text): array
+    public static function enqueueCoalesced(int $userId, string $phone, string $eventType, string $text, ?string $mergedText = null): array
     {
-        $stmt = db()->prepare("SELECT 1 FROM sms_outbox WHERE user_id = :u AND status = 'queued' AND event_type != 'test' LIMIT 1");
+        $stmt = db()->prepare("SELECT id, text, attempts FROM sms_outbox WHERE user_id = :u AND status = 'queued' AND event_type != 'test' ORDER BY id LIMIT 1");
         $stmt->execute(['u' => $userId]);
-        if ($stmt->fetchColumn()) {
+        $pending = $stmt->fetch();
+        if ($pending) {
+            // Ein anderer Anlass als der wartende: stattdessen der allgemeine Text ($mergedText). Nur solange
+            // noch kein Sendeversuch lief - sonst bliebe der Idempotency-Key mit geändertem Inhalt zurück.
+            if ($mergedText !== null && $pending['text'] !== $text && $pending['text'] !== $mergedText && (int)$pending['attempts'] === 0) {
+                db()->prepare("UPDATE sms_outbox SET text = :t, event_type = 'schedule_changed', updated_at = datetime('now') WHERE id = :id")
+                    ->execute(['t' => $mergedText, 'id' => $pending['id']]);
+            }
             return ['status' => 'merged'];
         }
 

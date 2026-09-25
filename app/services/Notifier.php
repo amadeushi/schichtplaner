@@ -17,7 +17,7 @@ declare(strict_types=1);
  * Abwesenheit (siehe absences.php) nicht verfügbar ist, bekommt währenddessen keine
  * E-Mails über Planänderungen. Webhooks sind davon unberührt (kein persönlicher Kanal).
  *
- * Dieselben drei Anlässe gehen zusätzlich als SMS über SmsClient - immer derselbe neutrale Hinweis
+ * Dieselben drei Anlässe gehen zusätzlich als SMS über SmsClient - nur ein neutraler Hinweis
  * mit Portal-Link (smsChangeNotice), nie mit Schichten oder Bewerbungsergebnissen,
  * unter denselben Bedingungen plus: Gateway konfiguriert, Mobilnummer vorhanden, notify_sms gesetzt.
  * Passwörter (Konto angelegt/zurückgesetzt) werden bewusst nie per SMS verschickt.
@@ -93,7 +93,8 @@ final class Notifier
             return;
         }
         try {
-            SmsClient::enqueueCoalesced((int)$user['id'], (string)$user['phone'], $eventType, $text);
+            // Überschneiden sich mehrere Anlässe im Zeitfenster, geht der allgemeine Plan-Hinweis raus.
+            SmsClient::enqueueCoalesced((int)$user['id'], (string)$user['phone'], $eventType, $text, smsChangeNotice(SmsClient::portalUrl()));
             $this->smsQueued++;
         } catch (Throwable) {
             // Ein SMS-Problem darf nie eine Planänderung oder das Veröffentlichen blockieren.
@@ -142,7 +143,7 @@ final class Notifier
             $this->mailer->send($applicant['email'], $applicant['name'], $subject, $body);
         }
 
-        $this->sms($applicant, 'application_decided', smsChangeNotice(SmsClient::portalUrl()));
+        $this->sms($applicant, 'application_decided', smsChangeNotice(SmsClient::portalUrl(), 'application'));
 
         $this->webhook->send('application.decided', [
             'shift' => $this->shiftPayload($shift),
