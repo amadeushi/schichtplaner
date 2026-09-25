@@ -6,6 +6,17 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.16.1] - 2026-09-25
+
+### Behoben
+- SMS: wurde der API-Schlüssel nur in den Einstellungen hinterlegt (ohne
+  `sms`-Block in `app/config.php`), fehlte dem Code die Gateway-Adresse. SMS galt
+  dann trotz Schlüssel und Aktivierung als "nicht konfiguriert", und "Verbindung
+  prüfen" wurde nicht angeboten. Ohne Angabe gilt jetzt `https://sms.amds.at`.
+- "Verbindung prüfen" erscheint, sobald ein Schlüssel hinterlegt ist - auch bei
+  noch ausgeschaltetem SMS-Versand, damit sich der Schlüssel vor dem Einschalten
+  testen lässt. "Test-SMS" und die Zähler bleiben an die Aktivierung gebunden.
+
 ## [1.16.0] - 2026-09-25
 
 ### Hinzugefügt

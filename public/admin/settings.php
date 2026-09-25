@@ -56,8 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'sms_health') {
-        if (!SmsClient::enabled()) {
-            flash('error', 'SMS ist nicht konfiguriert (siehe app/config.php).');
+        if (SmsClient::keySource() === null) {
+            flash('error', 'Bitte zuerst den API-Schlüssel des SMS-Gateways eingeben.');
         } else {
             $health = SmsClient::health();
             flash($health['ok'] ? 'success' : 'error', $health['ok']
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'sms_test') {
         if (!SmsClient::enabled()) {
-            flash('error', 'SMS ist nicht konfiguriert (siehe app/config.php).');
+            flash('error', 'SMS ist nicht aktiviert (Schlüssel eingeben und "SMS-Versand aktivieren" ankreuzen).');
         } elseif (empty($user['phone'])) {
             flash('error', 'Bitte zuerst deine Mobilnummer im Profil eintragen.');
         } else {
@@ -232,17 +232,21 @@ require __DIR__ . '/../partials/header.php';
       in Warteschlange: <strong class="mono"><?= $smsStats['queued'] ?></strong> &middot;
       fehlgeschlagen (7 Tage): <strong class="mono"><?= $smsStats['failed_week'] ?></strong>
     </p>
+  <?php endif; ?>
+  <?php if ($smsKeySource !== null): ?>
     <div class="table-actions" style="margin-top:0.75rem;">
       <form method="post" class="inline">
         <?= csrfField() ?>
         <input type="hidden" name="action" value="sms_health">
         <button type="submit" class="btn secondary">Verbindung prüfen</button>
       </form>
+      <?php if ($smsOn): ?>
       <form method="post" class="inline" onsubmit="return confirm('Eine echte Test-SMS an deine Mobilnummer senden? Sie zählt gegen das Tageslimit des Gateways.');">
         <?= csrfField() ?>
         <input type="hidden" name="action" value="sms_test">
         <button type="submit" class="btn secondary">Test-SMS an mich senden</button>
       </form>
+      <?php endif; ?>
     </div>
   <?php endif; ?>
 </div>

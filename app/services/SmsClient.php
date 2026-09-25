@@ -104,7 +104,9 @@ final class SmsClient
     /** Nur HTTPS (der Schlüssel geht nie unverschlüsselt übers Netz) - außer für localhost-Tests. */
     private static function baseUrl(): string
     {
-        $url = rtrim(trim((string)(self::cfg()['base_url'] ?? '')), '/');
+        // Ohne sms-Block in config.php (der Schlüssel kommt jetzt aus den Einstellungen) gilt das
+        // Standard-Gateway - sonst blieb enabled() trotz Schlüssel und Aktivierung false.
+        $url = rtrim(trim((string)(self::cfg()['base_url'] ?? '')) ?: 'https://sms.amds.at', '/');
         $parts = parse_url($url);
         if (!$parts || empty($parts['host'])) {
             return '';
