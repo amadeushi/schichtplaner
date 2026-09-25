@@ -175,6 +175,10 @@ function navActive(string $path, array $matches): bool
   input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent-color: var(--stamp); }
   textarea { min-height: 5rem; }
   select.select-inline { width: auto; min-height: 2.25rem; padding: 0.4rem 0.5rem; font-size: 0.82rem; }
+  /* Kompaktes Eingabefeld für Tabellenzeilen (Mobilnummer in admin/users.php) - wie select-inline
+     kein Unterschreiten der 36px-Kante, nur schmaler als das Standardfeld. */
+  input.input-inline { width: 10.5rem; min-height: 2.25rem; padding: 0.4rem 0.5rem; font-size: 0.9rem; }
+  .inline-phone { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
   label { display: block; font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 0.3rem; margin-top: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 

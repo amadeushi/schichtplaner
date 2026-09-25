@@ -32,6 +32,8 @@ require_once __DIR__ . '/services/Mailer.php';
 require_once __DIR__ . '/services/Webhook.php';
 require_once __DIR__ . '/services/Notifier.php';
 require_once __DIR__ . '/services/IcsBuilder.php';
+require_once __DIR__ . '/services/SmsClient.php';
+SmsClient::configure($config['sms'] ?? []);
 
 $pdo = db($config['db_path']);
 

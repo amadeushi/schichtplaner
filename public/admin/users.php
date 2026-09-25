@@ -23,13 +23,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('/admin/users.php');
         }
 
+        $phone = null;
+        $rawPhone = trim((string)($_POST['phone'] ?? ''));
+        if ($rawPhone !== '') {
+            $phone = normalizePhone($rawPhone);
+            if ($phone === null) {
+                flash('error', 'Die Mobilnummer ist nicht gültig. Bitte z.B. "0664 1234567" oder "+43 664 1234567" eingeben.');
+                redirect('/admin/users.php');
+            }
+        }
+
         $tempPassword = generatePassword();
         try {
             db()->prepare(
-                'INSERT INTO users (name, email, password_hash, role, must_change_password) VALUES (:n, :e, :h, :r, 1)'
+                'INSERT INTO users (name, email, password_hash, role, must_change_password, phone) VALUES (:n, :e, :h, :r, 1, :p)'
             )->execute([
                 'n' => $name, 'e' => $email,
-                'h' => password_hash($tempPassword, PASSWORD_DEFAULT), 'r' => $role,
+                'h' => password_hash($tempPassword, PASSWORD_DEFAULT), 'r' => $role, 'p' => $phone,
             ]);
             $generatedPassword = ['email' => $email, 'password' => $tempPassword];
             $notifier = new Notifier($config['smtp']);
@@ -53,6 +63,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = db()->prepare('UPDATE users SET active = 1 - active WHERE id = :id');
         $stmt->execute(['id' => $id]);
         flash($stmt->rowCount() > 0 ? 'success' : 'error', $stmt->rowCount() > 0 ? 'Status aktualisiert.' : 'Mitarbeiter nicht gefunden.');
+        redirect('/admin/users.php');
+    }
+
+    if ($action === 'set_phone') {
+        $id = (int)($_POST['user_id'] ?? 0);
+        $rawPhone = trim((string)($_POST['phone'] ?? ''));
+        $phone = null;
+        if ($rawPhone !== '') {
+            $phone = normalizePhone($rawPhone);
+            if ($phone === null) {
+                flash('error', 'Die Mobilnummer ist nicht gültig. Bitte z.B. "0664 1234567" oder "+43 664 1234567" eingeben (Festnetznummern können keine SMS empfangen).');
+                redirect('/admin/users.php');
+            }
+        }
+        $stmt = db()->prepare('UPDATE users SET phone = :p WHERE id = :id');
+        $stmt->execute(['p' => $phone, 'id' => $id]);
+        flash($stmt->rowCount() > 0 ? 'success' : 'error', $stmt->rowCount() > 0 ? ($phone ? 'Mobilnummer gespeichert: ' . $phone : 'Mobilnummer entfernt.') : 'Mitarbeiter nicht gefunden.');
         redirect('/admin/users.php');
     }
 
@@ -95,6 +122,7 @@ $users = db()->query('SELECT * FROM users ORDER BY role, name')->fetchAll();
 // mobile-first 640px-Spalte blieb pro Spalte so wenig Platz, dass selbst kurze Namen und Badges
 // mitten im Wort umbrachen. Am Desktop ist mehr Platz da, also nutzen wir ihn.
 $mainWide = true;
+$smsOn = SmsClient::enabled();
 require __DIR__ . '/../partials/header.php';
 ?>
 <h1>Mitarbeiter verwalten</h1>
@@ -114,6 +142,10 @@ require __DIR__ . '/../partials/header.php';
         <input type="email" id="email" name="email" required>
       </div>
     </div>
+    <?php if ($smsOn): ?>
+    <label for="phone">Mobilnummer (optional, für SMS-Benachrichtigungen)</label>
+    <input type="tel" id="phone" name="phone" inputmode="tel" placeholder="z.B. 0664 1234567">
+    <?php endif; ?>
     <label for="role">Rolle</label>
     <select id="role" name="role">
       <option value="employee">Mitarbeiter</option>
@@ -132,7 +164,18 @@ require __DIR__ . '/../partials/header.php';
   <?php foreach ($users as $u): ?>
     <tr>
       <td data-label="Name"><?= e($u['name']) ?></td>
-      <td data-label="E-Mail"><?= e($u['email']) ?></td>
+      <td data-label="E-Mail">
+        <?= e($u['email']) ?>
+        <?php if ($smsOn): ?>
+        <form class="inline-phone" method="post" style="margin-top:0.4rem;">
+          <?= csrfField() ?>
+          <input type="hidden" name="action" value="set_phone">
+          <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
+          <input type="tel" name="phone" class="input-inline" value="<?= e((string)($u['phone'] ?? '')) ?>" inputmode="tel" placeholder="Mobil, z.B. 0664 …" aria-label="Mobilnummer von <?= e($u['name']) ?>">
+          <button type="submit" class="btn small secondary">Speichern</button>
+        </form>
+        <?php endif; ?>
+      </td>
       <td data-label="Rolle"><?= $u['role'] === 'admin' ? 'Administrator' : 'Mitarbeiter' ?></td>
       <td data-label="Status"><span class="badge <?= $u['active'] ? 'open' : 'closed' ?>"><?= $u['active'] ? 'Aktiv' : 'Deaktiviert' ?></span></td>
       <td data-label="Zeiterfassung">

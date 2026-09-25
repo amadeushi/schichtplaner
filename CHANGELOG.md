@@ -6,6 +6,38 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.16.0] - 2026-09-25
+
+### Hinzugefügt
+- SMS-Benachrichtigungen über das eigene SMS-Gateway (`https://sms.amds.at`):
+  dieselben Anlässe und Bedingungen wie bei E-Mails (Sammelmeldung beim
+  Veröffentlichen, Bewerbung entschieden, Zuweisung entfernt; nicht während
+  einer eingetragenen Abwesenheit), zusätzlich nur mit hinterlegter
+  Mobilnummer und gesetztem "SMS erhalten". Die Texte sind auf 70 Zeichen
+  begrenzt (Vorgabe des Gateways), die Sammelmeldung enthält wie die Sammel-Mail
+  keine Schichtdetails, Passwörter werden nie per SMS verschickt.
+- Mobilnummer am Konto: im Profil und in der Mitarbeiter-Verwaltung (auch beim
+  Anlegen). Eingaben wie `0664 1234567`, `0043 664 …` oder `+43 (0) 664 …`
+  werden ins internationale Format `+436641234567` umgewandelt; Festnetz- und
+  ungültige Nummern werden mit klarer Meldung abgelehnt.
+- Einstellungen → "SMS-Versand": API-Schlüssel des Gateways eintragen (wird nur
+  gespeichert und nie wieder angezeigt, nur die letzten 4 Zeichen), Versand
+  aktivieren, "Verbindung prüfen" (ohne Versand) und "Test-SMS an mich senden".
+  Ohne Konfiguration sind alle SMS-Felder unsichtbar.
+- Warteschlange `sms_outbox`: das Gateway nimmt nur 10 neue Aufträge pro
+  Minute an und kann kurz ausfallen. Nicht angenommene SMS werden mit
+  wachsendem Abstand und demselben Idempotency-Key erneut versucht (nie
+  doppelt), nach 8 Versuchen oder 6 Stunden verworfen. Ein Gateway-Ausfall
+  blockiert nie eine Planänderung. Versuche stehen im Benachrichtigungsprotokoll
+  (Nummer maskiert). Die Wiederholung läuft per Cron (`bin/sms_flush.php`).
+- Migration `bin/migrate_sms.php` für bestehende Installationen (neue Spalten,
+  `sms_outbox`, Protokoll-Kanal `sms`).
+
+### Behoben
+- Abwesenheiten (v1.14.0): die Sammel-E-Mail beim Veröffentlichen wurde
+  trotz eingetragener Abwesenheit verschickt, weil die Abfrage der betroffenen
+  Personen keine `id` lieferte und die Abwesenheitsprüfung dadurch nie griff.
+
 ## [1.15.0] - 2026-09-25
 
 ### Hinzugefügt

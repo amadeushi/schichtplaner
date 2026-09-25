@@ -14,6 +14,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/profile.php');
     }
 
+    if ($action === 'sms_settings' && SmsClient::enabled()) {
+        $rawPhone = trim((string)($_POST['phone'] ?? ''));
+        $notifySms = isset($_POST['notify_sms']) ? 1 : 0;
+        $phone = null;
+        if ($rawPhone !== '') {
+            $phone = normalizePhone($rawPhone);
+            if ($phone === null) {
+                flash('error', 'Diese Mobilnummer ist nicht gültig. Bitte z.B. "0664 1234567" oder "+43 664 1234567" eingeben (Festnetznummern können keine SMS empfangen).');
+                redirect('/profile.php');
+            }
+        }
+        db()->prepare('UPDATE users SET phone = :p, notify_sms = :n WHERE id = :id')
+            ->execute(['p' => $phone, 'n' => $notifySms, 'id' => $user['id']]);
+        flash('success', $phone ? 'Mobilnummer gespeichert: ' . $phone : 'Mobilnummer entfernt.');
+        redirect('/profile.php');
+    }
+
     if ($action === 'regenerate_calendar_token') {
         $token = bin2hex(random_bytes(24));
         db()->prepare('UPDATE users SET calendar_token = :t WHERE id = :id')->execute(['t' => $token, 'id' => $user['id']]);
@@ -66,6 +83,25 @@ require __DIR__ . '/partials/header.php';
     <button type="submit" class="btn" style="margin-top:1rem;">Speichern</button>
   </form>
 </div>
+
+<?php if (SmsClient::enabled()): ?>
+<div class="card">
+  <h2>SMS-Benachrichtigungen</h2>
+  <p class="muted">Bei Planänderungen bekommst du zusätzlich (oder statt E-Mail) eine kurze SMS — unter denselben Bedingungen wie die E-Mail, also nicht während einer eingetragenen Abwesenheit.</p>
+  <form method="post">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="sms_settings">
+    <label for="phone">Mobilnummer</label>
+    <input type="tel" id="phone" name="phone" value="<?= e((string)($user['phone'] ?? '')) ?>" inputmode="tel" autocomplete="tel" placeholder="z.B. 0664 1234567">
+    <p class="muted" style="margin-top:0.4rem;">Wird automatisch ins internationale Format (+43 …) umgewandelt. Leer lassen, um keine SMS zu erhalten.</p>
+    <label style="display:flex;align-items:center;gap:0.5rem;">
+      <input type="checkbox" name="notify_sms" style="width:auto;" <?= ($user['notify_sms'] ?? 1) ? 'checked' : '' ?>>
+      SMS-Benachrichtigungen erhalten
+    </label>
+    <button type="submit" class="btn" style="margin-top:1rem;">Speichern</button>
+  </form>
+</div>
+<?php endif; ?>
 
 <div class="card">
   <h2>Kalender-Abo</h2>

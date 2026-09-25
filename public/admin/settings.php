@@ -28,6 +28,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/admin/settings.php');
     }
 
+    if ($action === 'save_sms') {
+        $rawKey = trim((string)($_POST['sms_api_key'] ?? ''));
+        if ($rawKey !== '') {
+            $rawKey = (string)preg_replace('/^Bearer\s+/i', '', $rawKey);
+            if (!preg_match('/^[\x21-\x7E]{8,512}$/', $rawKey)) {
+                flash('error', 'Der Schlüssel sieht nicht gültig aus (mindestens 8 Zeichen, keine Leerzeichen oder Zeilenumbrüche). Bitte genau so einfügen, wie er auf dem SMS-Pi steht.');
+                redirect('/admin/settings.php');
+            }
+            setSetting('sms_api_key', $rawKey);
+        }
+        $enable = isset($_POST['sms_enabled']);
+        if ($enable && $rawKey === '' && SmsClient::keySource() === null) {
+            flash('error', 'Zum Aktivieren bitte zuerst den API-Schlüssel des SMS-Gateways eingeben.');
+            redirect('/admin/settings.php');
+        }
+        setSetting('sms_enabled', $enable ? '1' : '0');
+        flash('success', 'SMS-Einstellungen gespeichert' . ($rawKey !== '' ? ' (neuer Schlüssel hinterlegt)' : '') . '. Mit "Verbindung prüfen" lässt sich der Schlüssel testen.');
+        redirect('/admin/settings.php');
+    }
+
+    if ($action === 'clear_sms_key') {
+        setSetting('sms_api_key', '');
+        setSetting('sms_enabled', '0');
+        flash('success', 'API-Schlüssel entfernt, SMS-Versand ist ausgeschaltet.');
+        redirect('/admin/settings.php');
+    }
+
+    if ($action === 'sms_health') {
+        if (!SmsClient::enabled()) {
+            flash('error', 'SMS ist nicht konfiguriert (siehe app/config.php).');
+        } else {
+            $health = SmsClient::health();
+            flash($health['ok'] ? 'success' : 'error', $health['ok']
+                ? 'SMS-Gateway erreichbar, Schlüssel gültig' . ($health['project'] ? ' (Projekt: ' . $health['project'] . ')' : '') . '. Es wurde keine SMS gesendet.'
+                : 'SMS-Gateway nicht nutzbar: ' . $health['error']);
+        }
+        redirect('/admin/settings.php');
+    }
+
+    if ($action === 'sms_test') {
+        if (!SmsClient::enabled()) {
+            flash('error', 'SMS ist nicht konfiguriert (siehe app/config.php).');
+        } elseif (empty($user['phone'])) {
+            flash('error', 'Bitte zuerst deine Mobilnummer im Profil eintragen.');
+        } else {
+            $res = SmsClient::enqueue((int)$user['id'], (string)$user['phone'], 'test', 'Testnachricht vom Schichtplaner');
+            flash($res['status'] === 'failed' ? 'error' : 'success', match ($res['status']) {
+                'accepted' => 'Test-SMS wurde vom Gateway angenommen und geht an ' . maskPhone((string)$user['phone']) . '.',
+                'queued' => 'Test-SMS ist in der Warteschlange (' . ($res['last_error'] ?? 'Gateway gerade nicht erreichbar') . ') und wird erneut versucht.',
+                default => 'Test-SMS fehlgeschlagen: ' . ($res['last_error'] ?? 'unbekannter Fehler'),
+            });
+        }
+        redirect('/admin/settings.php');
+    }
+
     if ($action === 'save_email_template') {
         $key = (string)($_POST['template_key'] ?? '');
         if (!array_key_exists($key, Notifier::TEMPLATES)) {
@@ -134,6 +189,62 @@ require __DIR__ . '/../partials/header.php';
     Aktueller Status: <strong><?= !empty($config['smtp']['enabled']) ? 'aktiviert' : 'deaktiviert' ?></strong>,
     Host: <code><?= e($config['smtp']['host'] ?? '-') ?></code>
   </p>
+</div>
+
+<?php
+  $smsOn = SmsClient::enabled();
+  $smsStats = $smsOn ? SmsClient::stats() : null;
+  $smsKeySource = SmsClient::keySource();
+  $smsKeyMask = SmsClient::maskedKey();
+?>
+<div class="card">
+  <h2>SMS-Versand</h2>
+  <p class="muted">
+    SMS gehen unter denselben Bedingungen wie E-Mails an Mitarbeiter mit Mobilnummer (Profil bzw. Mitarbeiter-Verwaltung), nicht während einer Abwesenheit, und bewusst kurz (höchstens 70 Zeichen, ohne Schichtdetails bei der Sammelmeldung).
+    Aktueller Status: <strong><?= $smsOn ? 'aktiviert' : (SmsClient::enabledFlag() ? 'eingeschaltet, aber ohne Schlüssel' : 'ausgeschaltet') ?></strong>.
+  </p>
+  <form method="post" autocomplete="off">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="save_sms">
+    <label style="display:flex;align-items:center;gap:0.5rem;">
+      <input type="checkbox" name="sms_enabled" style="width:auto;" <?= SmsClient::enabledFlag() ? 'checked' : '' ?>>
+      SMS-Versand aktivieren
+    </label>
+    <label for="sms_api_key">API-Schlüssel des SMS-Gateways</label>
+    <input type="password" id="sms_api_key" name="sms_api_key" autocomplete="new-password" spellcheck="false" autocapitalize="off"
+           placeholder="<?= $smsKeyMask ? 'Hinterlegt (' . e($smsKeyMask) . ') — nur zum Ändern neu eingeben' : 'Schlüssel hier einfügen' ?>">
+    <p class="muted" style="margin-top:0.4rem;">
+      Der Schlüssel wird nur gespeichert und nie wieder angezeigt (nur die letzten 4 Zeichen).
+      <?php if ($smsKeySource === 'settings'): ?>Quelle: hier hinterlegt.<?php elseif ($smsKeySource === 'config'): ?>Quelle: <code>app/config.php</code> — ein hier eingegebener Schlüssel hat Vorrang.<?php else: ?>Noch kein Schlüssel hinterlegt.<?php endif; ?>
+    </p>
+    <button type="submit" class="btn" style="margin-top:0.75rem;">Speichern</button>
+  </form>
+  <?php if ($smsKeySource === 'settings'): ?>
+    <form method="post" class="inline" style="margin-top:0.75rem;display:block;" onsubmit="return confirm('Hinterlegten Schlüssel entfernen und SMS-Versand ausschalten?');">
+      <?= csrfField() ?>
+      <input type="hidden" name="action" value="clear_sms_key">
+      <button type="submit" class="btn small danger">Schlüssel entfernen</button>
+    </form>
+  <?php endif; ?>
+  <?php if ($smsOn): ?>
+    <p class="muted" style="margin-top:1rem;">
+      Heute angenommen: <strong class="mono"><?= $smsStats['accepted_today'] ?></strong> &middot;
+      in Warteschlange: <strong class="mono"><?= $smsStats['queued'] ?></strong> &middot;
+      fehlgeschlagen (7 Tage): <strong class="mono"><?= $smsStats['failed_week'] ?></strong>
+    </p>
+    <div class="table-actions" style="margin-top:0.75rem;">
+      <form method="post" class="inline">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="sms_health">
+        <button type="submit" class="btn secondary">Verbindung prüfen</button>
+      </form>
+      <form method="post" class="inline" onsubmit="return confirm('Eine echte Test-SMS an deine Mobilnummer senden? Sie zählt gegen das Tageslimit des Gateways.');">
+        <?= csrfField() ?>
+        <input type="hidden" name="action" value="sms_test">
+        <button type="submit" class="btn secondary">Test-SMS an mich senden</button>
+      </form>
+    </div>
+  <?php endif; ?>
 </div>
 
 <div class="card">

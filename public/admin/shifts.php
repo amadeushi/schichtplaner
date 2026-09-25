@@ -226,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Betroffene Personen für diese Woche einsammeln, je genau EINE unspezifische
         // Sammel-Mail pro Person verschicken, dann die Warteschlange für diese Woche leeren.
         $notifyStmt = db()->prepare(
-            "SELECT DISTINCT pn.user_id, u.name, u.email, u.notify_email
+            "SELECT DISTINCT u.id AS id, pn.user_id, u.name, u.email, u.notify_email, u.phone, u.notify_sms
              FROM pending_notifications pn
              JOIN shifts sh ON sh.id = pn.shift_id
              JOIN users u ON u.id = pn.user_id
@@ -250,7 +250,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $draftCount = count($drafts);
         $affectedCount = count($affected);
-        flash('success', "Woche veröffentlicht: $draftCount Entwurf(-e) freigegeben, $affectedCount betroffene Mitarbeiter ($emailedCount E-Mails verschickt).");
+        $smsPart = SmsClient::enabled() ? ', ' . $notifier->smsCount() . ' SMS' : '';
+        flash('success', "Woche veröffentlicht: $draftCount Entwurf(-e) freigegeben, $affectedCount betroffene Mitarbeiter ($emailedCount E-Mails$smsPart verschickt).");
         $returnTo = (string)($_POST['return_to'] ?? '/admin/shifts.php');
         $returnTo = in_array($returnTo, ['/admin/shifts.php', '/admin/calendar.php'], true) ? $returnTo : '/admin/shifts.php';
         redirect($returnTo . '?date=' . urlencode($wStart));

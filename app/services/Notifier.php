@@ -16,6 +16,10 @@ declare(strict_types=1);
  * scheduleChanged) prüfen zusätzlich isUserAbsentOn() - wer heute laut eingetragener
  * Abwesenheit (siehe absences.php) nicht verfügbar ist, bekommt währenddessen keine
  * E-Mails über Planänderungen. Webhooks sind davon unberührt (kein persönlicher Kanal).
+ *
+ * Dieselben drei Anlässe gehen zusätzlich als kurze SMS über SmsClient (höchstens 70 Zeichen),
+ * unter denselben Bedingungen plus: Gateway konfiguriert, Mobilnummer vorhanden, notify_sms gesetzt.
+ * Passwörter (Konto angelegt/zurückgesetzt) werden bewusst nie per SMS verschickt.
  */
 final class Notifier
 {
@@ -66,6 +70,35 @@ final class Notifier
         ],
     ];
 
+    private int $smsQueued = 0;
+
+    /** Wie viele SMS dieser Notifier bisher an das Gateway übergeben bzw. in die Warteschlange gelegt hat. */
+    public function smsCount(): int
+    {
+        return $this->smsQueued;
+    }
+
+    /**
+     * SMS unter denselben Bedingungen wie die E-Mail (heute nicht laut Abwesenheit verhindert),
+     * zusätzlich: SMS im Gateway konfiguriert, Mobilnummer hinterlegt und "SMS erhalten" gesetzt.
+     * $user muss eine volle users-Zeile sein (id, phone, notify_sms). Nie Passwörter per SMS.
+     */
+    private function sms(array $user, string $eventType, string $text): void
+    {
+        if (!SmsClient::enabled() || empty($user['notify_sms']) || empty($user['phone'])) {
+            return;
+        }
+        if (isUserAbsentOn((int)$user['id'], date('Y-m-d'))) {
+            return;
+        }
+        try {
+            SmsClient::enqueue((int)$user['id'], (string)$user['phone'], $eventType, $text);
+            $this->smsQueued++;
+        } catch (Throwable) {
+            // Ein SMS-Problem darf nie eine Planänderung oder das Veröffentlichen blockieren.
+        }
+    }
+
     public function __construct(array $smtpConfig)
     {
         $this->mailer = new Mailer($smtpConfig);
@@ -107,6 +140,12 @@ final class Notifier
         if ($applicant['notify_email'] && !isUserAbsentOn((int)$applicant['id'], date('Y-m-d'))) {
             $this->mailer->send($applicant['email'], $applicant['name'], $subject, $body);
         }
+
+        $this->sms($applicant, 'application_decided', fitSmsText(
+            'Bewerbung ' . mb_strtolower($label) . ': ',
+            (string)$shift['title'],
+            ' am ' . date('d.m.', strtotime($shift['shift_date']))
+        ));
 
         $this->webhook->send('application.decided', [
             'shift' => $this->shiftPayload($shift),
@@ -165,6 +204,12 @@ final class Notifier
             $this->mailer->send($employee['email'], $employee['name'], $subject, $body);
         }
 
+        $this->sms($employee, 'assignment_removed', fitSmsText(
+            'Zuweisung entfernt: ',
+            (string)$shift['title'],
+            ' am ' . date('d.m.', strtotime($shift['shift_date']))
+        ));
+
         $this->webhook->send('application.removed', [
             'shift' => $this->shiftPayload($shift),
             'applicant' => ['id' => $employee['id'], 'name' => $employee['name'], 'email' => $employee['email']],
@@ -178,6 +223,10 @@ final class Notifier
      */
     public function scheduleChanged(array $user): bool
     {
+        // Wie die Sammel-Mail bewusst ohne Schichtdetails. Unabhängig vom E-Mail-Schalter -
+        // wer nur SMS möchte, bekommt trotzdem Bescheid.
+        $this->sms($user, 'schedule_changed', 'Schichtplan: Änderungen in deinem Plan. Bitte in der App nachsehen.');
+
         if (empty($user['notify_email']) || isUserAbsentOn((int)$user['id'], date('Y-m-d'))) {
             return false;
         }

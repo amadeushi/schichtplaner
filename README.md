@@ -131,6 +131,31 @@ externer SMTP-Relay die zuverlaessigere Wahl. Es wird ein minimaler,
 abhaengigkeitsfreier SMTP-Client mitgeliefert (`app/services/Mailer.php`,
 unterstuetzt STARTTLS/SSL + AUTH LOGIN) — kein Composer/PHPMailer noetig.
 
+## SMS-Versand konfigurieren (optional)
+
+SMS gehen an dieselben Anlässe und unter denselben Bedingungen wie die E-Mails an Mitarbeiter
+(Sammelmeldung beim Veröffentlichen, Bewerbung entschieden, Zuweisung entfernt; nicht während
+einer eingetragenen Abwesenheit) — zusätzlich nur mit hinterlegter Mobilnummer und gesetztem
+"SMS erhalten" im Profil. Passwörter werden nie per SMS verschickt. Texte sind höchstens 70 Zeichen
+lang (Vorgabe des Gateways).
+
+1. Eigenen Schlüssel für dieses Projekt auf dem SMS-Pi erzeugen (wird einmal angezeigt):
+   `sudo sms-project create-project schichtplaner 100`
+2. Migration einmalig ausführen: `sudo -u www-data php bin/migrate_sms.php`
+3. Schlüssel hinterlegen und SMS aktivieren — am einfachsten im Adminbereich unter
+   Einstellungen → "SMS-Versand" (Schlüssel einfügen, "SMS-Versand aktivieren", Speichern). Der
+   Schlüssel wird nur gespeichert und nie wieder angezeigt (nur die letzten 4 Zeichen). Alternativ
+   in `app/config.php` im Block `sms` (Vorlage: `app/config.example.php`); ein in den Einstellungen
+   hinterlegter Schlüssel hat Vorrang. Der Schlüssel gehört nicht ins Repo und nicht in Chats.
+4. Cron für Wiederholungen einrichten (das Gateway nimmt nur 10 neue Aufträge pro Minute an und
+   kann kurz ausfallen; nicht angenommene SMS bleiben in der Warteschlange `sms_outbox`):
+   `* * * * * cd /var/www/schichtplaner && php bin/sms_flush.php >/dev/null 2>&1` (als `www-data`)
+5. Unter Einstellungen → "SMS-Versand" mit "Verbindung prüfen" (ohne Versand) testen.
+
+Mobilnummern werden im internationalen Format gespeichert (`+436641234567`); Eingaben wie
+`0664 1234567` oder `0043 664 …` werden automatisch umgewandelt, für `+43` sind nur Mobilnummern
+zulässig. Nur HTTPS zum Gateway ist erlaubt (Ausnahme: localhost für Tests).
+
 ## n8n-Anbindung (optional)
 
 Unter "Einstellungen" (Adminbereich) kann eine n8n-Webhook-URL hinterlegt

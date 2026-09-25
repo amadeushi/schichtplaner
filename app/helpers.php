@@ -243,3 +243,68 @@ function shiftTimeHtml(string $start, string $end, bool $compact = false): strin
         . '<span class="shift-start">' . e($start) . '</span>'
         . '<span class="shift-end">bis ' . e($end) . '</span></span>';
 }
+
+/**
+ * Bringt eine eingegebene Mobilnummer ins internationale E.164-Format (+436641234567) - das
+ * verlangt das SMS-Gateway. Akzeptiert die üblichen Schreibweisen: "0664 1234567" (nationale
+ * Null wird durch die Standard-Landesvorwahl ersetzt, siehe SmsClient::defaultCountryCode()),
+ * "0043 664 1234567", "+43 (0) 664 123 45 67", "+43/664/1234567". Gibt null zurück, wenn das
+ * Ergebnis keine gültige Nummer ist. Österreichische Nummern müssen eine Mobilnummer sein (+436…),
+ * eine Festnetznummer kann keine SMS empfangen. Leere Eingabe prüft der Aufrufer selbst.
+ */
+function normalizePhone(string $input): ?string
+{
+    $s = preg_replace('/\(\s*0\s*\)/', '', trim($input));
+    $s = preg_replace('/[\s\-\/.()]/', '', (string)$s);
+    if ($s === '' || !preg_match('/^\+?\d+$/', $s)) {
+        return null;
+    }
+
+    if (str_starts_with($s, '00')) {
+        $s = '+' . substr($s, 2);
+    } elseif (str_starts_with($s, '0')) {
+        $s = SmsClient::defaultCountryCode() . substr($s, 1);
+    } elseif ($s[0] !== '+') {
+        return null; // ohne +, 00 oder 0 nicht eindeutig einem Land zuzuordnen
+    }
+
+    if (str_starts_with($s, '+430')) {
+        $s = '+43' . substr($s, 4); // "+43 0664 …": überflüssige nationale Null hinter der Vorwahl
+    }
+    if (!preg_match('/^\+[1-9]\d{7,14}$/', $s)) {
+        return null;
+    }
+    if (str_starts_with($s, '+43') && !preg_match('/^\+436\d{7,11}$/', $s)) {
+        return null;
+    }
+    return $s;
+}
+
+/** "+43664***4567" - für Protokolle und Anzeigen, in denen die volle Nummer nicht nötig ist. */
+function maskPhone(string $phone): string
+{
+    $len = strlen($phone);
+    if ($len <= 9) {
+        return $phone;
+    }
+    return substr($phone, 0, 5) . str_repeat('*', $len - 9) . substr($phone, -4);
+}
+
+/**
+ * Setzt eine SMS aus festem Anfang, variablem Teil (z.B. Schichttitel) und festem Ende zusammen
+ * und hält sie in der Vorgabe des Gateways: höchstens 70 Zeichen, nur Unicode-BMP (keine Emojis),
+ * keine Steuerzeichen. Reicht der Platz nicht, wird nur der variable Teil mit "…" gekürzt.
+ */
+function fitSmsText(string $prefix, string $variable, string $suffix = ''): string
+{
+    $max = 70;
+    $clean = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/[\x{10000}-\x{10FFFF}\p{Cc}]/u', ' ', $variable)));
+    $room = $max - mb_strlen($prefix) - mb_strlen($suffix);
+    if ($room < 1) {
+        return mb_substr($prefix . $suffix, 0, $max);
+    }
+    if (mb_strlen($clean) > $room) {
+        $clean = mb_substr($clean, 0, $room - 1) . '…';
+    }
+    return mb_substr($prefix . $clean . $suffix, 0, $max);
+}
