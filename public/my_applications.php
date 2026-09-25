@@ -26,7 +26,7 @@ require __DIR__ . '/partials/header.php';
   <?php foreach ($apps as $a): ?>
     <tr>
       <td data-label="Datum"><?= e(weekdayDe($a['shift_date'])) ?>, <?= e(formatDateDe($a['shift_date'])) ?></td>
-      <td data-label="Zeit"><?= e($a['start_time']) ?>-<?= e($a['end_time']) ?></td>
+      <td data-label="Zeit"><?= shiftTimeHtml($a['start_time'], $a['end_time'], true) ?></td>
       <td data-label="Titel"><?= e($a['title']) ?></td>
       <td data-label="Ort"><?= e($a['location'] ?? '-') ?></td>
       <td data-label="Status">

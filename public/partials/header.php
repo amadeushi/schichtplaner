@@ -261,6 +261,17 @@ function navActive(string $path, array $matches): bool
   .ticket-row:first-of-type { border-top: none; }
   .ticket-time { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.92rem; white-space: nowrap; }
   .ticket-meta { font-size: 0.82rem; color: var(--ink-soft); }
+  /* Schichtzeit: der Beginn ist die eine Zahl, die Mitarbeiter am Bon zuerst suchen - groß,
+     fett, in Druckerschwarz; das Ende ("bis 18:00") tritt klein und weich dahinter zurück.
+     Stufen aus der bestehenden Skala (Headline 1.3rem / Title 0.95rem / Mono 0.9rem), Register-
+     Tape-Regel bleibt: Zeiten in Mono mit Tabellenziffern. Kein Kasten, keine Farbe - Rot
+     bleibt dem Stempel vorbehalten. */
+  .shift-time { display: flex; align-items: baseline; gap: 0.5rem; white-space: nowrap; font-family: var(--font-mono); font-variant-numeric: tabular-nums; margin-bottom: 0.15rem; }
+  .shift-start { font-size: 1.3rem; font-weight: 700; color: var(--ink); line-height: 1.15; }
+  .shift-end { font-size: 0.9rem; font-weight: 600; color: var(--ink-soft); }
+  .shift-time.compact { display: inline-flex; margin-bottom: 0; }
+  .shift-time.compact .shift-start { font-size: 0.95rem; line-height: 1.3; }
+  .shift-time.compact .shift-end { font-size: 0.9rem; }
   .ticket-empty { color: var(--ink-soft); font-size: 0.88rem; padding: 0.3rem 0; }
 
   .duty-stamp {

@@ -230,3 +230,16 @@ function absencesOverlapping(string $start, string $end): array
     }
     return $byUser;
 }
+
+/**
+ * Schichtzeit mit hervorgehobenem Beginn (siehe .shift-time in partials/header.php): große
+ * Startzeit, dahinter klein "bis Ende". Der Beginn ist die eine Zahl, die Mitarbeiter am Bon
+ * suchen - "10:00–18:00" als gleich gewichteter Block ließ sie Anfang und Ende verwechseln.
+ * $compact für Tabellen/Listen, wo die große Variante zu viel Höhe kostet.
+ */
+function shiftTimeHtml(string $start, string $end, bool $compact = false): string
+{
+    return '<span class="shift-time' . ($compact ? ' compact' : '') . '">'
+        . '<span class="shift-start">' . e($start) . '</span>'
+        . '<span class="shift-end">bis ' . e($end) . '</span></span>';
+}

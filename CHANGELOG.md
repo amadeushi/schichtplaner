@@ -6,6 +6,25 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.15.0] - 2026-09-25
+
+### Hinzugefügt
+- Admin-Schichtplan: der heutige Tag steht wie im Mitarbeiter-Modus als großes
+  "Heute"-Ticket über dem Bon-Strang (mit allen Admin-Funktionen: zuweisen,
+  Bewerbungen entscheiden, bearbeiten, Status), darunter folgt "Diese Woche"
+  ohne den heutigen Tag doppelt. In einer Woche ohne heutigen Tag entfällt das
+  Hero. So ist auf einen Blick sichtbar, was heute ansteht.
+
+### Geändert
+- Schichtzeiten für Mitarbeiter ("Mein Plan", "Meine Bewerbungen"): der
+  Beginn steht groß und fett vorn, das Ende klein und weich dahinter ("10:00
+  bis 18:00") und die Zeile beginnt mit der Uhrzeit statt mit dem Titel.
+  Vorher wirkte "10:00–18:00" als gleich gewichteter Block, in dem Anfang und
+  Ende leicht verwechselt wurden.
+- Das Tages-Ticket der Admin-Wochenansicht liegt jetzt in einer gemeinsamen
+  Teildatei (`partials/admin_day_ticket.php`), damit Hero und Strang nicht
+  auseinanderlaufen können.
+
 ## [1.14.0] - 2026-09-17
 
 ### Hinzugefügt

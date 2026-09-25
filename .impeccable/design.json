@@ -245,6 +245,14 @@
       "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.5; border-bottom: 1.5px solid transparent; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; } .ds-badge-today { color: #c8391f; background: #f7e3dc; border: 1.5px solid #c8391f; border-radius: 3px; padding: 0.15rem 0.5rem; } .ds-badge-confirmed { color: #1c1917; border-bottom-color: #b9ad91; } .ds-badge-confirmed::before { content: '\\2713'; } .ds-badge-pending { color: #6b6459; border-bottom-style: dashed; border-bottom-color: #b9ad91; } .ds-badge-pending::before { content: '\\2013'; }"
     },
     {
+      "name": "Shift Time",
+      "kind": "custom",
+      "refersTo": "ticket",
+      "description": "Shift time with the start emphasised: large bold mono start, small soft \"bis <end>\" behind it. Splits start and end by weight so staff can no longer confuse them; no box, no color.",
+      "html": "<span class=\"ds-shift-time\"><span class=\"ds-shift-start\">10:00</span><span class=\"ds-shift-end\">bis 18:00</span></span>",
+      "css": ".ds-shift-time { display: flex; align-items: baseline; gap: 0.5rem; white-space: nowrap; font-family: ui-monospace, 'SF Mono', 'Roboto Mono', 'IBM Plex Mono', Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; } .ds-shift-start { font-size: 1.3rem; font-weight: 700; color: #1c1917; line-height: 1.15; } .ds-shift-end { font-size: 0.9rem; font-weight: 600; color: #6b6459; }"
+    },
+    {
       "name": "Input Field",
       "kind": "input",
       "refersTo": "input",

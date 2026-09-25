@@ -111,11 +111,9 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
         <?php $sh = $row['shift']; ?>
         <div class="ticket-row">
           <div>
+            <?= shiftTimeHtml($sh['start_time'], $sh['end_time']) ?>
             <div><strong><?= e($sh['title']) ?></strong></div>
-            <div class="ticket-meta">
-              <span class="mono"><?= e($sh['start_time']) ?>&ndash;<?= e($sh['end_time']) ?></span>
-              <?php if ($sh['location']): ?> &middot; <?= e($sh['location']) ?><?php endif; ?>
-            </div>
+            <?php if ($sh['location']): ?><div class="ticket-meta"><?= e($sh['location']) ?></div><?php endif; ?>
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <?php if ($row['kind'] === 'confirmed'): ?>
@@ -164,11 +162,9 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
         <?php $sh = $row['shift']; ?>
         <div class="ticket-row">
           <div>
+            <?= shiftTimeHtml($sh['start_time'], $sh['end_time']) ?>
             <div><strong><?= e($sh['title']) ?></strong></div>
-            <div class="ticket-meta">
-              <span class="mono"><?= e($sh['start_time']) ?>&ndash;<?= e($sh['end_time']) ?></span>
-              <?php if ($sh['location']): ?> &middot; <?= e($sh['location']) ?><?php endif; ?>
-            </div>
+            <?php if ($sh['location']): ?><div class="ticket-meta"><?= e($sh['location']) ?></div><?php endif; ?>
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <?php if ($row['kind'] === 'confirmed'): ?>
