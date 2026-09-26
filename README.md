@@ -144,6 +144,12 @@ Zeichen je SMS). Je Person geht höchstens eine SMS in 15 Minuten raus: die erst
 weitere im Zeitfenster gebündelt als eine SMS zum Fensterende (sendet der Cron), sodass keine
 Änderung untergeht und niemand mehrere gleichlautende SMS bekommt.
 
+Zusätzlich gibt es beim Veröffentlichen einen Rundruf "Neuer Plan verfügbar" per E-Mail und SMS
+an alle aktiven Mitarbeiter, die nicht persönlich betroffen sind (nach ihren Schaltern, nicht
+während einer Abwesenheit; die E-Mail-Vorlage ist unter Einstellungen editierbar). Er wird nur
+ausgelöst, wenn seit dem letzten Rundruf für diese Woche neue offene Schichten dazugekommen sind
+(gemerkt in den Einstellungen unter `sms_plan_announced_<Montag>`).
+
 1. Eigenen Schlüssel für dieses Projekt auf dem SMS-Pi erzeugen (wird einmal angezeigt):
    `sudo sms-project create-project schichtplaner 100`
 2. Migration einmalig ausführen: `sudo -u www-data php bin/migrate_sms.php`

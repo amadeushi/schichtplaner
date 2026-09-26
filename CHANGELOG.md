@@ -6,6 +6,24 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.18.0] - 2026-09-26
+
+### Hinzugefügt
+- Rundruf "Neuer Plan verfügbar": beim ersten Veröffentlichen neuer offener
+  Schichten bekommen alle aktiven Mitarbeiter, die nicht persönlich betroffen
+  sind, eine Nachricht per E-Mail (Betreff "Neuer Schichtplan verfügbar") und per
+  SMS ("Schichtplaner: Neuer Plan verfügbar. Jetzt Schichten ansehen und
+  bewerben: <Link>"), jeweils nach ihren Schaltern (E-Mail bzw. "SMS erhalten"
+  mit Mobilnummer) und nicht während einer Abwesenheit. Ausgelöst nur, wenn seit
+  dem letzten Rundruf für diese Woche neue offene Schichten dazugekommen sind;
+  Korrekturen an bestehenden Schichten, Zuweisungen oder volle Schichten lösen
+  ihn nicht (erneut) aus. Wer persönlich betroffen ist (zugewiesen, entfernt,
+  verschoben), bekommt stattdessen wie bisher die persönliche Sammelnachricht.
+  Die Rundmail ist wie die anderen Vorlagen unter Einstellungen editierbar; die
+  Meldung nach dem Veröffentlichen nennt die Zahl der Empfänger. Bei SMS gilt
+  zusätzlich das 15-Minuten-Fenster; überschneiden sich Anlässe, geht der
+  Plan-Text raus.
+
 ## [1.17.1] - 2026-09-25
 
 ### Geändert

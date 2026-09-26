@@ -314,11 +314,16 @@ function maskPhone(string $phone): string
 /**
  * Text der Benachrichtigungs-SMS: nur ein allgemeiner Hinweis und der Link ins Portal, bewusst
  * ohne Schichten, Titel oder Bewerbungsergebnisse (die stehen erst nach dem Login da).
- * $kind 'plan' = Änderung im Plan (Veröffentlichen), 'application' = Neuigkeit zur eigenen Bewerbung
- * (Ablehnung). Nur Zeichen aus dem GSM-Zeichensatz (Umlaute erlaubt): bis zu 160 Zeichen gelten.
+ * $kind: 'plan' = Änderung im eigenen Plan (Veröffentlichen), 'application' = Neuigkeit zur eigenen
+ * Bewerbung (Ablehnung), 'new_plan' = neuer Plan mit offenen Schichten zum Bewerben (an alle).
+ * Nur Zeichen aus dem GSM-Zeichensatz (Umlaute erlaubt): bis zu 160 Zeichen gelten.
  */
 function smsChangeNotice(string $portalUrl, string $kind = 'plan'): string
 {
+    if ($kind === 'new_plan') {
+        $text = 'Schichtplaner: Neuer Plan verfügbar. Jetzt Schichten ansehen und bewerben';
+        return $portalUrl === '' ? $text . '.' : $text . ': ' . $portalUrl;
+    }
     $text = $kind === 'application'
         ? 'Schichtplaner: Es gibt Neuigkeiten zu deiner Bewerbung.'
         : 'Schichtplaner: Es gibt eine Änderung in deinem Plan.';

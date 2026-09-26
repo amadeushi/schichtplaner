@@ -17,7 +17,8 @@ declare(strict_types=1);
  * Abwesenheit (siehe absences.php) nicht verfügbar ist, bekommt währenddessen keine
  * E-Mails über Planänderungen. Webhooks sind davon unberührt (kein persönlicher Kanal).
  *
- * Dieselben drei Anlässe gehen zusätzlich als SMS über SmsClient - nur ein neutraler Hinweis
+ * Dieselben drei Anlässe gehen zusätzlich als SMS über SmsClient (dazu ein Rundruf "Neuer Plan verfügbar" per
+ * SMS und E-Mail beim Veröffentlichen neuer offener Schichten, siehe newPlanAvailable) - nur ein neutraler Hinweis
  * mit Portal-Link (smsChangeNotice), nie mit Schichten oder Bewerbungsergebnissen,
  * unter denselben Bedingungen plus: Gateway konfiguriert, Mobilnummer vorhanden, notify_sms gesetzt.
  * Passwörter (Konto angelegt/zurückgesetzt) werden bewusst nie per SMS verschickt.
@@ -62,6 +63,12 @@ final class Notifier
             'subject' => 'Zuweisung entfernt: {{shift_title}} am {{shift_date}}',
             'body' => "Deine Zuweisung für die Schicht \"{{shift_title}}\" am {{shift_date}} ({{shift_time}}) wurde vom Admin entfernt.",
             'placeholders' => ['name', 'shift_title', 'shift_date', 'shift_time'],
+        ],
+        'new_plan' => [
+            'label' => 'Neuer Plan verfügbar (Rundmail bei Veröffentlichung neuer offener Schichten)',
+            'subject' => 'Neuer Schichtplan verfügbar',
+            'body' => "Hallo {{name}},\n\nes gibt neue offene Schichten in {{app_name}}. Bitte melde dich an, sieh unter \"Plan\" nach den offenen Schichten und bewirb dich auf die, die du übernehmen möchtest.",
+            'placeholders' => ['name', 'app_name'],
         ],
         'schedule_changed' => [
             'label' => 'Sammel-Mail bei Veröffentlichung',
@@ -150,6 +157,27 @@ final class Notifier
             'applicant' => ['id' => $applicant['id'], 'name' => $applicant['name'], 'email' => $applicant['email']],
             'status' => $status,
         ]);
+    }
+
+    /**
+     * Rundruf "Neuer Plan verfügbar" an eine Person, die vom Veröffentlichen nicht persönlich
+     * betroffen ist: Es gibt neue offene Schichten zum Bewerben. Wie die anderen Sammelnachrichten
+     * ohne Schichtdetails; E-Mail nach notify_email, SMS nach notify_sms - beides nicht während einer
+     * Abwesenheit. Gibt zurück, ob eine E-Mail verschickt wurde. $user muss eine volle users-Zeile sein.
+     */
+    public function newPlanAvailable(array $user): bool
+    {
+        $this->sms($user, 'plan_published', smsChangeNotice(SmsClient::portalUrl(), 'new_plan'));
+
+        if (empty($user['notify_email']) || isUserAbsentOn((int)$user['id'], date('Y-m-d'))) {
+            return false;
+        }
+        [$subject, $body] = $this->renderTemplate('new_plan', [
+            'name' => $user['name'],
+            'app_name' => setting('app_name', 'Schichtplaner'),
+        ]);
+
+        return $this->mailer->send($user['email'], $user['name'], $subject, $body);
     }
 
     public function shiftPublished(array $shift): void

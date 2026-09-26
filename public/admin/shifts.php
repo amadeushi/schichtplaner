@@ -242,6 +242,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        $smsAffected = $notifier->smsCount();
+
+        // Rundruf "Neuer Plan verfügbar" (E-Mail und SMS) an alle übrigen aktiven Mitarbeiter - nur wenn
+        // seit dem letzten Rundruf für diese Woche neue OFFENE Schichten dazugekommen sind (Korrekturen
+        // an bestehenden Schichten oder Zuweisungen lösen ihn nicht erneut aus). Betroffene bekommen
+        // stattdessen ihre persönliche Nachricht oben.
+        $announcedCount = 0;
+        $announcedMails = 0;
+        if (SmsClient::enabled() || !empty($config['smtp']['enabled'])) {
+            $announceKey = 'sms_plan_announced_' . $wStart;
+            $lastAnnounce = (string)setting($announceKey, '');
+            $hasNewOpen = false;
+            foreach ($drafts as $sh) {
+                if ($sh['status'] === 'open' && (string)$sh['created_at'] > $lastAnnounce) {
+                    $hasNewOpen = true;
+                    break;
+                }
+            }
+            if ($hasNewOpen) {
+                $affectedIds = array_map('intval', array_column($affected, 'id'));
+                foreach (db()->query("SELECT * FROM users WHERE role = 'employee' AND active = 1")->fetchAll() as $emp) {
+                    if (!in_array((int)$emp['id'], $affectedIds, true)) {
+                        $announcedCount++;
+                        if ($notifier->newPlanAvailable($emp)) {
+                            $announcedMails++;
+                        }
+                    }
+                }
+                setSetting($announceKey, gmdate('Y-m-d H:i:s'));
+            }
+        }
+
         db()->prepare(
             'DELETE FROM pending_notifications WHERE shift_id IN (
                 SELECT id FROM shifts WHERE shift_date BETWEEN :start AND :end
@@ -250,8 +282,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $draftCount = count($drafts);
         $affectedCount = count($affected);
-        $smsPart = SmsClient::enabled() ? ', ' . $notifier->smsCount() . ' SMS' : '';
-        flash('success', "Woche veröffentlicht: $draftCount Entwurf(-e) freigegeben, $affectedCount betroffene Mitarbeiter ($emailedCount E-Mails$smsPart verschickt).");
+        $smsPart = SmsClient::enabled() ? ', ' . $smsAffected . ' SMS' : '';
+        $announcePart = $announcedCount > 0 ? " Neuer-Plan-Hinweis an $announcedCount weitere Mitarbeiter ($announcedMails E-Mails" . (SmsClient::enabled() ? ', ' . ($notifier->smsCount() - $smsAffected) . ' SMS' : '') . ').' : '';
+        flash('success', "Woche veröffentlicht: $draftCount Entwurf(-e) freigegeben, $affectedCount betroffene Mitarbeiter ($emailedCount E-Mails$smsPart verschickt)." . $announcePart);
         $returnTo = (string)($_POST['return_to'] ?? '/admin/shifts.php');
         $returnTo = in_array($returnTo, ['/admin/shifts.php', '/admin/calendar.php'], true) ? $returnTo : '/admin/shifts.php';
         redirect($returnTo . '?date=' . urlencode($wStart));
