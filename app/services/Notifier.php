@@ -36,45 +36,52 @@ final class Notifier
     public const TEMPLATES = [
         'new_application' => [
             'label' => 'Neue Bewerbung (an Admin)',
-            'subject' => 'Neue Bewerbung: {{shift_title}} am {{shift_date}}',
-            'body' => "{{applicant_name}} hat sich für die Schicht \"{{shift_title}}\" am {{shift_date}} ({{shift_time}}) beworben.\n\nBitte im Adminbereich freigeben oder ablehnen.",
+            'subject' => 'Neue Bewerbung von {{applicant_name}}: {{shift_title}} am {{shift_date}}',
+            'body' => "{{applicant_name}} würde gern eine Schicht übernehmen:\n\nSchicht: {{shift_title}}\nTag: {{shift_date}}\nZeit: {{shift_time}}\n\nSchau bei Gelegenheit im Adminbereich vorbei und gib Bescheid – {{applicant_name}} freut sich über eine Rückmeldung.",
             'placeholders' => ['applicant_name', 'shift_title', 'shift_date', 'shift_time'],
+            'cta' => ['label' => 'Bewerbung ansehen', 'path' => '/admin/shifts.php'],
         ],
         'application_decided' => [
             'label' => 'Bewerbung entschieden (an Bewerber)',
-            'subject' => 'Deine Bewerbung wurde {{status_label}}: {{shift_title}} am {{shift_date}}',
-            'body' => "Deine Bewerbung für die Schicht \"{{shift_title}}\" am {{shift_date}} ({{shift_time}}) wurde {{status_label}}.",
-            'placeholders' => ['name', 'shift_title', 'shift_date', 'shift_time', 'status_label'],
+            'subject' => 'Rückmeldung zu deiner Bewerbung: {{shift_title}} am {{shift_date}}',
+            'body' => "Hallo {{name}},\n\n{{rueckmeldung}}\n\nSchicht: {{shift_title}}\nTag: {{shift_date}}\nZeit: {{shift_time}}",
+            'placeholders' => ['name', 'shift_title', 'shift_date', 'shift_time', 'status_label', 'rueckmeldung'],
+            'cta' => ['label' => 'Zum Plan', 'path' => '/my_week.php'],
         ],
         'account_created' => [
             'label' => 'Konto angelegt',
-            'subject' => 'Dein Zugang zu {{app_name}}',
-            'body' => "Hallo {{name}},\n\nfür dich wurde ein Konto in {{app_name}} angelegt.\n\nE-Mail: {{email}}\nVorläufiges Passwort: {{password}}\n\nBitte melde dich an und ändere dein Passwort beim ersten Login unter Profil.",
+            'subject' => 'Willkommen im Team – dein Zugang zu {{app_name}}',
+            'body' => "Hallo {{name}},\n\nschön, dass du dabei bist! Für dich wurde ein Konto in {{app_name}} angelegt. Dort siehst du deine Schichten und kannst dich auf offene Schichten bewerben.\n\nE-Mail: {{email}}\nVorläufiges Passwort: {{password}}\n\nMelde dich damit an und vergib beim ersten Login unter „Profil“ dein eigenes Passwort. Das vorläufige brauchst du nur für diesen ersten Schritt.",
             'placeholders' => ['name', 'email', 'password', 'app_name'],
+            'cta' => ['label' => 'Jetzt anmelden', 'path' => '/login.php'],
         ],
         'password_reset' => [
             'label' => 'Passwort zurückgesetzt',
-            'subject' => 'Dein Passwort für {{app_name}} wurde zurückgesetzt',
-            'body' => "Hallo {{name}},\n\ndein Passwort für {{app_name}} wurde von einem Admin zurückgesetzt.\n\nVorläufiges Passwort: {{password}}\n\nBitte melde dich an und ändere dein Passwort beim ersten Login unter Profil.",
+            'subject' => 'Dein neues vorläufiges Passwort für {{app_name}}',
+            'body' => "Hallo {{name}},\n\nein Admin hat dein Passwort für {{app_name}} zurückgesetzt. Damit kommst du wieder rein:\n\nVorläufiges Passwort: {{password}}\n\nBitte vergib nach der Anmeldung unter „Profil“ ein eigenes Passwort. Falls dich das überrascht, frag kurz bei deinem Admin nach.",
             'placeholders' => ['name', 'password', 'app_name'],
+            'cta' => ['label' => 'Jetzt anmelden', 'path' => '/login.php'],
         ],
         'assignment_removed' => [
             'label' => 'Zuweisung entfernt',
-            'subject' => 'Zuweisung entfernt: {{shift_title}} am {{shift_date}}',
-            'body' => "Deine Zuweisung für die Schicht \"{{shift_title}}\" am {{shift_date}} ({{shift_time}}) wurde vom Admin entfernt.",
+            'subject' => 'Kurze Info: Du bist für {{shift_title}} am {{shift_date}} ausgetragen',
+            'body' => "Hallo {{name}},\n\nkurze Info zu deinem Plan: Du wurdest für diese Schicht ausgetragen.\n\nSchicht: {{shift_title}}\nTag: {{shift_date}}\nZeit: {{shift_time}}\n\nBei Fragen sprich einfach kurz mit deinem Admin. Danke für dein Verständnis!",
             'placeholders' => ['name', 'shift_title', 'shift_date', 'shift_time'],
+            'cta' => ['label' => 'Zum Plan', 'path' => '/my_week.php'],
         ],
         'new_plan' => [
             'label' => 'Neuer Plan verfügbar (Rundmail bei Veröffentlichung neuer offener Schichten)',
-            'subject' => 'Neuer Schichtplan verfügbar',
-            'body' => "Hallo {{name}},\n\nes gibt neue offene Schichten in {{app_name}}. Bitte melde dich an, sieh unter \"Plan\" nach den offenen Schichten und bewirb dich auf die, die du übernehmen möchtest.",
+            'subject' => 'Neuer Plan verfügbar – such dir deine Schichten aus',
+            'body' => "Hallo {{name}},\n\nder neue Plan ist online, und es gibt offene Schichten, auf die du dich bewerben kannst.\n\nSchau in {{app_name}} unter „Plan“ nach und such dir aus, was zu dir passt. Wir freuen uns über jede Bewerbung!",
             'placeholders' => ['name', 'app_name'],
+            'cta' => ['label' => 'Schichten ansehen und bewerben', 'path' => '/shifts.php', 'variant' => 'stamp'],
         ],
         'schedule_changed' => [
             'label' => 'Sammel-Mail bei Veröffentlichung',
-            'subject' => 'Änderungen an deinem Schichtplan',
-            'body' => "Hallo {{name}},\n\nes gibt Änderungen an deinem Schichtplan in {{app_name}}. Bitte melde dich an und sieh in \"Mein Plan\" nach, um die Details zu sehen.",
+            'subject' => 'Neues in deinem Schichtplan',
+            'body' => "Hallo {{name}},\n\nin deinem Schichtplan in {{app_name}} hat sich etwas getan. Die Details findest du unter „Mein Plan“, dort steht immer der aktuelle Stand.\n\nSchau kurz rein, damit du nichts verpasst.",
             'placeholders' => ['name', 'app_name'],
+            'cta' => ['label' => 'Mein Plan öffnen', 'path' => '/my_week.php'],
         ],
     ];
 
@@ -125,7 +132,7 @@ final class Notifier
 
         foreach ($this->admins() as $admin) {
             if ($admin['notify_email']) {
-                $this->mailer->send($admin['email'], $admin['name'], $subject, $body);
+                $this->sendMail('new_application', $admin['email'], $admin['name'], $subject, $body);
             }
         }
 
@@ -144,10 +151,13 @@ final class Notifier
             'shift_date' => formatDateDe($shift['shift_date']),
             'shift_time' => "{$shift['start_time']}-{$shift['end_time']}",
             'status_label' => $label,
+            'rueckmeldung' => $status === 'approved'
+                ? 'Gute Nachricht: Du bist für diese Schicht eingeplant. Wir freuen uns auf dich!'
+                : 'Danke, dass du dich gemeldet hast! Für diese Schicht können wir dich diesmal leider nicht einplanen. Schau gern wieder in den Plan – es kommen laufend neue Schichten dazu.',
         ]);
 
         if ($applicant['notify_email'] && !isUserAbsentOn((int)$applicant['id'], date('Y-m-d'))) {
-            $this->mailer->send($applicant['email'], $applicant['name'], $subject, $body);
+            $this->sendMail('application_decided', $applicant['email'], $applicant['name'], $subject, $body);
         }
 
         $this->sms($applicant, 'application_decided', smsChangeNotice(SmsClient::portalUrl(), 'application'));
@@ -177,7 +187,7 @@ final class Notifier
             'app_name' => setting('app_name', 'Schichtplaner'),
         ]);
 
-        return $this->mailer->send($user['email'], $user['name'], $subject, $body);
+        return $this->sendMail('new_plan', $user['email'], $user['name'], $subject, $body);
     }
 
     public function shiftPublished(array $shift): void
@@ -202,7 +212,7 @@ final class Notifier
             'app_name' => $appName,
         ]);
 
-        return $this->mailer->send($user['email'], $user['name'], $subject, $body);
+        return $this->sendMail('account_created', $user['email'], $user['name'], $subject, $body);
     }
 
     public function passwordWasReset(array $user, string $tempPassword): bool
@@ -214,7 +224,7 @@ final class Notifier
             'app_name' => $appName,
         ]);
 
-        return $this->mailer->send($user['email'], $user['name'], $subject, $body);
+        return $this->sendMail('password_reset', $user['email'], $user['name'], $subject, $body);
     }
 
     public function assignmentRemoved(array $shift, array $employee): void
@@ -227,7 +237,7 @@ final class Notifier
         ]);
 
         if ($employee['notify_email'] && !isUserAbsentOn((int)$employee['id'], date('Y-m-d'))) {
-            $this->mailer->send($employee['email'], $employee['name'], $subject, $body);
+            $this->sendMail('assignment_removed', $employee['email'], $employee['name'], $subject, $body);
         }
 
         $this->sms($employee, 'assignment_removed', smsChangeNotice(SmsClient::portalUrl()));
@@ -258,7 +268,7 @@ final class Notifier
             'app_name' => $appName,
         ]);
 
-        return $this->mailer->send($user['email'], $user['name'], $subject, $body);
+        return $this->sendMail('schedule_changed', $user['email'], $user['name'], $subject, $body);
     }
 
     /**
@@ -267,6 +277,26 @@ final class Notifier
      * in $vars - sowohl in der Admin-Vorlage als auch im Standard, damit ein Admin, der nur
      * den Betreff überschreibt, im Text trotzdem funktionierende Platzhalter behält.
      */
+    /**
+     * Verschickt eine Vorlagen-Mail als HTML im Bon-Layout (MailLayout) mit Text-Alternative. Der
+     * Button kommt aus TEMPLATES[$key]['cta'], enthält der Text schon eine eigene Adresse, wird diese
+     * zum Button.
+     */
+    private function sendMail(string $templateKey, string $toEmail, string $toName, string $subject, string $body): bool
+    {
+        $cta = self::TEMPLATES[$templateKey]['cta'] ?? null;
+        $portalUrl = SmsClient::portalUrl();
+        $appName = (string)setting('app_name', 'Schichtplaner');
+
+        return $this->mailer->send(
+            $toEmail,
+            $toName,
+            $subject,
+            MailLayout::text($body, $cta, $portalUrl),
+            MailLayout::html($subject, $body, $cta, $appName, $portalUrl)
+        );
+    }
+
     private function renderTemplate(string $key, array $vars): array
     {
         $default = self::TEMPLATES[$key];

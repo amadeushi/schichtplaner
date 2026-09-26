@@ -6,6 +6,21 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.19.0] - 2026-09-26
+
+### Geändert
+- E-Mails: alle System-Mails kommen jetzt als HTML im Look des Schichtplaners
+  (Bon auf dunklem Tresen, Angaben als Bon-Block mit Zeiten in Monospace, Button
+  statt nacktem Link) und mit reiner Text-Alternative. Die Vorlagen bleiben
+  editierbarer Klartext; Leerzeile = Absatz, "Bezeichnung: Wert"-Zeilen = Bon-Block,
+  eine Adresse allein im Absatz = Button.
+- E-Mail-Texte neu und persönlicher formuliert (Willkommen, Passwort-Reset,
+  Bewerbungs-Rückmeldung, Zuweisung entfernt, Sammel-Mail, Rundmail "Neuer Plan
+  verfügbar", neue Bewerbung an Admins). Die Rückmeldung zur Bewerbung nennt das
+  Ergebnis freundlich (neuer Platzhalter `{{rueckmeldung}}`). Vom Admin
+  angepasste Vorlagen bleiben unverändert im Einsatz, bekommen aber das neue
+  Layout; unter Einstellungen lassen sie sich auf den neuen Standard zurücksetzen.
+
 ## [1.18.0] - 2026-09-26
 
 ### Hinzugefügt

@@ -21,7 +21,8 @@ final class Mailer
         return $this->lastError;
     }
 
-    public function send(string $toEmail, string $toName, string $subject, string $body): bool
+    /** Mit $html geht die Mail als multipart/alternative (Text + HTML), sonst als reiner Text. */
+    public function send(string $toEmail, string $toName, string $subject, string $body, ?string $html = null): bool
     {
         $this->lastError = null;
 
@@ -37,7 +38,7 @@ final class Mailer
         }
 
         try {
-            $this->sendSmtp($toEmail, $toName, $subject, $body);
+            $this->sendSmtp($toEmail, $toName, $subject, $body, $html);
             $this->log('email', $toEmail, true, null);
             return true;
         } catch (Throwable $e) {
@@ -47,7 +48,7 @@ final class Mailer
         }
     }
 
-    private function sendSmtp(string $toEmail, string $toName, string $subject, string $body): void
+    private function sendSmtp(string $toEmail, string $toName, string $subject, string $body, ?string $html = null): void
     {
         $host = $this->cfg['host'];
         $port = (int)$this->cfg['port'];
@@ -83,13 +84,31 @@ final class Mailer
         $toHeader = mb_encode_mimeheader($this->stripHeaderInjection($toName)) . ' <' . $toEmail . '>';
         $subjectHeader = mb_encode_mimeheader($this->stripHeaderInjection($subject));
 
-        $message = "From: $fromHeader\r\n"
+        $headers = "From: $fromHeader\r\n"
             . "To: $toHeader\r\n"
             . "Subject: $subjectHeader\r\n"
-            . "MIME-Version: 1.0\r\n"
-            . "Content-Type: text/plain; charset=UTF-8\r\n"
-            . "\r\n"
-            . str_replace("\n.", "\n..", $body) . "\r\n.";
+            . "MIME-Version: 1.0\r\n";
+
+        if ($html === null) {
+            $message = $headers
+                . "Content-Type: text/plain; charset=UTF-8\r\n"
+                . "\r\n"
+                . str_replace("\n.", "\n..", $body) . "\r\n.";
+        } else {
+            // Beide Teile als base64: bringt Umlaute/Leerzeichen am Zeilenende und lange Zeilen
+            // sicher durch jedes SMTP-Relay, und ein einzelner Punkt am Zeilenanfang kann nicht vorkommen.
+            $boundary = 'sp_' . bin2hex(random_bytes(12));
+            $part = static fn(string $type, string $content): string => "--$boundary\r\n"
+                . "Content-Type: $type; charset=UTF-8\r\n"
+                . "Content-Transfer-Encoding: base64\r\n\r\n"
+                . chunk_split(base64_encode(str_replace("\r\n", "\n", $content)), 76, "\r\n");
+            $message = $headers
+                . "Content-Type: multipart/alternative; boundary=\"$boundary\"\r\n"
+                . "\r\n"
+                . $part('text/plain', $body)
+                . $part('text/html', $html)
+                . "--$boundary--\r\n.";
+        }
 
         $this->write($socket, $message);
         $this->expect($socket, '250');

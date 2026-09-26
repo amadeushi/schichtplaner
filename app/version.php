@@ -6,4 +6,4 @@ declare(strict_types=1);
  * nennenswerten Änderung zusammen mit einem neuen Eintrag in
  * CHANGELOG.md aktualisieren (siehe CLAUDE.md, Abschnitt "Versionierung").
  */
-define('APP_VERSION', '1.18.0');
+define('APP_VERSION', '1.19.0');

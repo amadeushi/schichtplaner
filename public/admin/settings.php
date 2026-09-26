@@ -253,7 +253,7 @@ require __DIR__ . '/../partials/header.php';
 
 <div class="card">
   <h2>E-Mail-Vorlagen</h2>
-  <p class="muted">Betreff und Text jeder System-Mail lassen sich hier anpassen. Platzhalter wie <code>{{name}}</code> werden beim Versand automatisch durch den passenden Wert ersetzt. Änderungen gelten sofort für neu verschickte Mails.</p>
+  <p class="muted">Betreff und Text jeder System-Mail lassen sich hier anpassen. Platzhalter wie <code>{{name}}</code> werden beim Versand automatisch durch den passenden Wert ersetzt. Änderungen gelten sofort für neu verschickte Mails. Die Mails erscheinen im Look des Schichtplaners: Eine Leerzeile beginnt einen neuen Absatz, Zeilen wie <code>Zeit: {{shift_time}}</code> ergeben einen Bon-Block, und eine Adresse allein in einem Absatz wird zum Button.</p>
   <?php foreach (Notifier::TEMPLATES as $key => $tpl): ?>
     <?php $override = $templateOverrides[$key] ?? null; ?>
     <details class="tpl-editor">
