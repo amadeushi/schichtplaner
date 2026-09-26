@@ -12,7 +12,9 @@ declare(strict_types=1);
  *   - https://...             Absatz nur aus einer Adresse: wird zum Button (Beschriftung aus $cta)
  *
  * E-Mail-Clients verstehen kein modernes CSS, daher Tabellen und Inline-Styles; Lochreihe und
- * Zickzack-Kante sind Zugabe (Farbverlauf), ohne sie bleibt eine gerade Papierkante.
+ * Zickzack-Kante bestehen aus einer Reihe kleiner Elemente (Rand-Dreiecke, abgerundete Blöcke) statt aus
+ * Farbverläufen, weil viele Mail-Programme Verläufe entfernen; wo auch das nicht geht (Outlook für
+ * Windows), bleibt eine gerade Papierkante.
  */
 final class MailLayout
 {
@@ -77,25 +79,27 @@ final class MailLayout
                 : '„Profil“')
             . ' ein.';
 
-        $holes = 'background-color:' . self::PAPER . ';background-image:radial-gradient(circle at 12px 0,' . self::SURROUND . ' 5px,rgba(51,43,28,0) 5.5px);background-size:24px 10px;background-repeat:repeat-x;';
-        $tear = 'background-color:' . self::PAPER . ';background-image:linear-gradient(315deg,' . self::SURROUND . ' 25%,rgba(51,43,28,0) 25%),linear-gradient(45deg,' . self::SURROUND . ' 25%,rgba(51,43,28,0) 25%);background-size:12px 12px;background-position:0 2px;background-repeat:repeat-x;';
+        // Lochreihe oben: halbrunde Kerben in Tresenfarbe, die in die Papierkante greifen. Zickzack unten:
+        // Papier-Dreiecke, die in den Tresen zeigen. Beides ohne Farbverlauf (siehe Klassenkommentar).
+        $holes = str_repeat('<span style="display:inline-block;width:12px;height:6px;margin:0 6px;vertical-align:top;background:' . self::SURROUND . ';border-radius:0 0 6px 6px;"></span>', 24);
+        $tear = str_repeat('<span style="display:inline-block;width:0;height:0;vertical-align:top;border-left:6px solid ' . self::SURROUND . ';border-right:6px solid ' . self::SURROUND . ';border-top:8px solid ' . self::PAPER . ';"></span>', 47);
 
-        return '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8">'
+        return '<!DOCTYPE html><html lang="de" style="color-scheme:only light;"><head><meta charset="utf-8">'
             . '<meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">'
             . '<title>' . self::e($subject) . '</title></head>'
-            . '<body style="margin:0;padding:0;background:' . self::SURROUND . ';">'
+            . '<body bgcolor="' . self::SURROUND . '" style="margin:0;padding:0;background:' . self::SURROUND . ';color-scheme:only light;">'
             . '<div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:' . self::SURROUND . ';">' . self::e($preheader) . '&#8199;&#847;&#8199;&#847;&#8199;&#847;</div>'
             . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' . self::SURROUND . ';"><tr><td align="center" style="padding:28px 12px 32px 12px;">'
-            . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">'
+            . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;table-layout:fixed;">'
             // Kopf auf dem Tresen: nur der Name des Tools, in der Etiketten-Stimme des Systems.
             . '<tr><td style="padding:0 4px 12px 4px;font:700 12px/1.2 ' . self::SANS . ';letter-spacing:0.08em;text-transform:uppercase;color:' . self::SURROUND_INK . ';">' . self::e($appName) . '</td></tr>'
             // Lochreihe, Bon, Zickzack-Kante.
-            . '<tr><td height="10" style="height:10px;line-height:10px;font-size:0;border-radius:2px 2px 0 0;' . $holes . '">&nbsp;</td></tr>'
-            . '<tr><td style="background:' . self::PAPER . ';padding:8px 28px 6px 28px;">'
+            . '<tr><td height="6" style="height:6px;line-height:0;font-size:0;background:' . self::PAPER . ';border-radius:2px 2px 0 0;overflow:hidden;white-space:nowrap;text-align:left;max-width:0;">' . $holes . '</td></tr>'
+            . '<tr><td bgcolor="' . self::PAPER . '" style="background:' . self::PAPER . ';padding:8px 27px 6px 27px;border-left:1px solid ' . self::LINE_STRONG . ';border-right:1px solid ' . self::LINE_STRONG . ';">'
             . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' . $inner . '</table>'
             . '</td></tr>'
-            . '<tr><td height="12" style="height:12px;line-height:12px;font-size:0;border-radius:0 0 2px 2px;' . $tear . '">&nbsp;</td></tr>'
+            . '<tr><td height="8" style="height:8px;line-height:0;font-size:0;background:' . self::SURROUND . ';overflow:hidden;white-space:nowrap;text-align:center;max-width:0;">' . $tear . '</td></tr>'
             . '<tr><td style="padding:18px 4px 0 4px;font:400 12px/1.5 ' . self::SANS . ';color:' . self::SURROUND_INK_SOFT . ';">' . $footer . '</td></tr>'
             . '</table></td></tr></table></body></html>';
     }

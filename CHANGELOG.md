@@ -6,6 +6,21 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.19.1] - 2026-09-26
+
+### Behoben
+- E-Mails: Lochreihe oben und Zickzack-Kante unten waren als CSS-Farbverlauf
+  gebaut, den viele Mail-Programme entfernen - übrig blieb eine glatte Karte statt
+  des Bon-Zettels. Beide Kanten bestehen jetzt aus einer Reihe kleiner Elemente
+  (Rand-Dreiecke, abgerundete Blöcke) und bleiben ohne Farbverlauf erhalten. Auf
+  schmalen Bildschirmen werden die Reihen am Rand abgeschnitten und weiten das
+  Layout nicht mehr.
+- E-Mails: der Bon hat jetzt einen feinen Rand (Hairline) links und rechts, damit
+  er auch dann als Zettel erkennbar bleibt, wenn ein Mail-Programm die helle
+  Papierfläche im Dunkelmodus entfernt (Thunderbird mit aktivem "Dunklen
+  Nachrichtenmodus"). Zusätzlich meldet die Mail per `color-scheme`, dass sie ihr
+  eigenes helles Farbschema mitbringt.
+
 ## [1.19.0] - 2026-09-26
 
 ### Geändert
