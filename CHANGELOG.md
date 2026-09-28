@@ -30,6 +30,23 @@ für Fixes). Die aktuell laufende Version steht in `app/version.php`.
   dieselbe Optik wie der Aushang selbst (rot umrandete Fläche mit der Marke
   "Wichtig"); die SMS lautet z.B. "Schichtplaner – Wichtig: <Text> <Link>".
 
+## [1.20.3] - 2026-09-28
+
+### Behoben
+- SMS: der Personalbedarf-Rundruf und der Mitteilungs-Rundruf enthielten
+  einen Gedankenstrich ("–") in ihrem festen Text. Das Gateway wertet eine
+  SMS mit auch nur einem Zeichen außerhalb des GSM-Zeichensatzes als
+  Unicode und erlaubt dann nur noch 70 statt 160 Zeichen - bei 127 Zeichen
+  wurde "Personal gesucht" deshalb abgelehnt ("Unicode-Text überschreitet
+  70 Zeichen"). Der Strich ist jetzt ein normaler Bindestrich; zusätzlich
+  ersetzt eine neue Funktion `gsmSafe()` "kluge" Zeichen (Gedankenstrich,
+  geschwungene Anführungszeichen, Auslassungspunkt, geschütztes Leerzeichen)
+  in einem selbst getippten Schichttitel oder Mitteilungstext automatisch
+  durch ihr ASCII-Gegenstück, bevor daraus eine SMS wird. Bereits
+  fehlgeschlagene Einträge in der Warteschlange werden nicht automatisch
+  erneut versucht; ein erneuter Klick auf "Personal gesucht" verschickt
+  die Erinnerung mit dem korrigierten Text neu.
+
 ## [1.20.2] - 2026-09-28
 
 ### Geändert

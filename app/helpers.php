@@ -337,15 +337,30 @@ function smsChangeNotice(string $portalUrl, string $kind = 'plan'): string
  * Nachricht eine konkrete Handlungsaufforderung ist. Reicht der Platz nicht (bis 160 Zeichen,
  * nur BMP), wird nur der Schichttitel gekürzt; Tag, Zeit und Link bleiben immer vollständig.
  */
+/**
+ * Ersetzt "typografische" Zeichen, die Texteditoren/Smartphones gern automatisch einsetzen
+ * (Gedankenstrich, geschwungene Anführungszeichen, Auslassungspunkt, geschütztes Leerzeichen)
+ * durch ihr ASCII-Gegenstück. Grund: Das SMS-Gateway sendet nur reinen GSM-7-Text mit bis zu 160
+ * Zeichen; ist auch nur ein einziges Zeichen NICHT im GSM-Zeichensatz (z.B. "–" statt "-"), wertet
+ * es die ganze Nachricht als Unicode und erlaubt dann nur noch 70 Zeichen - genau das ließ zuvor
+ * den Personalbedarf-Rundruf mit "–" im festen Text scheitern (127 > 70 Zeichen, HTTP 400). Deutsche
+ * Umlaute (ä/ö/ü/ß) gehören zum GSM-7-Zeichensatz und bleiben unangetastet.
+ */
+function gsmSafe(string $text): string
+{
+    $map = ['–' => '-', '—' => '-', '−' => '-', '‘' => "'", '’' => "'", '‚' => "'", '“' => '"', '”' => '"', '„' => '"', '…' => '...', "Â " => ' '];
+    return strtr($text, $map);
+}
+
 function smsUrgentNotice(array $shift, string $portalUrl): string
 {
-    $prefix = 'Schichtplaner: Dringend gesucht – ';
+    $prefix = 'Schichtplaner: Dringend gesucht - ';
     $suffix = ' am ' . date('d.m.', strtotime((string)$shift['shift_date']))
         . ', ' . $shift['start_time'] . '-' . $shift['end_time'] . '. Jetzt bewerben'
         . ($portalUrl === '' ? '.' : ': ' . rtrim($portalUrl, '/') . '/shifts.php');
 
     $max = 160;
-    $clean = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/[\x{10000}-\x{10FFFF}\p{Cc}]/u', ' ', (string)$shift['title'])));
+    $clean = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/[\x{10000}-\x{10FFFF}\p{Cc}]/u', ' ', gsmSafe((string)$shift['title']))));
     $room = $max - mb_strlen($prefix) - mb_strlen($suffix);
     if ($room < 1) {
         return mb_substr($prefix . $suffix, 0, $max);
@@ -364,11 +379,11 @@ function smsUrgentNotice(array $shift, string $portalUrl): string
  */
 function smsBroadcastNotice(string $noticeText, string $portalUrl): string
 {
-    $prefix = 'Schichtplaner – Wichtig: ';
+    $prefix = 'Schichtplaner - Wichtig: ';
     $suffix = $portalUrl === '' ? '' : ' ' . rtrim($portalUrl, '/') . '/my_week.php';
 
     $max = 160;
-    $clean = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/[\x{10000}-\x{10FFFF}\p{Cc}]/u', ' ', $noticeText)));
+    $clean = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/[\x{10000}-\x{10FFFF}\p{Cc}]/u', ' ', gsmSafe($noticeText))));
     $room = $max - mb_strlen($prefix) - mb_strlen($suffix);
     if ($room < 1) {
         return mb_substr($prefix . $suffix, 0, $max);
