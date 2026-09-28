@@ -329,3 +329,52 @@ function smsChangeNotice(string $portalUrl, string $kind = 'plan'): string
         : 'Schichtplaner: Es gibt eine Änderung in deinem Plan.';
     return $portalUrl === '' ? $text : $text . ' Details im Portal: ' . $portalUrl;
 }
+
+/**
+ * SMS für den Personalbedarf-Rundruf einer konkreten Schicht (admin/shifts.php, Aktion
+ * 'urgent_reminder'): nennt bewusst Titel, Tag und Zeit - anders als smsChangeNotice() ist das
+ * hier die eine sanktionierte Ausnahme, weil der Admin die Schicht selbst auswählt und die
+ * Nachricht eine konkrete Handlungsaufforderung ist. Reicht der Platz nicht (bis 160 Zeichen,
+ * nur BMP), wird nur der Schichttitel gekürzt; Tag, Zeit und Link bleiben immer vollständig.
+ */
+function smsUrgentNotice(array $shift, string $portalUrl): string
+{
+    $prefix = 'Schichtplaner: Dringend gesucht – ';
+    $suffix = ' am ' . date('d.m.', strtotime((string)$shift['shift_date']))
+        . ', ' . $shift['start_time'] . '-' . $shift['end_time'] . '. Jetzt bewerben'
+        . ($portalUrl === '' ? '.' : ': ' . rtrim($portalUrl, '/') . '/shifts.php');
+
+    $max = 160;
+    $clean = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/[\x{10000}-\x{10FFFF}\p{Cc}]/u', ' ', (string)$shift['title'])));
+    $room = $max - mb_strlen($prefix) - mb_strlen($suffix);
+    if ($room < 1) {
+        return mb_substr($prefix . $suffix, 0, $max);
+    }
+    if (mb_strlen($clean) > $room) {
+        $clean = mb_substr($clean, 0, max(0, $room - 3)) . '...';
+    }
+    return mb_substr($prefix . $clean . $suffix, 0, $max);
+}
+
+/**
+ * SMS für den Rundruf der dringenden Mitteilung (admin/settings.php, "Dringende Mitteilung").
+ * Anders als smsUrgentNotice() hat hier der ADMIN den gesamten Text frei verfasst (kein fester
+ * Rahmensatz), deshalb wird nur "Wichtig: " davorgesetzt und bei Bedarf gekürzt (bis 160 Zeichen,
+ * nur BMP).
+ */
+function smsBroadcastNotice(string $noticeText, string $portalUrl): string
+{
+    $prefix = 'Schichtplaner – Wichtig: ';
+    $suffix = $portalUrl === '' ? '' : ' ' . rtrim($portalUrl, '/') . '/my_week.php';
+
+    $max = 160;
+    $clean = trim((string)preg_replace('/\s+/u', ' ', (string)preg_replace('/[\x{10000}-\x{10FFFF}\p{Cc}]/u', ' ', $noticeText)));
+    $room = $max - mb_strlen($prefix) - mb_strlen($suffix);
+    if ($room < 1) {
+        return mb_substr($prefix . $suffix, 0, $max);
+    }
+    if (mb_strlen($clean) > $room) {
+        $clean = mb_substr($clean, 0, max(0, $room - 3)) . '...';
+    }
+    return mb_substr($prefix . $clean . $suffix, 0, $max);
+}

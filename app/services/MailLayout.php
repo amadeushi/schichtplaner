@@ -26,6 +26,7 @@ final class MailLayout
     private const LINE = '#ddd4bf';
     private const LINE_STRONG = '#b9ad91';
     private const STAMP = '#c8391f';
+    private const STAMP_WASH = '#f7e3dc';
     private const SURROUND_INK = '#f3e8d3';
     private const SURROUND_INK_SOFT = '#a8967a';
 
@@ -40,13 +41,23 @@ final class MailLayout
     /**
      * @param array{label:string,path?:string,url?:string,variant?:string}|null $cta Button; url hat Vorrang vor path
      */
-    public static function html(string $subject, string $body, ?array $cta, string $appName, string $portalUrl): string
+    /**
+     * $highlight markiert den ersten passenden Block stempelrot statt in der sonst achromatischen
+     * Bon-Optik - die eine sanktionierte Ausnahme, siehe "The One Stamp Rule" in DESIGN.md: eine
+     * vom Admin bewusst ausgelöste dringende Mitteilung zählt zu den vier erlaubten Stempel-
+     * Anlässen. 'shift' markiert den ersten Bon-Block (Schicht/Tag/Zeit/…, urgent_reminder),
+     * 'notice' rahmt den ersten Fließtext-Absatz wie den Aushang im Adminbereich (urgent_notice,
+     * .notice-board/.badge.urgent - identische Farben, damit Mail und Seite gleich aussehen).
+     */
+    public static function html(string $subject, string $body, ?array $cta, string $appName, string $portalUrl, string $highlight = 'none'): string
     {
         $blocks = self::parse($body);
         $ctaUrl = self::ctaUrl($cta, $portalUrl);
         $stamp = ($cta['variant'] ?? 'ink') === 'stamp';
 
         $hasButton = false;
+        $kvSeen = false;
+        $noticeSeen = false;
         $inner = '';
         $preheader = '';
         foreach ($blocks as $b) {
@@ -55,7 +66,8 @@ final class MailLayout
                     $inner .= '<tr><td style="padding:0 0 14px 0;font:700 21px/1.25 ' . self::SANS . ';letter-spacing:-0.01em;color:' . self::INK . ';">' . self::e($b['text']) . '</td></tr>';
                     break;
                 case 'kv':
-                    $inner .= self::kvBlock($b['rows']);
+                    $inner .= self::kvBlock($b['rows'], $highlight === 'shift' && !$kvSeen);
+                    $kvSeen = true;
                     break;
                 case 'url':
                     $inner .= self::button($cta['label'] ?? 'Zum Schichtplaner', $b['text'], $stamp);
@@ -64,6 +76,11 @@ final class MailLayout
                 default:
                     if ($preheader === '') {
                         $preheader = mb_substr(preg_replace('/\s+/u', ' ', $b['text']) ?? '', 0, 110);
+                    }
+                    if ($highlight === 'notice' && !$noticeSeen) {
+                        $inner .= self::noticeBlock($b['text']);
+                        $noticeSeen = true;
+                        break;
                     }
                     $inner .= '<tr><td style="padding:0 0 16px 0;font:400 16px/1.55 ' . self::SANS . ';color:' . self::INK . ';">' . self::linkify(self::e($b['text'])) . '</td></tr>';
             }
@@ -154,21 +171,44 @@ final class MailLayout
         return $rows;
     }
 
-    private static function kvBlock(array $rows): string
+    /**
+     * Rahmt einen Fließtext-Absatz wie den Aushang (.notice-board) im Adminbereich: dieselbe
+     * stempelrot umrandete Stamp-Wash-Fläche, derselbe "Wichtig"-Vermerk wie .badge.urgent -
+     * für den Rundruf einer dringenden Mitteilung (urgent_notice).
+     */
+    private static function noticeBlock(string $text): string
     {
-        $html = '<tr><td style="padding:2px 0 18px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px dashed ' . self::LINE_STRONG . ';border-bottom:1px dashed ' . self::LINE_STRONG . ';">';
-        foreach ($rows as $n => [$label, $value]) {
-            $mono = (bool)preg_match(self::MONO_LABEL, $label);
+        return '<tr><td style="padding:2px 0 18px 0;">'
+            . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' . self::STAMP_WASH . ';border:1.5px solid ' . self::STAMP . ';border-radius:3px;">'
+            . '<tr><td style="padding:0.9rem 1.1rem 0.5rem 1.1rem;">'
+            . '<span style="display:inline-block;padding:0.15rem 0.5rem;border:1.5px solid ' . self::STAMP . ';border-radius:3px;background:' . self::STAMP_WASH . ';color:' . self::STAMP . ';font:700 11px/1.3 ' . self::SANS . ';letter-spacing:0.035em;text-transform:uppercase;">Wichtig</span>'
+            . '</td></tr>'
+            . '<tr><td style="padding:0 1.1rem 0.9rem 1.1rem;font:600 16px/1.45 ' . self::SANS . ';color:' . self::INK . ';">' . self::linkify(self::e($text)) . '</td></tr>'
+            . '</table></td></tr>';
+    }
+
+    private static function kvBlock(array $rows, bool $urgent = false): string
+    {
+        $borderColor = $urgent ? self::STAMP : self::LINE_STRONG;
+        $borderWidth = $urgent ? '1.5px' : '1px';
+        $label = '';
+        if ($urgent) {
+            $label = '<tr><td style="padding:0 0 10px 0;"><span style="display:inline-block;padding:0.2rem 0.65rem;border:1.5px solid ' . self::STAMP . ';border-radius:3px;background:' . self::STAMP_WASH . ';color:' . self::STAMP . ';font:700 11px/1.3 ' . self::SANS . ';letter-spacing:0.035em;text-transform:uppercase;">Dringend gesucht</span></td></tr>';
+        }
+        $rows_html = '<tr><td><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:' . $borderWidth . ' dashed ' . $borderColor . ';border-bottom:' . $borderWidth . ' dashed ' . $borderColor . ';">';
+        foreach ($rows as $n => [$rowLabel, $value]) {
+            $mono = (bool)preg_match(self::MONO_LABEL, $rowLabel);
             $valueStyle = $mono
                 ? 'font:600 16px/1.35 ' . self::MONO . ';'
                 : 'font:700 16px/1.35 ' . self::SANS . ';';
             $rule = $n > 0 ? 'border-top:1px solid ' . self::LINE . ';' : '';
-            $html .= '<tr>'
-                . '<td valign="baseline" width="34%" style="padding:9px 10px 9px 0;' . $rule . 'font:700 12px/1.3 ' . self::SANS . ';letter-spacing:0.035em;text-transform:uppercase;color:' . self::INK_SOFT . ';">' . self::e($label) . '</td>'
+            $rows_html .= '<tr>'
+                . '<td valign="baseline" width="34%" style="padding:9px 10px 9px 0;' . $rule . 'font:700 12px/1.3 ' . self::SANS . ';letter-spacing:0.035em;text-transform:uppercase;color:' . self::INK_SOFT . ';">' . self::e($rowLabel) . '</td>'
                 . '<td valign="baseline" style="padding:9px 0;' . $rule . $valueStyle . 'color:' . self::INK . ';word-break:break-word;">' . self::e($value) . '</td>'
                 . '</tr>';
         }
-        return $html . '</table></td></tr>';
+        $rows_html .= '</table></td></tr>';
+        return '<tr><td style="padding:2px 0 18px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">' . $label . $rows_html . '</table></td></tr>';
     }
 
     private static function button(string $label, string $url, bool $stamp): string

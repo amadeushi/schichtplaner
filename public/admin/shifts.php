@@ -204,6 +204,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect($backTo);
     }
 
+    if ($action === 'urgent_reminder') {
+        $shiftId = (int)($_POST['shift_id'] ?? 0);
+        $returnDate = (string)($_POST['return_date'] ?? '');
+        $backTo = '/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : '') . '#shift-' . $shiftId;
+
+        $stmt = db()->prepare(
+            "SELECT sh.*, (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sh.id AND a.status = 'approved') AS approved_count
+             FROM shifts sh WHERE sh.id = :id"
+        );
+        $stmt->execute(['id' => $shiftId]);
+        $shift = $stmt->fetch();
+
+        if (!$shift || $shift['published_at'] === null || $shift['status'] !== 'open') {
+            flash('error', 'Für diese Schicht ist gerade kein Rundruf möglich (nicht veröffentlicht oder nicht offen).');
+            redirect($backTo);
+        }
+        if ((int)$shift['approved_count'] >= (int)$shift['needed_count']) {
+            flash('error', 'Diese Schicht ist bereits voll besetzt.');
+            redirect($backTo);
+        }
+
+        // Alle aktiven Mitarbeiter ohne laufende Bewerbung/Zuweisung für GENAU diese Schicht - wer
+        // schon beworben oder zugewiesen ist, weiß bereits Bescheid und braucht keinen Rundruf.
+        $recipStmt = db()->prepare(
+            "SELECT u.* FROM users u
+             WHERE u.role = 'employee' AND u.active = 1
+               AND NOT EXISTS (
+                   SELECT 1 FROM shift_applications sa
+                   WHERE sa.shift_id = :sid AND sa.user_id = u.id AND sa.status IN ('pending', 'approved')
+               )
+             ORDER BY u.name"
+        );
+        $recipStmt->execute(['sid' => $shiftId]);
+        $today = date('Y-m-d');
+        $recipients = array_values(array_filter($recipStmt->fetchAll(), function ($u) use ($shift, $today) {
+            // heute abwesend (globale Benachrichtigungs-Sperre) oder am Schichttag selbst abwesend
+            return !isUserAbsentOn((int)$u['id'], $today) && !isUserAbsentOn((int)$u['id'], $shift['shift_date']);
+        }));
+
+        $notifier = new Notifier($config['smtp']);
+        $mailedCount = 0;
+        foreach ($recipients as $rec) {
+            if ($notifier->urgentReminder($shift, $rec)) {
+                $mailedCount++;
+            }
+        }
+
+        if (!$recipients) {
+            flash('error', 'Rundruf nicht verschickt: Niemand verfügbar (alle bereits beworben/zugewiesen oder abwesend).');
+        } else {
+            $smsPart = SmsClient::enabled() ? ', ' . $notifier->smsCount() . ' SMS' : '';
+            flash('success', 'Rundruf "Personal gesucht" an ' . count($recipients) . ' Mitarbeiter verschickt (' . $mailedCount . " E-Mails$smsPart).");
+        }
+        redirect($backTo);
+    }
+
     if ($action === 'publish') {
         $refDate = (string)($_POST['week_date'] ?? '');
         $refTs = ($refDate !== '' && strtotime($refDate) !== false) ? strtotime($refDate) : time();

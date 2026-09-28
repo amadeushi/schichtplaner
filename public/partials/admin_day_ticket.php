@@ -117,6 +117,15 @@
               <span></span>
             <?php endif; ?>
             <span style="display:flex;gap:0.4rem;align-items:center;">
+              <?php if (!$full && $sh['status'] === 'open' && $sh['published_at'] !== null): ?>
+                <form class="inline" method="post" onsubmit="return confirm('Allen verfügbaren, noch nicht eingeplanten Mitarbeitern eine dringende Erinnerung zu &quot;<?= e($sh['title']) ?>&quot; am <?= e(formatDateDe($d)) ?> schicken?');">
+                  <?= csrfField() ?>
+                  <input type="hidden" name="action" value="urgent_reminder">
+                  <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
+                  <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
+                  <button type="submit" class="btn small stamp-btn">Personal gesucht</button>
+                </form>
+              <?php endif; ?>
               <a class="btn small secondary" href="?edit=<?= (int)$sh['id'] ?>&date=<?= e($weekStart) ?>#edit-shift">Bearbeiten</a>
               <form class="inline" method="post">
                 <?= csrfField() ?>

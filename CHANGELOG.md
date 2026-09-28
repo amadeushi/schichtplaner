@@ -6,6 +6,39 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.20.0] - 2026-09-28
+
+### Hinzugefügt
+- Rundruf "Personal gesucht": am Schicht-Ticket in der Admin-Wochenansicht
+  (admin/shifts.php) kann eine offene, unterbesetzte Schicht direkt per Knopf
+  ausgewählt werden. Es geht eine Erinnerung an alle aktiven Mitarbeiter, die
+  weder bereits zugewiesen noch beworben und weder heute noch am Schichttag
+  abwesend sind - per E-Mail und SMS, jeweils nach ihren Schaltern. Anders als
+  die übrigen Benachrichtigungen nennt diese bewusst Schicht, Tag, Zeit und Ort
+  (SMS z.B. "Schichtplaner: Dringend gesucht – Abendschicht am 05.10.,
+  16:00-22:30. Jetzt bewerben: <Link>"); die Mail hebt den Bon-Block mit einer
+  stempelroten Kontur und dem Vermerk "Dringend gesucht" hervor (One Stamp
+  Rule). Läuft direkt, ohne die sonstige 15-Minuten-SMS-Bündelung. Die
+  E-Mail-Vorlage ist wie die anderen unter Einstellungen editierbar.
+
+- "Dringende Mitteilung" (Einstellungen → Aushang): eine neue Checkbox
+  "Auch per E-Mail/SMS an alle Mitarbeiter verschicken" streut den Aushang-Text
+  beim Speichern zusätzlich als Rundruf, statt ihn nur im Plan hervorzuheben.
+  Der Admin entscheidet das jedes Mal beim Speichern neu, kein automatischer
+  Versand bei jeder Änderung. Empfänger sind aktive Mitarbeiter, die heute
+  nicht abwesend sind, je nach ihren E-Mail-/SMS-Schaltern. Die Mail übernimmt
+  dieselbe Optik wie der Aushang selbst (rot umrandete Fläche mit der Marke
+  "Wichtig"); die SMS lautet z.B. "Schichtplaner – Wichtig: <Text> <Link>".
+
+### Behoben
+- Tabellen (z.B. Benachrichtigungsprotokoll in Einstellungen): eine breite
+  Spalte wie "Erfolg" mit langem Fehlertext konnte die Tabelle über den
+  Kartenrand auf den dunklen Hintergrund hinausschieben, weil `overflow-x`
+  allein auf `<table>` bei normalem Tabellen-Layout nicht greift. Tabellen
+  (außer der Admin-Kalendertabelle, die ihre eigene Lösung hat) scrollen
+  jetzt innerhalb der Karte horizontal statt überzulaufen; die gestapelte
+  Mobil-Ansicht ist unverändert.
+
 ## [1.19.1] - 2026-09-26
 
 ### Behoben

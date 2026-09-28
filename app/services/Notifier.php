@@ -83,6 +83,29 @@ final class Notifier
             'placeholders' => ['name', 'app_name'],
             'cta' => ['label' => 'Mein Plan öffnen', 'path' => '/my_week.php'],
         ],
+        'urgent_notice' => [
+            'label' => 'Wichtige Mitteilung (Rundruf beim Aktivieren des Aushangs)',
+            'subject' => 'Wichtige Mitteilung',
+            'body' => "Hallo {{name}},\n\n{{text}}\n\nDiese Mitteilung steht auch im Schichtplaner oben im Plan.",
+            'placeholders' => ['name', 'text'],
+            'cta' => ['label' => 'Zum Schichtplaner', 'path' => '/my_week.php', 'variant' => 'stamp'],
+        ],
+        'urgent_reminder' => [
+            'label' => 'Personal gesucht (Rundruf für eine einzelne Schicht)',
+            'subject' => 'Dringend gesucht: {{shift_title}} am {{shift_date}}',
+            'body' => "Hallo {{name}},
+
+für diese Schicht werden noch dringend Bewerbende gesucht:
+
+Schicht: {{shift_title}}
+Tag: {{shift_date}}
+Zeit: {{shift_time}}
+Ort: {{location}}
+
+Hast du an dem Tag Zeit? Wir freuen uns, wenn du dich meldest!",
+            'placeholders' => ['name', 'shift_title', 'shift_date', 'shift_time', 'location'],
+            'cta' => ['label' => 'Jetzt bewerben', 'path' => '/shifts.php', 'variant' => 'stamp'],
+        ],
     ];
 
     private int $smsQueued = 0;
@@ -98,7 +121,12 @@ final class Notifier
      * zusätzlich: SMS im Gateway konfiguriert, Mobilnummer hinterlegt und "SMS erhalten" gesetzt.
      * $user muss eine volle users-Zeile sein (id, phone, notify_sms). Nie Passwörter per SMS.
      */
-    private function sms(array $user, string $eventType, string $text): void
+    /**
+     * $direct = true umgeht die 15-Minuten-Bündelung (enqueueCoalesced): eine bewusst pro Schicht
+     * ausgelöste, konkrete Nachricht (z.B. Personalbedarf) darf nie in den allgemeinen Plan-Hinweis
+     * einer zufällig zeitgleich wartenden SMS aufgehen.
+     */
+    private function sms(array $user, string $eventType, string $text, bool $direct = false): void
     {
         if (!SmsClient::enabled() || empty($user['notify_sms']) || empty($user['phone'])) {
             return;
@@ -107,8 +135,12 @@ final class Notifier
             return;
         }
         try {
-            // Überschneiden sich mehrere Anlässe im Zeitfenster, geht der allgemeine Plan-Hinweis raus.
-            SmsClient::enqueueCoalesced((int)$user['id'], (string)$user['phone'], $eventType, $text, smsChangeNotice(SmsClient::portalUrl()));
+            if ($direct) {
+                SmsClient::enqueue((int)$user['id'], (string)$user['phone'], $eventType, $text);
+            } else {
+                // Überschneiden sich mehrere Anlässe im Zeitfenster, geht der allgemeine Plan-Hinweis raus.
+                SmsClient::enqueueCoalesced((int)$user['id'], (string)$user['phone'], $eventType, $text, smsChangeNotice(SmsClient::portalUrl()));
+            }
             $this->smsQueued++;
         } catch (Throwable) {
             // Ein SMS-Problem darf nie eine Planänderung oder das Veröffentlichen blockieren.
@@ -188,6 +220,56 @@ final class Notifier
         ]);
 
         return $this->sendMail('new_plan', $user['email'], $user['name'], $subject, $body);
+    }
+
+    /**
+     * Rundruf "Personal gesucht" für eine einzelne, konkrete Schicht (admin/shifts.php, Aktion
+     * 'urgent_reminder'): nennt bewusst Schicht, Tag und Zeit - anders als die übrigen Sammel-
+     * nachrichten, die genau das auslassen. Der Admin wählt Empfänger und Zeitpunkt bewusst pro
+     * Schicht, deshalb keine 15-Minuten-Bündelung (SMS geht direkt raus). Gibt zurück, ob eine
+     * E-Mail verschickt wurde. $recipient muss eine volle users-Zeile sein.
+     */
+    /**
+     * Rundruf für die dringende Mitteilung (admin/settings.php, "Dringende Mitteilung" +
+     * Kästchen "Auch verschicken"): streut denselben Text, der oben im Plan als Aushang steht,
+     * zusätzlich per E-Mail/SMS. Bewusst kein Abgleich mit einer vorherigen Fassung - jeder
+     * Aufruf ist eine eigene, vom Admin bestätigte Entscheidung (siehe admin/settings.php), damit
+     * eine spätere Textänderung sich bei Bedarf erneut streuen lässt, ohne heimlich zu wiederholen,
+     * wenn der Admin nur ohne Häkchen erneut speichert. Gibt zurück, ob eine E-Mail verschickt wurde.
+     */
+    public function noticeBroadcast(string $noticeText, array $recipient): bool
+    {
+        $mailed = false;
+        if (!empty($recipient['notify_email'])) {
+            [$subject, $body] = $this->renderTemplate('urgent_notice', [
+                'name' => $recipient['name'],
+                'text' => $noticeText,
+            ]);
+            $mailed = $this->sendMail('urgent_notice', $recipient['email'], $recipient['name'], $subject, $body, 'notice');
+        }
+
+        $this->sms($recipient, 'urgent_notice', smsBroadcastNotice($noticeText, SmsClient::portalUrl()), true);
+
+        return $mailed;
+    }
+
+    public function urgentReminder(array $shift, array $recipient): bool
+    {
+        $mailed = false;
+        if (!empty($recipient['notify_email'])) {
+            [$subject, $body] = $this->renderTemplate('urgent_reminder', [
+                'name' => $recipient['name'],
+                'shift_title' => $shift['title'],
+                'shift_date' => formatDateDe($shift['shift_date']),
+                'shift_time' => "{$shift['start_time']}-{$shift['end_time']}",
+                'location' => (string)($shift['location'] ?: '–'),
+            ]);
+            $mailed = $this->sendMail('urgent_reminder', $recipient['email'], $recipient['name'], $subject, $body, 'shift');
+        }
+
+        $this->sms($recipient, 'urgent_reminder', smsUrgentNotice($shift, SmsClient::portalUrl()), true);
+
+        return $mailed;
     }
 
     public function shiftPublished(array $shift): void
@@ -282,7 +364,8 @@ final class Notifier
      * Button kommt aus TEMPLATES[$key]['cta'], enthält der Text schon eine eigene Adresse, wird diese
      * zum Button.
      */
-    private function sendMail(string $templateKey, string $toEmail, string $toName, string $subject, string $body): bool
+    /** $highlight: 'none'|'shift'|'notice' - siehe MailLayout::html(). */
+    private function sendMail(string $templateKey, string $toEmail, string $toName, string $subject, string $body, string $highlight = 'none'): bool
     {
         $cta = self::TEMPLATES[$templateKey]['cta'] ?? null;
         $portalUrl = SmsClient::portalUrl();
@@ -293,7 +376,7 @@ final class Notifier
             $toName,
             $subject,
             MailLayout::text($body, $cta, $portalUrl),
-            MailLayout::html($subject, $body, $cta, $appName, $portalUrl)
+            MailLayout::html($subject, $body, $cta, $appName, $portalUrl, $highlight)
         );
     }
 

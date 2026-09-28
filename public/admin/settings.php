@@ -15,9 +15,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'save_notice') {
-        setSetting('urgent_notice_enabled', isset($_POST['urgent_notice_enabled']) ? '1' : '0');
-        setSetting('urgent_notice_text', trim((string)($_POST['urgent_notice_text'] ?? '')));
-        flash('success', 'Mitteilung gespeichert.');
+        $enabled = isset($_POST['urgent_notice_enabled']);
+        $text = trim((string)($_POST['urgent_notice_text'] ?? ''));
+        setSetting('urgent_notice_enabled', $enabled ? '1' : '0');
+        setSetting('urgent_notice_text', $text);
+
+        $broadcastRequested = isset($_POST['urgent_notice_broadcast']);
+        if (!$broadcastRequested) {
+            flash('success', 'Mitteilung gespeichert.');
+            redirect('/admin/settings.php');
+        }
+        if (!$enabled || $text === '') {
+            flash('success', 'Mitteilung gespeichert. Kein Rundruf verschickt (Mitteilung ist ausgeschaltet oder ohne Text).');
+            redirect('/admin/settings.php');
+        }
+
+        // Rundruf an alle aktiven Mitarbeiter, die heute nicht abwesend sind - Admins kennen ihre
+        // eigene Mitteilung bereits, siehe Notifier::noticeBroadcast().
+        $recipients = array_values(array_filter(
+            db()->query("SELECT * FROM users WHERE role = 'employee' AND active = 1 ORDER BY name")->fetchAll(),
+            fn($u) => !isUserAbsentOn((int)$u['id'], date('Y-m-d'))
+        ));
+
+        $notifier = new Notifier($config['smtp']);
+        $mailedCount = 0;
+        foreach ($recipients as $rec) {
+            if ($notifier->noticeBroadcast($text, $rec)) {
+                $mailedCount++;
+            }
+        }
+
+        if (!$recipients) {
+            flash('success', 'Mitteilung gespeichert. Kein Rundruf verschickt (niemand verfügbar).');
+        } else {
+            $smsPart = SmsClient::enabled() ? ', ' . $notifier->smsCount() . ' SMS' : '';
+            flash('success', 'Mitteilung gespeichert und an ' . count($recipients) . ' Mitarbeiter verschickt (' . $mailedCount . " E-Mails$smsPart).");
+        }
         redirect('/admin/settings.php');
     }
 
@@ -152,6 +185,11 @@ require __DIR__ . '/../partials/header.php';
     </label>
     <label for="urgent_notice_text">Text</label>
     <textarea id="urgent_notice_text" name="urgent_notice_text" placeholder="z.B. Küche heute wegen Wasserschaden geschlossen."><?= e(setting('urgent_notice_text', '')) ?></textarea>
+    <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem;">
+      <input type="checkbox" name="urgent_notice_broadcast" style="width:auto;">
+      Auch per E-Mail/SMS an alle Mitarbeiter verschicken
+    </label>
+    <p class="muted" style="font-size:0.85rem;margin:0.2rem 0 0;">Nur beim Absenden dieses Formulars aktiv - unabhängig davon bleibt die Mitteilung oben im Plan stehen, solange "Mitteilung anzeigen" an ist.</p>
     <button type="submit" class="btn" style="margin-top:1rem;">Speichern</button>
   </form>
 </div>
