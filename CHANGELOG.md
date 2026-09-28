@@ -30,6 +30,20 @@ für Fixes). Die aktuell laufende Version steht in `app/version.php`.
   dieselbe Optik wie der Aushang selbst (rot umrandete Fläche mit der Marke
   "Wichtig"); die SMS lautet z.B. "Schichtplaner – Wichtig: <Text> <Link>".
 
+## [1.20.2] - 2026-09-28
+
+### Geändert
+- Benachrichtigungsprotokoll (Einstellungen): statt einer Tabelle mit
+  horizontalem Scrollbalken steht jede Zeile jetzt immer als eigener Eintrag
+  untereinander - passt zur Natur eines Protokolls (eine Reihe einzelner
+  Ereignisse, kein Raster gleich geformter Zeilen) und lässt eine lange
+  Fehlermeldung einfach über die volle Kartenbreite laufen statt in eine
+  enge Spalte gepresst zu werden. Zeit steht jetzt in Monospace
+  (Register-Tape Rule), Erfolg/Fehler als Kassenbon-Vermerk (✓/×) statt
+  als Text "OK"/"Fehler: …". Die übrigen Tabellen (Abwesenheiten,
+  Bewerbungen, Arbeitszeiten, Mitarbeiterverwaltung) bleiben echte
+  Tabellen mit horizontalem Scrollbalken als Ausweichlösung.
+
 ## [1.20.1] - 2026-09-28
 
 ### Behoben

@@ -115,6 +115,16 @@ function navActive(string $path, array $matches): bool
      die letzte) bis zur Unlesbarkeit zusammen. .week-grid hat mit .grid-scroll seine eigene,
      baugleiche Lösung. */
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* .log-list: ein Log ist von Natur aus eine Reihe einzelner Einträge, kein Raster gleich
+     geformter Zeilen - eine variable, freie Spalte wie ein Fehlertext liest sich als eigene
+     Zeile innerhalb des Eintrags besser als in einer engen Tabellenspalte. Nutzt genau dieselbe
+     Stapel-Darstellung wie die mobile Tabellen-Ansicht unten, hier aber bei jeder Breite. */
+  table.log-list, table.log-list thead, table.log-list tbody,
+  table.log-list th, table.log-list td, table.log-list tr { display: block; }
+  table.log-list thead { display: none; }
+  table.log-list tr { border-bottom: 1px solid var(--ink-line); padding: 0.6rem 0; }
+  table.log-list td { border: none; padding: 0.2rem 0; }
+  table.log-list td::before { content: attr(data-label) ": "; font-weight: 600; color: var(--ink-soft); }
   th, td { text-align: left; padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--ink-line); font-size: 0.9rem; vertical-align: middle; }
   /* Bewusst KEIN erzwungenes word-break auf Zellen: das brach frühere Male auch kurze, normale
      Wörter (Namen, "Administrator") mitten im Wort, sobald eine Spalte knapp wurde, obwohl genug

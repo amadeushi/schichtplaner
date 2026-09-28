@@ -217,6 +217,19 @@ The ticket's signature silhouette is built from two CSS pseudo-elements rather t
 - **Shadow:** the hairline-only "Card lift" (see Elevation).
 - **Internal padding:** `1.1rem`.
 
+### Log-Liste (`.log-list`, admin/settings.php)
+Das Benachrichtigungsprotokoll ist ein `<table>`, das per Klasse `log-list` immer (nicht nur unter
+640px) auf die gestapelte Zeilenansicht schaltet - `display:block` je Zelle mit
+`content: attr(data-label) ": "` davor, dieselbe Technik wie die mobile Tabellen-Ansicht, nur
+unbedingt statt nur im `@media`-Fall. Ein Protokoll ist von Natur aus eine Reihe einzelner
+Ereignisse, kein Raster gleich geformter Zeilen; eine freie Spalte wie eine Fehlermeldung läuft so
+über die volle Kartenbreite statt in eine enge Spalte gepresst zu werden. Zeit steht in Monospace
+(Register-Tape Rule), Erfolg/Fehler als Kassenbon-Vermerk (`.badge.confirmed`/`.badge.rejected`)
+statt als Text "OK"/"Fehler: …". Andere Admin-Tabellen (Abwesenheiten, Bewerbungen, Arbeitszeiten,
+Mitarbeiterverwaltung) bleiben echte Tabellen in einem `.table-scroll`-Wrapper, der bei Bedarf
+horizontal scrollt - ihre Spalten sind gleichförmig genug (Namen, Daten, kurze Badges), dass ein
+Raster dort die richtige Form bleibt.
+
 ### Tickets (signature component)
 The system's one true custom component; every shift, on every surface, staff or admin, is a `.ticket`. Perforated top and torn bottom (see Shapes), 1.5px `ink-line` border that turns stamp-red on `.today`/`.on-duty`, dashed internal row dividers, a head row pairing the sans-set day name against the mono-set date. The **hero variant** (`.ticket.hero`, today's card on the staff "Mein Plan" screen *and* on the admin "Schichtplan" — there it carries the full admin controls, rendered from the shared `partials/admin_day_ticket.php` so the hero and the rail's tickets can never drift apart; today is shown once, as the hero, and skipped in the rail below the "Diese Woche" divider; a week that does not contain today simply has no hero) is not a modifier class alone — it is enlarged (1.4rem/1.6rem padding vs. 1.1rem/1.25rem) and its day/date type step up a size, so today is unmistakably the largest object on the screen, not just an outlined ticket in its normal weekday slot. On `admin/shifts.php`, a shift ticket's row also carries a "Bearbeiten" action (title, location, date, times, needed count, note) that opens a `?edit=<id>` form above the rail — the one place a shift's own fields, as opposed to its assignments, are changed after creation.
 

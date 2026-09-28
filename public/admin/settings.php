@@ -346,22 +346,27 @@ require __DIR__ . '/../partials/header.php';
   <?php if (!$logs): ?>
     <p class="muted" style="margin-top:1rem;">Noch keine Benachrichtigungen gesendet.</p>
   <?php else: ?>
-  <div class="table-scroll">
-  <table style="margin-top:1rem;">
+  <table class="log-list" style="margin-top:1rem;">
     <thead><tr><th>Zeit</th><th>Ereignis</th><th>Kanal</th><th>Empfänger</th><th>Erfolg</th></tr></thead>
     <tbody>
     <?php foreach ($logs as $l): ?>
       <tr>
-        <td data-label="Zeit"><?= e(formatUtcLocal($l['created_at'])) ?></td>
+        <td data-label="Zeit" class="mono"><?= e(formatUtcLocal($l['created_at'])) ?></td>
         <td data-label="Ereignis"><?= e($l['event_type']) ?></td>
         <td data-label="Kanal"><?= e($l['channel']) ?></td>
         <td data-label="Empfänger"><?= e($l['recipient'] ?? '-') ?></td>
-        <td data-label="Erfolg"><?= $l['success'] ? 'OK' : 'Fehler: ' . e($l['error'] ?? '') ?></td>
+        <td data-label="Erfolg">
+          <?php if ($l['success']): ?>
+            <span class="badge confirmed">OK</span>
+          <?php else: ?>
+            <span class="badge rejected">Fehler</span>
+            <?php if ($l['error']): ?><br><span class="muted"><?= e($l['error']) ?></span><?php endif; ?>
+          <?php endif; ?>
+        </td>
       </tr>
     <?php endforeach; ?>
     </tbody>
   </table>
-  </div>
   <?php endif; ?>
 </div>
 
