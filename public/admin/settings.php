@@ -346,6 +346,7 @@ require __DIR__ . '/../partials/header.php';
   <?php if (!$logs): ?>
     <p class="muted" style="margin-top:1rem;">Noch keine Benachrichtigungen gesendet.</p>
   <?php else: ?>
+  <div class="table-scroll">
   <table style="margin-top:1rem;">
     <thead><tr><th>Zeit</th><th>Ereignis</th><th>Kanal</th><th>Empfänger</th><th>Erfolg</th></tr></thead>
     <tbody>
@@ -360,6 +361,7 @@ require __DIR__ . '/../partials/header.php';
     <?php endforeach; ?>
     </tbody>
   </table>
+  </div>
   <?php endif; ?>
 </div>
 

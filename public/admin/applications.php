@@ -44,6 +44,7 @@ require __DIR__ . '/../partials/header.php';
   <?php if (!$pending): ?>
     <p class="muted">Keine offenen Bewerbungen.</p>
   <?php else: ?>
+  <div class="table-scroll">
   <table>
     <thead><tr><th>Datum</th><th>Schicht</th><th>Bewerber</th><th>Plätze</th><th></th></tr></thead>
     <tbody>
@@ -60,6 +61,7 @@ require __DIR__ . '/../partials/header.php';
     <?php endforeach; ?>
     </tbody>
   </table>
+  </div>
   <?php endif; ?>
 </div>
 
@@ -68,6 +70,7 @@ require __DIR__ . '/../partials/header.php';
   <?php if (!$recent): ?>
     <p class="muted">Noch keine Entscheidungen getroffen.</p>
   <?php else: ?>
+  <div class="table-scroll">
   <table>
     <thead><tr><th>Datum</th><th>Schicht</th><th>Bewerber</th><th>Status</th></tr></thead>
     <tbody>
@@ -84,6 +87,7 @@ require __DIR__ . '/../partials/header.php';
     <?php endforeach; ?>
     </tbody>
   </table>
+  </div>
   <?php endif; ?>
 </div>
 

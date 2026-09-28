@@ -158,6 +158,7 @@ require __DIR__ . '/../partials/header.php';
 
 <div class="card">
 <h2>Alle Mitarbeiter</h2>
+<div class="table-scroll">
 <table>
   <thead><tr><th>Name</th><th>E-Mail</th><th>Rolle</th><th>Status</th><th>Zeiterfassung</th><th></th></tr></thead>
   <tbody>
@@ -208,6 +209,7 @@ require __DIR__ . '/../partials/header.php';
   <?php endforeach; ?>
   </tbody>
 </table>
+</div>
 </div>
 
 <?php require __DIR__ . '/../partials/footer.php'; ?>

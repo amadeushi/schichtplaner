@@ -98,6 +98,7 @@ require __DIR__ . '/../partials/header.php';
   <?php if (!$absences): ?>
     <p class="muted">Noch keine Abwesenheiten eingetragen.</p>
   <?php else: ?>
+  <div class="table-scroll">
   <table>
     <thead><tr><th>Mitarbeiter</th><th>Zeitraum</th><th>Art</th><th>Notiz</th><th></th></tr></thead>
     <tbody>
@@ -126,6 +127,7 @@ require __DIR__ . '/../partials/header.php';
     <?php endforeach; ?>
     </tbody>
   </table>
+  </div>
   <?php endif; ?>
 </div>
 

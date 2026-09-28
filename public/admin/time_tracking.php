@@ -35,6 +35,7 @@ require __DIR__ . '/../partials/header.php';
 <?php if ($openNow): ?>
 <div class="card">
   <h2>Aktuell eingestempelt</h2>
+  <div class="table-scroll">
   <table>
     <thead><tr><th>Mitarbeiter</th><th>Seit</th><th>Dauer</th></tr></thead>
     <tbody>
@@ -47,6 +48,7 @@ require __DIR__ . '/../partials/header.php';
     <?php endforeach; ?>
     </tbody>
   </table>
+  </div>
 </div>
 <?php endif; ?>
 
@@ -64,6 +66,7 @@ require __DIR__ . '/../partials/header.php';
 <?php if (!$summary): ?>
   <p class="muted">Für keinen Mitarbeiter ist die Zeiterfassung freigeschaltet. Das lässt sich in der Mitarbeiterverwaltung ändern.</p>
 <?php else: ?>
+<div class="table-scroll">
 <table>
   <thead><tr><th>Mitarbeiter</th><th>Gesamtstunden</th><th>Einträge</th><th></th></tr></thead>
   <tbody>
@@ -77,6 +80,7 @@ require __DIR__ . '/../partials/header.php';
   <?php endforeach; ?>
   </tbody>
 </table>
+</div>
 <?php endif; ?>
 </div>
 

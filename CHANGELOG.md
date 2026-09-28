@@ -30,14 +30,19 @@ für Fixes). Die aktuell laufende Version steht in `app/version.php`.
   dieselbe Optik wie der Aushang selbst (rot umrandete Fläche mit der Marke
   "Wichtig"); die SMS lautet z.B. "Schichtplaner – Wichtig: <Text> <Link>".
 
+## [1.20.1] - 2026-09-28
+
 ### Behoben
-- Tabellen (z.B. Benachrichtigungsprotokoll in Einstellungen): eine breite
-  Spalte wie "Erfolg" mit langem Fehlertext konnte die Tabelle über den
-  Kartenrand auf den dunklen Hintergrund hinausschieben, weil `overflow-x`
-  allein auf `<table>` bei normalem Tabellen-Layout nicht greift. Tabellen
-  (außer der Admin-Kalendertabelle, die ihre eigene Lösung hat) scrollen
-  jetzt innerhalb der Karte horizontal statt überzulaufen; die gestapelte
-  Mobil-Ansicht ist unverändert.
+- Tabellen-Fix aus 1.20.0 nachgebessert: `display:block` direkt auf
+  `<table>` behob den Überlauf in Chrome, presste in Firefox aber
+  stattdessen eine breite Spalte wie "Erfolg" gewaltsam auf Kartenbreite
+  zusammen und machte sie praktisch unlesbar. Jede Tabelle (Benachrichtigungs-
+  protokoll, Abwesenheiten, Bewerbungen, Arbeitszeiten, Mitarbeiterverwaltung;
+  außer der Admin-Kalendertabelle, die ihre eigene Lösung hat) steckt jetzt
+  in einem eigenen `.table-scroll`-Wrapper: die Tabelle selbst bleibt
+  ungebremstes normales Tabellen-Layout und darf so breit werden, wie ihr
+  Inhalt es braucht, der Wrapper scrollt das browserübergreifend
+  horizontal. Die gestapelte Mobil-Ansicht ist unverändert.
 
 ## [1.19.1] - 2026-09-26
 

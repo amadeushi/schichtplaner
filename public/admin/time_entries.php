@@ -187,6 +187,7 @@ require __DIR__ . '/../partials/header.php';
 <?php if (!$entries): ?>
   <p class="muted">Keine Einträge in diesem Monat.</p>
 <?php else: ?>
+<div class="table-scroll">
 <table>
   <thead><tr><th>Datum</th><th>Von</th><th>Bis</th><th>Dauer</th><th></th></tr></thead>
   <tbody>
@@ -214,6 +215,7 @@ require __DIR__ . '/../partials/header.php';
   <?php endforeach; ?>
   </tbody>
 </table>
+</div>
 <?php endif; ?>
 </div>
 

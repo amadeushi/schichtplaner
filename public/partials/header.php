@@ -106,17 +106,15 @@ function navActive(string $path, array $matches): bool
   }
 
   table { width: 100%; border-collapse: collapse; }
-  /* overflow-x als Sicherheitsnetz: erzwingt bei zu vielen/zu breiten Spalten (z.B. lange
-     E-Mail-Adressen, ein langer Fehlertext plus mehrere Aktions-Buttons) einen Scrollbalken
-     innerhalb der Karte statt dass die Tabelle sichtbar über den Kartenrand auf den dunklen
-     Tresen-Hintergrund hinausläuft. overflow-x allein auf <table> reicht dafür NICHT: eine
-     Tabelle im normalen Auto-Layout darf breiter werden als ihre 100%-Vorgabe, sobald eine
-     Zelle es verlangt, und es gibt dann nichts, worauf der Scrollbalken sich bezieht. display:
-     block macht die Tabelle zu einer echten Box mit eigener Breite, an der overflow-x greifen
-     kann - die Zeilen/Zellen bleiben durch die vom Browser erzeugte anonyme Tabellen-Box
-     optisch unverändert im Raster. .week-grid hat mit .grid-scroll bereits seine eigene Lösung.
-     Die @media-Regel unten (Stapel-Ansicht < 640px) überschreibt display ohnehin wieder. */
-  table:not(.week-grid) { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* .table-scroll umschließt jede Tabelle außer .week-grid (siehe unten) - der Wrapper hat die
+     feste Breite der Karte, die Tabelle selbst bleibt ungebremstes normales Tabellen-Layout und
+     darf so breit werden, wie ihr Inhalt es verlangt. Erst DAS macht overflow-x wirksam: direkt
+     auf <table> hatte es zwei verschiedene Fehlschläge zur Folge, je nach Browser - Chrome ließ
+     die Tabelle sichtbar über den Kartenrand hinauslaufen, Firefox erzwang stattdessen mit
+     `display:block` + `width:100%` exakt die Kartenbreite und quetschte dafür eine Spalte (meist
+     die letzte) bis zur Unlesbarkeit zusammen. .week-grid hat mit .grid-scroll seine eigene,
+     baugleiche Lösung. */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   th, td { text-align: left; padding: 0.55rem 0.5rem; border-bottom: 1px solid var(--ink-line); font-size: 0.9rem; vertical-align: middle; }
   /* Bewusst KEIN erzwungenes word-break auf Zellen: das brach frühere Male auch kurze, normale
      Wörter (Namen, "Administrator") mitten im Wort, sobald eine Spalte knapp wurde, obwohl genug
