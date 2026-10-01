@@ -180,11 +180,12 @@ require __DIR__ . '/../partials/header.php';
       <td data-label="Rolle"><?= $u['role'] === 'admin' ? 'Administrator' : 'Mitarbeiter' ?></td>
       <td data-label="Status"><span class="badge <?= $u['active'] ? 'open' : 'closed' ?>"><?= $u['active'] ? 'Aktiv' : 'Deaktiviert' ?></span></td>
       <td data-label="Zeiterfassung">
-        <form class="inline" method="post">
+        <span class="badge <?= $u['time_tracking_enabled'] ? 'confirmed' : 'closed' ?>"><?= $u['time_tracking_enabled'] ? 'Freigeschaltet' : 'Gesperrt' ?></span><br>
+        <form class="inline" method="post" style="margin-top:0.35rem;display:inline-block;">
           <?= csrfField() ?>
           <input type="hidden" name="action" value="toggle_time_tracking">
           <input type="hidden" name="user_id" value="<?= (int)$u['id'] ?>">
-          <button type="submit" class="btn small btn-toggle <?= $u['time_tracking_enabled'] ? '' : 'secondary' ?>"><?= $u['time_tracking_enabled'] ? 'Aktiv' : 'Gesperrt' ?></button>
+          <button type="submit" class="btn small secondary"><?= $u['time_tracking_enabled'] ? 'Sperren' : 'Freischalten' ?></button>
         </form>
       </td>
       <td data-label="Aktion">

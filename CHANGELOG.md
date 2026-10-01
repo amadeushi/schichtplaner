@@ -6,29 +6,38 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
-## [1.20.0] - 2026-09-28
+## [1.21.0] - 2026-10-01
 
-### Hinzugefügt
-- Rundruf "Personal gesucht": am Schicht-Ticket in der Admin-Wochenansicht
-  (admin/shifts.php) kann eine offene, unterbesetzte Schicht direkt per Knopf
-  ausgewählt werden. Es geht eine Erinnerung an alle aktiven Mitarbeiter, die
-  weder bereits zugewiesen noch beworben und weder heute noch am Schichttag
-  abwesend sind - per E-Mail und SMS, jeweils nach ihren Schaltern. Anders als
-  die übrigen Benachrichtigungen nennt diese bewusst Schicht, Tag, Zeit und Ort
-  (SMS z.B. "Schichtplaner: Dringend gesucht – Abendschicht am 05.10.,
-  16:00-22:30. Jetzt bewerben: <Link>"); die Mail hebt den Bon-Block mit einer
-  stempelroten Kontur und dem Vermerk "Dringend gesucht" hervor (One Stamp
-  Rule). Läuft direkt, ohne die sonstige 15-Minuten-SMS-Bündelung. Die
-  E-Mail-Vorlage ist wie die anderen unter Einstellungen editierbar.
-
-- "Dringende Mitteilung" (Einstellungen → Aushang): eine neue Checkbox
-  "Auch per E-Mail/SMS an alle Mitarbeiter verschicken" streut den Aushang-Text
-  beim Speichern zusätzlich als Rundruf, statt ihn nur im Plan hervorzuheben.
-  Der Admin entscheidet das jedes Mal beim Speichern neu, kein automatischer
-  Versand bei jeder Änderung. Empfänger sind aktive Mitarbeiter, die heute
-  nicht abwesend sind, je nach ihren E-Mail-/SMS-Schaltern. Die Mail übernimmt
-  dieselbe Optik wie der Aushang selbst (rot umrandete Fläche mit der Marke
-  "Wichtig"); die SMS lautet z.B. "Schichtplaner – Wichtig: <Text> <Link>".
+### Geändert
+- Admin-Wochenansicht (admin/shifts.php): die sechs Kontrollen einer
+  Schicht-Zeile (zuweisen, Personal gesucht, Bearbeiten, Status, Löschen)
+  liefen auf dem primären Mobilmaßstab (375px) über den Bildschirmrand
+  hinaus - der Lösch-Button lag dabei vollständig außerhalb des sichtbaren
+  Bereichs. Die Zeile ist jetzt zweigeteilt: oben zuweisen/Personal gesucht
+  (die beiden Kontrollen für den täglichen Blick), darunter Bearbeiten/
+  Status/Löschen als zurückgenommene, umbrechende zweite Reihe.
+- "Personal gesucht" ist nicht mehr dauerhaft stempelrot, sondern nur noch
+  innerhalb von 48 Stunden vor Schichtbeginn - vorher lief das der One
+  Stamp Rule zuwider (Rot als Alltagszustand statt rationierter Ausnahme).
+  Außerhalb des Zeitfensters eine ruhige Outline-Variante, Funktion
+  unverändert.
+- Mitarbeiterverwaltung (admin/users.php): der Zeiterfassungs-Schalter
+  zeigte als Beschriftung den aktuellen Zustand ("Aktiv"/"Gesperrt") statt
+  der Aktion, die ein Klick auslöst. Jetzt ein eigener Status-Vermerk
+  ("Freigeschaltet"/"Gesperrt") plus ein Knopf, der die Aktion nennt
+  ("Sperren"/"Freischalten") - wie bereits beim Status-Knopf nebenan.
+- Checkbox-Beschriftungen mit ganzen Sätzen (z.B. "Auch per E-Mail/SMS an
+  alle Mitarbeiter verschicken") liefen in Versalien, obwohl die Label-
+  Stimme des Systems für kurze Eyebrow-Labels gedacht ist, nicht für
+  Fließtext. Neue Klasse `.checkbox-field` nimmt diese Ausnahme zurück.
+- Einstellungen (admin/settings.php): eine Sprungliste unter der
+  Überschrift springt direkt zu den sechs Karten (Mitteilung, Allgemein,
+  E-Mail, SMS, Vorlagen, Protokoll), statt die Seite nur linear
+  durchscrollen zu können.
+- `surround-ink-soft` (Text auf dem bloßen Tresen-Hintergrund, z.B.
+  Fußzeile, Sprungliste) von `#a8967a` auf `#b4a58c` angehoben: der
+  Kontrast lag bei 4,0:1 gegen den tatsächlich genutzten Hintergrund,
+  unter dem WCAG-AA-Minimum von 4,5:1.
 
 ## [1.20.3] - 2026-09-28
 
@@ -74,6 +83,30 @@ für Fixes). Die aktuell laufende Version steht in `app/version.php`.
   ungebremstes normales Tabellen-Layout und darf so breit werden, wie ihr
   Inhalt es braucht, der Wrapper scrollt das browserübergreifend
   horizontal. Die gestapelte Mobil-Ansicht ist unverändert.
+
+## [1.20.0] - 2026-09-28
+
+### Hinzugefügt
+- Rundruf "Personal gesucht": am Schicht-Ticket in der Admin-Wochenansicht
+  (admin/shifts.php) kann eine offene, unterbesetzte Schicht direkt per Knopf
+  ausgewählt werden. Es geht eine Erinnerung an alle aktiven Mitarbeiter, die
+  weder bereits zugewiesen noch beworben und weder heute noch am Schichttag
+  abwesend sind - per E-Mail und SMS, jeweils nach ihren Schaltern. Anders als
+  die übrigen Benachrichtigungen nennt diese bewusst Schicht, Tag, Zeit und Ort
+  (SMS z.B. "Schichtplaner: Dringend gesucht – Abendschicht am 05.10.,
+  16:00-22:30. Jetzt bewerben: <Link>"); die Mail hebt den Bon-Block mit einer
+  stempelroten Kontur und dem Vermerk "Dringend gesucht" hervor (One Stamp
+  Rule). Läuft direkt, ohne die sonstige 15-Minuten-SMS-Bündelung. Die
+  E-Mail-Vorlage ist wie die anderen unter Einstellungen editierbar.
+
+- "Dringende Mitteilung" (Einstellungen → Aushang): eine neue Checkbox
+  "Auch per E-Mail/SMS an alle Mitarbeiter verschicken" streut den Aushang-Text
+  beim Speichern zusätzlich als Rundruf, statt ihn nur im Plan hervorzuheben.
+  Der Admin entscheidet das jedes Mal beim Speichern neu, kein automatischer
+  Versand bei jeder Änderung. Empfänger sind aktive Mitarbeiter, die heute
+  nicht abwesend sind, je nach ihren E-Mail-/SMS-Schaltern. Die Mail übernimmt
+  dieselbe Optik wie der Aushang selbst (rot umrandete Fläche mit der Marke
+  "Wichtig"); die SMS lautet z.B. "Schichtplaner – Wichtig: <Text> <Link>".
 
 ## [1.19.1] - 2026-09-26
 

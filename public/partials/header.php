@@ -37,7 +37,7 @@ function navActive(string $path, array $matches): bool
     --danger-wash: #f7e3dc;
     --confirm-wash: #eee8d8;
     --surround-ink: #f3e8d3;
-    --surround-ink-soft: #a8967a;
+    --surround-ink-soft: #b4a58c; /* angehoben von #a8967a: 4,0:1 gegen --paper-surround-top war unter dem WCAG-AA-Minimum von 4,5:1 */
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, "SF Mono", "Roboto Mono", "IBM Plex Mono", Menlo, Consolas, monospace;
     --tab-bar-h: 62px;
@@ -196,6 +196,11 @@ function navActive(string $path, array $matches): bool
   input.input-inline { width: 10.5rem; min-height: 2.25rem; padding: 0.4rem 0.5rem; font-size: 0.9rem; }
   .inline-phone { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
   label { display: block; font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 0.3rem; margin-top: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  /* Die Label-Stimme (Versalien, getrackt) ist für kurze Eyebrow-Beschriftungen gedacht - ein
+     Kontrollkästchen mit einem ganzen erklärenden Satz als Beschriftung ("Auch per E-Mail/SMS an
+     alle Mitarbeiter verschicken") ist Fließtext, kein Label, und wurde als Versal-Satz schwerer
+     lesbar. .checkbox-field nimmt diese eine Ausnahme von der label-Regel zurück. */
+  label.checkbox-field { display: flex; align-items: center; gap: 0.5rem; text-transform: none; letter-spacing: normal; color: var(--ink); font-size: 0.9rem; font-weight: 400; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
   /* Zustands-Badges ("Kassenbon-Vermerk"): kein Chip/Kasten mehr, sondern ein bedruckter
@@ -253,6 +258,14 @@ function navActive(string $path, array $matches): bool
     background-size: 2px 7px; background-repeat: repeat-y;
   }
   .rail-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--surround-ink-soft); font-weight: 700; margin: 1.5rem 0 0.6rem 16px; }
+  /* Sprungliste über langen, kartenreichen Seiten (z.B. admin/settings.php) - sitzt bare-auf-dem-
+     Tresen direkt unter dem <h1>, daher surround-ink/-soft statt ink/ink-soft (Bare-Ground Rule). */
+  .settings-jump { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: -0.5rem 0 1rem; }
+  .settings-jump a {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+    color: var(--surround-ink-soft); text-decoration: none; border-bottom: 1.5px solid transparent;
+  }
+  .settings-jump a:hover, .settings-jump a:focus-visible { color: var(--surround-ink); border-bottom-color: var(--surround-ink-soft); }
   .ticket.hero { padding: 1.4rem 1.4rem 1.6rem; }
   .ticket.hero .ticket-day { font-size: 1.25rem; }
   .ticket.hero .ticket-date { font-size: 0.88rem; }

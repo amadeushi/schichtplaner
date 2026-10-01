@@ -76,7 +76,7 @@ require __DIR__ . '/partials/header.php';
   <form method="post">
     <?= csrfField() ?>
     <input type="hidden" name="action" value="notify">
-    <label style="display:flex;align-items:center;gap:0.5rem;">
+    <label class="checkbox-field">
       <input type="checkbox" name="notify_email" style="width:auto;" <?= $user['notify_email'] ? 'checked' : '' ?>>
       E-Mail-Benachrichtigungen erhalten
     </label>
@@ -94,7 +94,7 @@ require __DIR__ . '/partials/header.php';
     <label for="phone">Mobilnummer</label>
     <input type="tel" id="phone" name="phone" value="<?= e((string)($user['phone'] ?? '')) ?>" inputmode="tel" autocomplete="tel" placeholder="z.B. 0664 1234567">
     <p class="muted" style="margin-top:0.4rem;">Wird automatisch ins internationale Format (+43 …) umgewandelt. Leer lassen, um keine SMS zu erhalten.</p>
-    <label style="display:flex;align-items:center;gap:0.5rem;">
+    <label class="checkbox-field">
       <input type="checkbox" name="notify_sms" style="width:auto;" <?= ($user['notify_sms'] ?? 1) ? 'checked' : '' ?>>
       SMS-Benachrichtigungen erhalten
     </label>

@@ -49,6 +49,11 @@
           $assignedIds = array_column($assigned, 'id');
           $assignable = array_filter($employees, fn($e) => !in_array((int)$e['id'], $assignedIds, true));
           $full = (int)$sh['approved_count'] >= (int)$sh['needed_count'];
+          // One Stamp Rule: der Rundruf-Knopf ist nur innerhalb von 48h vor Schichtbeginn stempelrot
+          // (echte Dringlichkeit), sonst eine ruhige Outline-Variante - sonst wäre Rot ein
+          // Dauerzustand statt einer rationierten Ausnahme, siehe DESIGN.md.
+          $hoursUntilShift = (strtotime($sh['shift_date'] . ' ' . $sh['start_time']) - time()) / 3600;
+          $staffingUrgent = $hoursUntilShift <= 48;
         ?>
         <div class="ticket-row" id="shift-<?= (int)$sh['id'] ?>" style="flex-direction:column;align-items:stretch;gap:0.5rem;scroll-margin-top:5rem;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem;">
@@ -99,33 +104,40 @@
             </div>
           <?php endforeach; ?>
 
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;border-top:1px dashed var(--ink-line);padding-top:0.5rem;">
-            <?php if (!$full && $assignable): ?>
-              <form class="inline cell-assign" method="post" style="display:flex;gap:0.4rem;">
-                <?= csrfField() ?>
-                <input type="hidden" name="action" value="assign">
-                <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
-                <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                <select name="employee_id" onchange="this.form.submit()">
-                  <option value="">+ zuweisen</option>
-                  <?php foreach ($assignable as $e): ?>
-                    <option value="<?= (int)$e['id'] ?>"><?= e($e['name']) ?><?= $isAbsentOnDay((int)$e['id']) ? ' (abwesend)' : '' ?></option>
-                  <?php endforeach; ?>
-                </select>
-              </form>
-            <?php else: ?>
-              <span></span>
-            <?php endif; ?>
-            <span style="display:flex;gap:0.4rem;align-items:center;">
+          <div style="border-top:1px dashed var(--ink-line);padding-top:0.5rem;display:flex;flex-direction:column;gap:0.5rem;">
+            <!-- Primäre Zeile: die zwei Kontrollen, die beim Überfliegen der Woche tatsächlich
+                 gebraucht werden - wer fehlt noch, und soll ich nachfragen. -->
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              <?php if (!$full && $assignable): ?>
+                <form class="inline cell-assign" method="post" style="display:flex;gap:0.4rem;">
+                  <?= csrfField() ?>
+                  <input type="hidden" name="action" value="assign">
+                  <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
+                  <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
+                  <select name="employee_id" onchange="this.form.submit()">
+                    <option value="">+ zuweisen</option>
+                    <?php foreach ($assignable as $e): ?>
+                      <option value="<?= (int)$e['id'] ?>"><?= e($e['name']) ?><?= $isAbsentOnDay((int)$e['id']) ? ' (abwesend)' : '' ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </form>
+              <?php else: ?>
+                <span></span>
+              <?php endif; ?>
               <?php if (!$full && $sh['status'] === 'open' && $sh['published_at'] !== null): ?>
                 <form class="inline" method="post" onsubmit="return confirm('Allen verfügbaren, noch nicht eingeplanten Mitarbeitern eine dringende Erinnerung zu &quot;<?= e($sh['title']) ?>&quot; am <?= e(formatDateDe($d)) ?> schicken?');">
                   <?= csrfField() ?>
                   <input type="hidden" name="action" value="urgent_reminder">
                   <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                   <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                  <button type="submit" class="btn small stamp-btn">Personal gesucht</button>
+                  <button type="submit" class="btn small <?= $staffingUrgent ? 'stamp-btn' : 'secondary' ?>">Personal gesucht</button>
                 </form>
               <?php endif; ?>
+            </div>
+            <!-- Sekundäre Zeile: seltene/verwaltende Aktionen, bewusst zurückgenommen (zweite
+                 Zeile, rechtsbündig, Outline-Buttons) statt gleichgewichtig neben den obigen zu
+                 stehen; .table-actions bricht bei Bedarf um, statt über den Rand zu laufen. -->
+            <div class="table-actions" style="justify-content:flex-end;">
               <a class="btn small secondary" href="?edit=<?= (int)$sh['id'] ?>&date=<?= e($weekStart) ?>#edit-shift">Bearbeiten</a>
               <form class="inline" method="post">
                 <?= csrfField() ?>
@@ -145,7 +157,7 @@
                 <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
                 <button type="submit" class="btn small danger">&times;</button>
               </form>
-            </span>
+            </div>
           </div>
         </div>
       <?php endforeach; ?>

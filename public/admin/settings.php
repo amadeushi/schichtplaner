@@ -173,19 +173,28 @@ require __DIR__ . '/../partials/header.php';
 ?>
 <h1>Einstellungen</h1>
 
-<div class="card">
+<nav class="settings-jump" aria-label="Sprung zu Abschnitt">
+  <a href="#notice">Mitteilung</a>
+  <a href="#general">Allgemein</a>
+  <a href="#email">E-Mail</a>
+  <a href="#sms">SMS</a>
+  <a href="#templates">Vorlagen</a>
+  <a href="#log">Protokoll</a>
+</nav>
+
+<div class="card" id="notice" style="scroll-margin-top:4rem;">
   <h2>Dringende Mitteilung</h2>
   <p class="muted">Wird farblich hervorgehoben über dem Wochenplan angezeigt (Mein Plan und Schichtplan) — sichtbar für alle Mitarbeiter, bleibt beim Wechseln der Kalenderwoche stehen.</p>
   <form method="post">
     <?= csrfField() ?>
     <input type="hidden" name="action" value="save_notice">
-    <label style="display:flex;align-items:center;gap:0.5rem;">
+    <label class="checkbox-field">
       <input type="checkbox" name="urgent_notice_enabled" style="width:auto;" <?= setting('urgent_notice_enabled', '0') === '1' ? 'checked' : '' ?>>
       Mitteilung anzeigen
     </label>
     <label for="urgent_notice_text">Text</label>
     <textarea id="urgent_notice_text" name="urgent_notice_text" placeholder="z.B. Küche heute wegen Wasserschaden geschlossen."><?= e(setting('urgent_notice_text', '')) ?></textarea>
-    <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem;">
+    <label class="checkbox-field" style="margin-top:0.75rem;">
       <input type="checkbox" name="urgent_notice_broadcast" style="width:auto;">
       Auch per E-Mail/SMS an alle Mitarbeiter verschicken
     </label>
@@ -194,7 +203,7 @@ require __DIR__ . '/../partials/header.php';
   </form>
 </div>
 
-<div class="card">
+<div class="card" id="general" style="scroll-margin-top:4rem;">
   <h2>Allgemein</h2>
   <form method="post">
     <?= csrfField() ?>
@@ -204,7 +213,7 @@ require __DIR__ . '/../partials/header.php';
 
     <h2 style="margin-top:1.5rem;">n8n / Webhook-Benachrichtigungen</h2>
     <p class="muted">Bei jedem Ereignis (neue Bewerbung, Entscheidung, neue Schicht) wird ein JSON-POST an diese URL gesendet. In n8n kannst du daraus z.B. Telegram-, Slack- oder zusätzliche E-Mail-Benachrichtigungen bauen. Empfohlen: ein "Webhook"-Trigger-Node in n8n, dessen Produktions-URL du hier einträgst.</p>
-    <label style="display:flex;align-items:center;gap:0.5rem;">
+    <label class="checkbox-field">
       <input type="checkbox" name="webhook_enabled" style="width:auto;" <?= setting('webhook_enabled', '0') === '1' ? 'checked' : '' ?>>
       Webhook-Benachrichtigungen aktivieren
     </label>
@@ -220,7 +229,7 @@ require __DIR__ . '/../partials/header.php';
   </form>
 </div>
 
-<div class="card">
+<div class="card" id="email" style="scroll-margin-top:4rem;">
   <h2>E-Mail-Versand</h2>
   <p class="muted">
     SMTP wird in <code>app/config.php</code> konfiguriert (nicht über die Oberfläche, da dort auch das Passwort hinterlegt wird).
@@ -235,7 +244,7 @@ require __DIR__ . '/../partials/header.php';
   $smsKeySource = SmsClient::keySource();
   $smsKeyMask = SmsClient::maskedKey();
 ?>
-<div class="card">
+<div class="card" id="sms" style="scroll-margin-top:4rem;">
   <h2>SMS-Versand</h2>
   <p class="muted">
     SMS gehen unter denselben Bedingungen wie E-Mails an Mitarbeiter mit Mobilnummer (Profil bzw. Mitarbeiter-Verwaltung), nicht während einer Abwesenheit, und ohne Schichtdetails: die SMS weist nur allgemein auf eine Änderung im Plan bzw. Neuigkeiten zur Bewerbung hin und enthält den Link ins Portal. Höchstens eine SMS je Person in 15 Minuten, weitere Änderungen werden gebündelt. Beim Veröffentlichen neuer offener Schichten geht zusätzlich "Neuer Plan verfügbar" per E-Mail und SMS an alle übrigen Mitarbeiter.
@@ -244,7 +253,7 @@ require __DIR__ . '/../partials/header.php';
   <form method="post" autocomplete="off">
     <?= csrfField() ?>
     <input type="hidden" name="action" value="save_sms">
-    <label style="display:flex;align-items:center;gap:0.5rem;">
+    <label class="checkbox-field">
       <input type="checkbox" name="sms_enabled" style="width:auto;" <?= SmsClient::enabledFlag() ? 'checked' : '' ?>>
       SMS-Versand aktivieren
     </label>
@@ -289,7 +298,7 @@ require __DIR__ . '/../partials/header.php';
   <?php endif; ?>
 </div>
 
-<div class="card">
+<div class="card" id="templates" style="scroll-margin-top:4rem;">
   <h2>E-Mail-Vorlagen</h2>
   <p class="muted">Betreff und Text jeder System-Mail lassen sich hier anpassen. Platzhalter wie <code>{{name}}</code> werden beim Versand automatisch durch den passenden Wert ersetzt. Änderungen gelten sofort für neu verschickte Mails. Die Mails erscheinen im Look des Schichtplaners: Eine Leerzeile beginnt einen neuen Absatz, Zeilen wie <code>Zeit: {{shift_time}}</code> ergeben einen Bon-Block, und eine Adresse allein in einem Absatz wird zum Button.</p>
   <?php foreach (Notifier::TEMPLATES as $key => $tpl): ?>
@@ -321,7 +330,7 @@ require __DIR__ . '/../partials/header.php';
   <?php endforeach; ?>
 </div>
 
-<div class="card">
+<div class="card" id="log" style="scroll-margin-top:4rem;">
   <h2>Letzte Benachrichtigungen (Protokoll)</h2>
   <p class="muted">Zeigt die letzten 25 von insgesamt <strong><?= $totalLogCount ?></strong> Einträgen.</p>
 
