@@ -464,7 +464,7 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
   <input type="hidden" name="action" value="publish">
   <input type="hidden" name="week_date" value="<?= e($weekStart) ?>">
   <span class="publish-bar-summary">
-    <?php if ($draftCount > 0): ?><strong><?= $draftCount ?></strong> Entwurf<?= $draftCount === 1 ? '' : 'e' ?><?php endif; ?>
+    <?php if ($draftCount > 0): ?><strong><?= $draftCount ?></strong> <?= $draftCount === 1 ? 'Entwurf' : 'Entwürfe' ?><?php endif; ?>
     <?php if ($draftCount > 0 && $pendingNotifyCount > 0): ?> &middot; <?php endif; ?>
     <?php if ($pendingNotifyCount > 0): ?><strong><?= $pendingNotifyCount ?></strong> ausstehende Benachrichtigung<?= $pendingNotifyCount === 1 ? '' : 'en' ?><?php endif; ?>
   </span>

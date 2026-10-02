@@ -6,6 +6,24 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.22.3] - 2026-10-02
+
+### Hinzugefügt
+- Automatisierte Tests ohne Abhängigkeiten: `php tests/run.php` (reines PHP,
+  kein Composer/PHPUnit), von der CI nach dem `php -l`-Lauf ausgeführt. Deckt
+  die Fehlerklassen ab, die bereits aufgetreten sind: SMS-Texte müssen
+  GSM-7-Zeichen enthalten und höchstens 160 Zeichen lang sein, Telefonnummern-
+  Validierung (inkl. unsichtbarer Unicode-Formatzeichen und deutscher
+  Festnetznummern), Publish-Bestätigungstext, Escaping, und ein Scan, der
+  interpoliertes PHP in `onsubmit`-`confirm()`-Handlern verbietet (Stored XSS
+  aus v1.22.1). Auslöser war der `ecc:harness-audit`.
+- `SECURITY.md` mit Meldeweg über GitHubs private Schwachstellen-Meldung.
+
+### Behoben
+- Rechtschreibung in der Veröffentlichen-Leiste (admin/shifts.php,
+  admin/calendar.php) und im Bestätigungsdialog: der Plural hieß "Entwurfe"
+  statt "Entwürfe". Aufgefallen durch den neuen Test beim ersten Lauf.
+
 ## [1.22.2] - 2026-10-02
 
 ### Behoben

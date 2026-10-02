@@ -87,9 +87,15 @@ Entscheidung, kein separater Key). Vor jedem Commit/Push kurz prüfen, dass
 
 ## Tests
 
-Es gibt aktuell **keine automatisierte Test-Suite**. CI (`.github/workflows/`)
-prüft bisher nur `php -l` (Syntaxfehler) über alle PHP-Dateien — das ist
-kein Ersatz für echte Tests, nur ein Mindest-Sicherheitsnetz.
+`php tests/run.php` ist eine bewusst minimale Test-Suite in reinem PHP (kein
+Composer/PHPUnit, passend zum Abhängigkeits-Verbot oben). Sie deckt reine
+Funktionen und gezielte Regressionen ab: SMS-Texte müssen GSM-7 und höchstens
+160 Zeichen sein, Telefonnummern-Validierung, Publish-Bestätigungstext, und ein
+Scan, der interpoliertes PHP in `onsubmit="...confirm(...)"` verbietet (Stored
+XSS, siehe `data-confirm` in `partials/header.php`). Die CI führt sie nach dem
+`php -l`-Lauf aus. Bei einem Bugfix gehört ein Test für genau diesen Fehler
+dazu. Die Suite ersetzt keine Prüfung im Browser: Rendering, Formulare und
+Datenbankabläufe sind nicht abgedeckt.
 
 ## Versionierung
 

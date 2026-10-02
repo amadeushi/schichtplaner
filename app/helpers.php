@@ -15,7 +15,7 @@ function publishConfirmMessage(int $draftCount, int $pendingNotifyCount): string
 {
     $parts = [];
     if ($draftCount > 0) {
-        $parts[] = $draftCount . ' Entwurf' . ($draftCount === 1 ? '' : 'e');
+        $parts[] = $draftCount . ($draftCount === 1 ? ' Entwurf' : ' Entwürfe');
     }
     if ($pendingNotifyCount > 0) {
         $parts[] = $pendingNotifyCount . ' ausstehende Benachrichtigung' . ($pendingNotifyCount === 1 ? '' : 'en');
