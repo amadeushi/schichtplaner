@@ -49,7 +49,7 @@ function navActive(string $path, array $matches): bool
   input, textarea { caret-color: var(--stamp); }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: var(--paper-surround); }
-  ::-webkit-scrollbar-thumb { background: var(--ink-line-strong); border-radius: 5px; border: 2px solid var(--paper-surround); }
+  ::-webkit-scrollbar-thumb { background: var(--ink-line-strong); border-radius: 3px; border: 2px solid var(--paper-surround); }
   body {
     margin: 0;
     font-family: var(--font-sans);
@@ -247,7 +247,7 @@ function navActive(string $path, array $matches): bool
 
   .flash { padding: 0.7rem 1rem; border-radius: 3px; margin-bottom: 1rem; font-size: 0.9rem; border: 1.5px solid; }
   .flash.success { background: var(--confirm-wash); border-color: var(--ink-line-strong); color: var(--ink); }
-  .flash.error { background: var(--stamp-wash); border-color: var(--stamp); color: #7a2213; }
+  .flash.error { background: var(--stamp-wash); border-color: var(--stamp); color: var(--danger); }
   .muted { color: var(--ink-soft); font-size: 0.85rem; }
 
   /* Bon-Strang: die zentrale Komponente */

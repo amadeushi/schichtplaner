@@ -130,7 +130,21 @@ require __DIR__ . '/partials/header.php';
         <span class="duty-stamp-time mono">seit <?= e(date('H:i', strtotime($openEntry['clock_in']))) ?></span>
       </button>
     </form>
-    <p class="muted" style="margin-top:1rem;">Aktuell: <strong class="mono"><?= e(formatDurationHm($sinceSeconds)) ?></strong> &middot; antippen zum Ausstempeln</p>
+    <p class="muted" style="margin-top:1rem;">Aktuell: <strong class="mono" id="duty-elapsed" data-since-epoch="<?= (int)strtotime($openEntry['clock_in']) ?>"><?= e(formatDurationHm($sinceSeconds)) ?></strong> &middot; antippen zum Ausstempeln</p>
+    <script>
+      (function () {
+        // Register-Tape Rule: diese Zahl gilt als "Fakt", durfte also nicht ohne
+        // Neuladen veralten - reines Vanilla-JS, kein Framework (siehe CLAUDE.md).
+        var el = document.getElementById('duty-elapsed');
+        if (!el) { return; }
+        var sinceMs = parseInt(el.dataset.sinceEpoch, 10) * 1000;
+        function tick() {
+          var totalMin = Math.max(0, Math.floor((Date.now() - sinceMs) / 60000));
+          el.textContent = Math.floor(totalMin / 60) + ':' + String(totalMin % 60).padStart(2, '0') + ' Std.';
+        }
+        setInterval(tick, 30000);
+      })();
+    </script>
   <?php else: ?>
     <form method="post">
       <?= csrfField() ?>

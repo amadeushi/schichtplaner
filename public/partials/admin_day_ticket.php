@@ -114,12 +114,13 @@
                   <input type="hidden" name="action" value="assign">
                   <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                   <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                  <select name="employee_id" onchange="this.form.submit()">
+                  <select name="employee_id">
                     <option value="">+ zuweisen</option>
                     <?php foreach ($assignable as $e): ?>
                       <option value="<?= (int)$e['id'] ?>"><?= e($e['name']) ?><?= $isAbsentOnDay((int)$e['id']) ? ' (abwesend)' : '' ?></option>
                     <?php endforeach; ?>
                   </select>
+                  <button type="submit" class="btn small secondary">Zuweisen</button>
                 </form>
               <?php else: ?>
                 <span></span>
@@ -139,16 +140,17 @@
                  stehen; .table-actions bricht bei Bedarf um, statt über den Rand zu laufen. -->
             <div class="table-actions" style="justify-content:flex-end;">
               <a class="btn small secondary" href="?edit=<?= (int)$sh['id'] ?>&date=<?= e($weekStart) ?>#edit-shift">Bearbeiten</a>
-              <form class="inline" method="post">
+              <form class="inline" method="post" style="display:inline-flex;gap:0.3rem;">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="status">
                 <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                 <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                <select name="status" onchange="this.form.submit()" class="select-inline">
+                <select name="status" class="select-inline">
                   <option value="open" <?= $sh['status'] === 'open' ? 'selected' : '' ?>>Offen</option>
                   <option value="filled" <?= $sh['status'] === 'filled' ? 'selected' : '' ?>>Besetzt</option>
                   <option value="closed" <?= $sh['status'] === 'closed' ? 'selected' : '' ?>>Geschlossen</option>
                 </select>
+                <button type="submit" class="btn small secondary">Übernehmen</button>
               </form>
               <form class="inline" method="post" onsubmit="return confirm('Schicht wirklich löschen?');">
                 <?= csrfField() ?>

@@ -327,7 +327,19 @@ require __DIR__ . '/../partials/header.php';
 </div>
 
 <?php if ($draftCount > 0 || $pendingNotifyCount > 0): ?>
-<form method="post" action="/admin/shifts.php" class="publish-bar">
+<?php
+  // Dasselbe confirm() wie im Schichtplan (admin/shifts.php) - dieses Formular sendet an
+  // denselben Handler, braucht also dieselbe Sicherung, siehe /impeccable critique (P1).
+  $publishConfirmParts = [];
+  if ($draftCount > 0) {
+      $publishConfirmParts[] = $draftCount . ' Entwurf' . ($draftCount === 1 ? '' : 'e');
+  }
+  if ($pendingNotifyCount > 0) {
+      $publishConfirmParts[] = $pendingNotifyCount . ' ausstehende Benachrichtigung' . ($pendingNotifyCount === 1 ? '' : 'en');
+  }
+  $publishConfirmText = implode(' und ', $publishConfirmParts) . ' jetzt an betroffene Mitarbeiter senden?';
+?>
+<form method="post" action="/admin/shifts.php" class="publish-bar" onsubmit="return confirm('<?= e($publishConfirmText) ?>');">
   <?= csrfField() ?>
   <input type="hidden" name="action" value="publish">
   <input type="hidden" name="week_date" value="<?= e($weekStart) ?>">

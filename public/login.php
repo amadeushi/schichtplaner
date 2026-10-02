@@ -40,5 +40,6 @@ require __DIR__ . '/partials/header.php';
     <input type="password" id="password" name="password" required>
     <button type="submit" class="btn" style="margin-top:1.25rem;width:100%;">Anmelden</button>
   </form>
+  <p class="muted" style="margin-top:1rem;">Passwort vergessen oder Konto gesperrt? Wende dich an deinen Admin.</p>
 </div>
 <?php require __DIR__ . '/partials/footer.php'; ?>

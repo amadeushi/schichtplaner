@@ -37,7 +37,7 @@ typography:
     letterSpacing: "normal"
   label:
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    fontSize: "0.75rem"
+    fontSize: "0.72rem"
     fontWeight: 700
     lineHeight: 1.2
     letterSpacing: "0.035em"
@@ -167,6 +167,8 @@ The palette is a near-monochrome thermal-receipt paper stock (cream tickets and 
 - **Body** (400, ~0.85–0.9rem, 1.4 line-height): ticket-meta captions, table cells, muted paragraph text.
 - **Label** (700, 0.72–0.78rem, uppercase, 0.03–0.04em tracking): section headings (`h2`), form field labels, badges, the rail's "Diese Woche" divider — the system's eyebrow voice, always uppercase, always `ink-soft` unless the badge is stamp-red.
 - **Mono** (600, ~0.8–0.92rem, tabular-nums): shift times (`ticket-time`), dates (`ticket-date`), durations, the brand wordmark, and every bottom-tab label — even navigation labels are set in mono, tying "this is data / this is structure" to the typeface itself.
+
+The ranges above (e.g. Body 0.85–0.9rem, Label 0.72–0.78rem, Mono 0.8–0.92rem) are the real, deliberate scale: each intermediate step (0.8rem, 0.82rem, 0.85rem, etc.) repeats across multiple components and files rather than being a one-off. An `impeccable detect` run flags these against the frontmatter's single canonical value per step — that's a known gap between the strict machine-readable token and its documented range, not undiscovered inconsistency; treat a hit inside one of these ranges as expected, not as new debt (checked 2026-10-02).
 
 ### Named Rules
 **The Register-Tape Rule.** Any value a user could look up on a time clock — a clock-in, a shift start/end, a date, a duration, an hours total — is set in mono with tabular-nums. Nothing else is. This is the fastest way to tell "this is a fact" from "this is a name" at a glance, one-handed, in a kitchen.

@@ -6,6 +6,47 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.22.0] - 2026-10-02
+
+### Behoben
+- Admin-Wochenansicht/Kalender (admin/shifts.php, admin/calendar.php): "Woche
+  veröffentlichen" löst beim Klick sofort echte E-Mails/SMS an alle
+  betroffenen Mitarbeiter aus und ist nicht rückgängig zu machen - anders als
+  Löschen/Entfernen/SMS-Key-zurücksetzen fehlte dafür bisher ein confirm().
+  Beide Formulare (Schichtplan und Kalender posten an denselben Handler)
+  fragen jetzt mit der konkreten Anzahl an Entwürfen/Benachrichtigungen nach.
+- Login (login.php): gesperrte oder Passwort-vergessene Mitarbeiter hatten
+  keinen Hinweis, dass der Admin ihr Passwort zurücksetzen kann - eine Zeile
+  Hinweistext unter dem Formular schließt diese Lücke, ohne einen neuen Ablauf
+  zu brauchen (die Admin-Funktion existierte bereits).
+- Zeiterfassung (time_tracking.php): "Aktuell: X Std." stand seit dem
+  Laden der Seite fest und aktualisierte sich nie von selbst. Ein kleines
+  Vanilla-JS tickt die Anzeige jetzt alle 30s nach, ohne Framework oder
+  Neuladen.
+- Admin-Tagesticket (partials/admin_day_ticket.php): die Zuweisen- und
+  Status-Auswahlfelder lösten die Aktion sofort beim Ändern aus (`onchange`),
+  ohne Rückfrage - ein Fehltipp am Handy oder ein Tastatur-Durchklicken
+  konnte so unbeabsichtigt zuweisen oder den Status ändern. Beide haben jetzt
+  einen eigenen Bestätigen-Button ("Zuweisen"/"Übernehmen").
+- Design-Token-Drift (partials/header.php): der Scrollbar-Thumb-Radius
+  (5px) und eine dritte, undokumentierte Rot-Variante in `.flash.error`
+  (`#7a2213`) entsprachen nicht der in DESIGN.md dokumentierten Skala/Palette
+  - jetzt auf die dokumentierten Tokens (3px-Radius, `--danger`) vereinheit-
+  licht.
+
+### Geändert
+- Admin-Wochenansicht (admin/shifts.php): "Neue Schicht anlegen" ist jetzt
+  standardmäßig eingeklappt (`<details>`, dasselbe Muster wie die
+  E-Mail-Vorlagen in admin/settings.php) statt permanent alle acht Felder auf
+  einer Seite zu zeigen, die primär zum Überfliegen der Besetzung aufgerufen
+  wird.
+- DESIGN.md: der dokumentierte `label`-Schriftgrad wurde von 0.75rem auf
+  0.72rem korrigiert - der tatsächlich im gesamten Code konsistent verwendete
+  Wert war schon immer 0.72rem, nicht die bisher dokumentierten 0.75rem.
+  Zusätzlich eine Anmerkung ergänzt, dass die übrigen Zwischenstufen der
+  Typo-Skala (0.8/0.82/0.85rem etc.) eine bewusste, bereits mehrfach
+  wiederverwendete Erweiterung sind, keine undokumentierte Drift.
+
 ## [1.21.0] - 2026-10-01
 
 ### Geändert

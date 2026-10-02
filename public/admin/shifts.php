@@ -452,7 +452,20 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
 </div>
 
 <?php if ($draftCount > 0 || $pendingNotifyCount > 0): ?>
-<form method="post" class="publish-bar">
+<?php
+  // Höchste Reichweite aller Admin-Aktionen hier (echte Mails/SMS an alle Betroffenen,
+  // nicht rückgängig zu machen) - anders als delete/unassign/clear_sms_key fehlte dafür
+  // bisher ein confirm(), siehe /impeccable critique vom 2026-10-02 (P1).
+  $publishConfirmParts = [];
+  if ($draftCount > 0) {
+      $publishConfirmParts[] = $draftCount . ' Entwurf' . ($draftCount === 1 ? '' : 'e');
+  }
+  if ($pendingNotifyCount > 0) {
+      $publishConfirmParts[] = $pendingNotifyCount . ' ausstehende Benachrichtigung' . ($pendingNotifyCount === 1 ? '' : 'en');
+  }
+  $publishConfirmText = implode(' und ', $publishConfirmParts) . ' jetzt an betroffene Mitarbeiter senden?';
+?>
+<form method="post" class="publish-bar" onsubmit="return confirm('<?= e($publishConfirmText) ?>');">
   <?= csrfField() ?>
   <input type="hidden" name="action" value="publish">
   <input type="hidden" name="week_date" value="<?= e($weekStart) ?>">
@@ -524,8 +537,9 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
 </div>
 
 <div class="card">
-  <h2>Neue Schicht anlegen</h2>
-  <form method="post">
+  <details class="tpl-editor">
+    <summary>Neue Schicht anlegen</summary>
+    <form method="post">
     <?= csrfField() ?>
     <input type="hidden" name="action" value="create">
     <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
@@ -564,7 +578,8 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
     <label for="repeat_weeks">Wiederholen (Anzahl Wochen, wöchentlich ab Datum)</label>
     <input type="number" id="repeat_weeks" name="repeat_weeks" min="1" max="26" value="1">
     <button type="submit" class="btn" style="margin-top:1rem;">Als Entwurf anlegen</button>
-  </form>
+    </form>
+  </details>
 </div>
 
 <?php require __DIR__ . '/../partials/footer.php'; ?>
