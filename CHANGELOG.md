@@ -6,6 +6,43 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.22.1] - 2026-10-02
+
+### Behoben
+- **Sicherheit (kritisch)**: In mehreren `onsubmit="return confirm('...')"`-Bestätigungs-
+  dialogen wurde ein von Admins eingegebener Wert (Schichttitel, Mitarbeitername)
+  nur per `htmlspecialchars()` escaped - das schützt zwar das umgebende HTML-
+  Attribut, aber der Browser dekodiert die Entities wieder, bevor er den
+  Attributinhalt als JS ausführt. Ein Anführungszeichen im Wert konnte so aus
+  dem `confirm()`-String ausbrechen und beliebiges JavaScript einschleusen
+  (Stored XSS, admin-zu-admin). Betroffen: "Entfernen" und "Personal gesucht"
+  in partials/admin_day_ticket.php, "Abwesenheit löschen" in
+  admin/absences.php, die neuen Publish-Bestätigungen in admin/shifts.php und
+  admin/calendar.php (dort nur mit Zahlen gefüllt, aber dasselbe unsichere
+  Muster) sowie "Protokoll bereinigen" in admin/settings.php. Alle sechs
+  Stellen nutzen jetzt ein sicheres `data-confirm`-Attribut plus einen
+  einzigen global delegierten `submit`-Listener in partials/header.php -
+  der Wert wird dort nur als String gelesen, nie als Code geparst. Gefunden
+  durch den `ecc:php-reviewer`-Agenten, verifiziert mit einem echten
+  Payload lokal vor dem Fix (Ausführung bestätigt) und danach (neutralisiert).
+- Logout (app/auth.php): die Session wurde serverseitig zerstört, aber das
+  Session-Cookie clientseitig nicht explizit abgelaufen gesetzt.
+- "Neue Schicht anlegen" (admin/shifts.php): das seit v1.22.0 eingeklappte
+  Formular blieb bei einem Validierungsfehler geschlossen, obwohl die
+  Fehlermeldung oben die darin verborgenen Felder betraf - öffnet sich jetzt
+  automatisch wieder, wenn eine Anlage fehlschlägt.
+- Zeiterfassung (time_tracking.php): der live tickende Timer zeigte bis zu
+  30s lang den beim Laden berechneten Wert, bevor der erste Tick lief.
+- Admin-Tagesticket (partials/admin_day_ticket.php): ein ungültiges
+  `strtotime()`-Ergebnis hätte "Personal gesucht" fälschlich als dringend
+  (stempelrot) einstufen können statt sicher auf die ruhige Variante
+  zurückzufallen.
+
+### Geändert
+- Der doppelt vorhandene Code zur Publish-Bestätigung (admin/shifts.php und
+  admin/calendar.php posten an denselben Handler) ist jetzt eine gemeinsame
+  Funktion `publishConfirmMessage()` in app/helpers.php.
+
 ## [1.22.0] - 2026-10-02
 
 ### Behoben

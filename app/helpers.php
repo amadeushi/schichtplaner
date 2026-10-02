@@ -6,6 +6,23 @@ function e(?string $value): string
     return htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
+/**
+ * Bestätigungstext für "Woche veröffentlichen" - identisch in admin/shifts.php und
+ * admin/calendar.php verwendet (beide posten an denselben Handler), vorher an beiden
+ * Stellen dupliziert (siehe ecc:php-reviewer, 2026-10-02).
+ */
+function publishConfirmMessage(int $draftCount, int $pendingNotifyCount): string
+{
+    $parts = [];
+    if ($draftCount > 0) {
+        $parts[] = $draftCount . ' Entwurf' . ($draftCount === 1 ? '' : 'e');
+    }
+    if ($pendingNotifyCount > 0) {
+        $parts[] = $pendingNotifyCount . ' ausstehende Benachrichtigung' . ($pendingNotifyCount === 1 ? '' : 'en');
+    }
+    return implode(' und ', $parts) . ' jetzt an betroffene Mitarbeiter senden?';
+}
+
 function redirect(string $path): never
 {
     header('Location: ' . $path);

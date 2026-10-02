@@ -476,6 +476,21 @@ function navActive(string $path, array $matches): bool
 </style>
 </head>
 <body>
+<script>
+  // Sichere Ersetzung für ein per PHP interpoliertes onsubmit="return confirm('...')":
+  // htmlspecialchars() schützt zwar das umgebende HTML-Attribut,
+  // aber der Browser dekodiert Entities wieder, BEVOR er den Attributinhalt als JS ausführt -
+  // ein Anführungszeichen im Wert (z.B. in einem Schicht-/Mitarbeiternamen) konnte so aus dem
+  // confirm()-String ausbrechen und beliebiges JS einschleusen (Stored XSS, Fund per
+  // ecc:php-reviewer am 2026-10-02). data-confirm wird nur als String gelesen, nie als Code
+  // geparst, darum sicher unabhängig vom Inhalt.
+  document.addEventListener('submit', function (ev) {
+    var msg = ev.target.dataset && ev.target.dataset.confirm;
+    if (msg !== undefined && !confirm(msg)) {
+      ev.preventDefault();
+    }
+  });
+</script>
 <!--
 THESIS: Der Dienstplan ist kein Formular, er ist der Bon-Strang über der Ausgabe.
 OWN-WORLD: Dunkler Espresso-Umber (aus Zeus' Fell/Maske) als Tresen, helles Bon-Papier darauf, ein gestempeltes Rot nur für heute/aktiv; Monospace für Zeiten, ruhiger Sans für Namen; echtes AMDS-Logo im Header. Jede Schicht ein perforierter Bon mit Lochrand.

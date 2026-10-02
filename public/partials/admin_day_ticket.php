@@ -52,8 +52,8 @@
           // One Stamp Rule: der Rundruf-Knopf ist nur innerhalb von 48h vor Schichtbeginn stempelrot
           // (echte Dringlichkeit), sonst eine ruhige Outline-Variante - sonst wäre Rot ein
           // Dauerzustand statt einer rationierten Ausnahme, siehe DESIGN.md.
-          $hoursUntilShift = (strtotime($sh['shift_date'] . ' ' . $sh['start_time']) - time()) / 3600;
-          $staffingUrgent = $hoursUntilShift <= 48;
+          $shiftStartTs = strtotime($sh['shift_date'] . ' ' . $sh['start_time']);
+          $staffingUrgent = $shiftStartTs !== false && ($shiftStartTs - time()) / 3600 <= 48;
         ?>
         <div class="ticket-row" id="shift-<?= (int)$sh['id'] ?>" style="flex-direction:column;align-items:stretch;gap:0.5rem;scroll-margin-top:5rem;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem;">
@@ -69,7 +69,7 @@
           <?php foreach ($assigned as $person): ?>
             <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
               <span>&#10003; <?= e($person['name']) ?><?php if ($isAbsentOnDay((int)$person['id'])): ?> <span class="muted">(abwesend)</span><?php endif; ?></span>
-              <form class="inline" method="post" onsubmit="return confirm('<?= e($person['name']) ?> von \'<?= e($sh['title']) ?>\' entfernen?');">
+              <form class="inline" method="post" data-confirm="<?= e($person['name']) ?> von &quot;<?= e($sh['title']) ?>&quot; entfernen?">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="unassign">
                 <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
@@ -126,7 +126,7 @@
                 <span></span>
               <?php endif; ?>
               <?php if (!$full && $sh['status'] === 'open' && $sh['published_at'] !== null): ?>
-                <form class="inline" method="post" onsubmit="return confirm('Allen verfügbaren, noch nicht eingeplanten Mitarbeitern eine dringende Erinnerung zu &quot;<?= e($sh['title']) ?>&quot; am <?= e(formatDateDe($d)) ?> schicken?');">
+                <form class="inline" method="post" data-confirm="Allen verfügbaren, noch nicht eingeplanten Mitarbeitern eine dringende Erinnerung zu &quot;<?= e($sh['title']) ?>&quot; am <?= e(formatDateDe($d)) ?> schicken?">
                   <?= csrfField() ?>
                   <input type="hidden" name="action" value="urgent_reminder">
                   <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">

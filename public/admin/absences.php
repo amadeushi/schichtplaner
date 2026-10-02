@@ -116,7 +116,7 @@ require __DIR__ . '/../partials/header.php';
         <td data-label="Art"><?= e(absenceTypeLabelDe($a['type'])) ?></td>
         <td data-label="Notiz"><?= $a['note'] ? e($a['note']) : '<span class="muted">—</span>' ?></td>
         <td data-label="Aktion">
-          <form class="inline" method="post" onsubmit="return confirm('Abwesenheit von <?= e($a['user_name']) ?> löschen?');">
+          <form class="inline" method="post" data-confirm="Abwesenheit von <?= e($a['user_name']) ?> löschen?">
             <?= csrfField() ?>
             <input type="hidden" name="action" value="delete">
             <input type="hidden" name="absence_id" value="<?= (int)$a['id'] ?>">

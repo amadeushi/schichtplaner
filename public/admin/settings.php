@@ -344,7 +344,7 @@ require __DIR__ . '/../partials/header.php';
     <button type="submit" class="btn secondary" style="margin-top:0.85rem;">Speichern</button>
   </form>
 
-  <form method="post" style="margin-top:0.75rem;" onsubmit="return confirm('<?= $overLimitCount ?> älteste Einträge jetzt endgültig löschen?');">
+  <form method="post" style="margin-top:0.75rem;" data-confirm="<?= (int)$overLimitCount ?> älteste Einträge jetzt endgültig löschen?">
     <?= csrfField() ?>
     <input type="hidden" name="action" value="cleanup_log">
     <button type="submit" class="btn danger" <?= $overLimitCount === 0 ? 'disabled' : '' ?>>

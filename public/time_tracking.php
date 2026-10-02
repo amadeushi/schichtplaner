@@ -142,6 +142,7 @@ require __DIR__ . '/partials/header.php';
           var totalMin = Math.max(0, Math.floor((Date.now() - sinceMs) / 60000));
           el.textContent = Math.floor(totalMin / 60) + ':' + String(totalMin % 60).padStart(2, '0') + ' Std.';
         }
+        tick();
         setInterval(tick, 30000);
       })();
     </script>

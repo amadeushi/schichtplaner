@@ -19,6 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($title === '' || !$date || !$start || !$end) {
             flash('error', 'Bitte Titel, Datum sowie Start- und Endzeit angeben.');
+            // Markiert fuer den naechsten Request, dass das eingeklappte Formular offen
+            // starten soll - sonst waere die Fehlermeldung oben sichtbar, aber die Felder,
+            // die sie betrifft, blieben unter <details> verborgen (siehe ecc:php-reviewer).
+            $_SESSION['open_create_form'] = true;
             redirect('/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : ''));
         }
 
@@ -432,6 +436,9 @@ if ($weekShifts) {
     $pendingNotifyCount = (int)$pnStmt->fetchColumn();
 }
 
+$openCreateForm = !empty($_SESSION['open_create_form']);
+unset($_SESSION['open_create_form']);
+
 require __DIR__ . '/../partials/header.php';
 
 $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
@@ -452,20 +459,7 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
 </div>
 
 <?php if ($draftCount > 0 || $pendingNotifyCount > 0): ?>
-<?php
-  // Höchste Reichweite aller Admin-Aktionen hier (echte Mails/SMS an alle Betroffenen,
-  // nicht rückgängig zu machen) - anders als delete/unassign/clear_sms_key fehlte dafür
-  // bisher ein confirm(), siehe /impeccable critique vom 2026-10-02 (P1).
-  $publishConfirmParts = [];
-  if ($draftCount > 0) {
-      $publishConfirmParts[] = $draftCount . ' Entwurf' . ($draftCount === 1 ? '' : 'e');
-  }
-  if ($pendingNotifyCount > 0) {
-      $publishConfirmParts[] = $pendingNotifyCount . ' ausstehende Benachrichtigung' . ($pendingNotifyCount === 1 ? '' : 'en');
-  }
-  $publishConfirmText = implode(' und ', $publishConfirmParts) . ' jetzt an betroffene Mitarbeiter senden?';
-?>
-<form method="post" class="publish-bar" onsubmit="return confirm('<?= e($publishConfirmText) ?>');">
+<form method="post" class="publish-bar" data-confirm="<?= e(publishConfirmMessage($draftCount, $pendingNotifyCount)) ?>">
   <?= csrfField() ?>
   <input type="hidden" name="action" value="publish">
   <input type="hidden" name="week_date" value="<?= e($weekStart) ?>">
@@ -537,7 +531,7 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
 </div>
 
 <div class="card">
-  <details class="tpl-editor">
+  <details class="tpl-editor"<?= $openCreateForm ? ' open' : '' ?>>
     <summary>Neue Schicht anlegen</summary>
     <form method="post">
     <?= csrfField() ?>
