@@ -157,7 +157,7 @@
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                 <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                <button type="submit" class="btn small danger">&times;</button>
+                <button type="submit" class="btn small danger" aria-label="Schicht löschen">&times;</button>
               </form>
             </div>
           </div>

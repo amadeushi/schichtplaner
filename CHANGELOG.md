@@ -6,6 +6,27 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.22.2] - 2026-10-02
+
+### Behoben
+- Barrierefreiheit (WCAG 2.2 AA, `ecc:accessibility`-Audit): der Lösch-Button
+  (&times;) in partials/admin_day_ticket.php hatte keinen zugänglichen Namen
+  - Screenreader lasen nur "Mal"/"×" statt "Schicht löschen". Jetzt mit
+  `aria-label="Schicht löschen"`.
+- Barrierefreiheit: der "N Bew."/"Entscheiden"-Knopf in den Kalender-Bons
+  (`.chip-pending`, partials/header.php) war mit ca. 15px Höhe deutlich unter
+  der WCAG-Mindestgröße für Tap-Ziele (24×24px) - jetzt mit `min-height:
+  1.5rem` exakt auf 24px gebracht.
+
+### Bekannt, bewusst zurückgestellt
+- Das Verschieben von Schichten und Umhängen von Bewerbungen im Kalender
+  (admin/calendar.php) ist weiterhin nur per Drag&Drop bedienbar, ohne
+  Tastatur-Alternative (WCAG SC 2.1.1/2.5.7). Zuweisen/Entfernen einer
+  Schicht ist über admin/shifts.php tastaturbedienbar erreichbar; das
+  Umhängen einer Bewerbung auf eine andere Schicht hat aktuell keinen
+  Ersatzweg. Als eigene, größere Aufgabe zurückgestellt statt hier
+  mitgefixt.
+
 ## [1.22.1] - 2026-10-02
 
 ### Behoben

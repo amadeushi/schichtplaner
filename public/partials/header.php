@@ -414,7 +414,7 @@ function navActive(string $path, array $matches): bool
      etablierte Abkürzung (siehe Tab-Leiste "BEWERB."). */
   .chip-pending {
     display: inline-flex; align-items: center; margin-top: 0.2rem; padding: 0.05rem 0.35rem;
-    border: 1px dashed var(--ink-line-strong); border-radius: 999px; font-size: 0.72rem;
+    min-height: 1.5rem; border: 1px dashed var(--ink-line-strong); border-radius: 999px; font-size: 0.72rem;
     font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--ink-soft);
     background: transparent; font-family: inherit; line-height: normal;
     text-decoration: none; cursor: pointer;
