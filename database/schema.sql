@@ -144,6 +144,28 @@ CREATE INDEX IF NOT EXISTS idx_time_entries_clockin ON time_entries(clock_in);
 CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON login_attempts(email, created_at);
 CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip_address, created_at);
 
+-- "Passwort vergessen": Einmal-Link per E-Mail oder SMS. Gespeichert wird nur der SHA-256-Hash des
+-- Tokens (der Link selbst steht nur in der Nachricht), gültig 30 Minuten und genau einmal.
+CREATE TABLE IF NOT EXISTS password_resets (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  TEXT NOT NULL UNIQUE,
+    expires_at  TEXT NOT NULL,
+    used_at     TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+-- Jede angenommene Anfrage (auch für unbekannte Adressen, damit sich daran nichts erkennen lässt)
+-- für die Begrenzung je Adresse und je IP.
+CREATE TABLE IF NOT EXISTS password_reset_requests (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    email       TEXT NOT NULL,
+    ip_address  TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+CREATE INDEX IF NOT EXISTS idx_password_reset_requests_email ON password_reset_requests(email, created_at);
+CREATE INDEX IF NOT EXISTS idx_password_reset_requests_ip ON password_reset_requests(ip_address, created_at);
+
 -- Default-Einstellungen
 INSERT OR IGNORE INTO settings (key, value) VALUES ('webhook_url', '');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('webhook_enabled', '0');

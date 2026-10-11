@@ -2,6 +2,7 @@ app/config.php
 storage/*.sqlite
 storage/*.sqlite-*
 storage/*.sqlite3
+storage/sessions/
 .DS_Store
 *.log
 .idea/

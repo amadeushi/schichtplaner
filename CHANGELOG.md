@@ -6,6 +6,90 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.24.0] - 2026-10-11
+
+### Hinzugefügt
+- "Passwort vergessen" per E-Mail oder SMS (login.php, forgot_password.php,
+  reset_password.php). Der Hinweis "wende dich an deinen Admin" auf der
+  Anmeldeseite ist durch einen Link ersetzt. Man gibt die E-Mail-Adresse ein
+  und bekommt einen Link, über den man ein neues Passwort vergibt; ist SMS
+  aktiv, kann man stattdessen "per SMS" wählen (an die hinterlegte Mobilnummer,
+  fehlt sie oder nimmt das Gateway die SMS nicht an, geht der Link per
+  E-Mail). Die E-Mail-Vorlage "Passwort vergessen (Link)" lässt sich unter
+  Einstellungen bearbeiten, der Button mit dem Link bleibt davon unberührt.
+- Sicherheit des Links: 128 Bit Zufall, in der Datenbank steht nur der
+  SHA-256-Hash. Gültig 30 Minuten und genau einmal, eine neue Anfrage
+  entwertet ältere Links. Nur das Absenden verbraucht ihn, nicht das bloße
+  Öffnen (Link-Vorschauen und Mail-Scanner). Die Antwort ist immer dieselbe,
+  ob die Adresse ein Konto hat oder nicht, und der Versand läuft erst nach der
+  Antwort, damit auch die Antwortzeit nichts verrät. Begrenzt auf 3 Anfragen je
+  Adresse und 10 je IP und Stunde, das schützt auch das SMS-Kontingent. Nach
+  dem Zurücksetzen werden die Fehlversuche des Kontos gelöscht, eine
+  Login-Sperre blockiert den neuen Zugang also nicht.
+- Eine Passwortänderung meldet jetzt alle anderen Geräte ab (Zurücksetzen per
+  Link, durch den Admin oder im Profil; das ändernde Gerät bleibt angemeldet).
+  Mit den 30-Tage-Anmeldungen wichtig: ein verlorenes oder bekannt gewordenes
+  Passwort lässt sich so wirklich unschädlich machen. Technisch: die Session
+  merkt sich einen Fingerabdruck des Passwort-Hashes.
+- Tests dafür in `tests/run.php` gegen eine In-Memory-Datenbank mit dem echten
+  Schema: Hash statt Klartext, Einmaligkeit, Ablauf, Limits, Entwertung,
+  Aufräumen der Fehlversuche, SMS-Text (GSM-7, 160 Zeichen).
+
+### Geändert
+- Der Grundsatz "Passwörter nie per SMS" bleibt. Der Einmal-Link ist die
+  einzige Ausnahme (kein Passwort, 30 Minuten, einmal nutzbar) und wird nach
+  dem Versand aus der SMS-Outbox entfernt statt 30 Tage dort zu liegen.
+- Tippflächen der Auswahlkästchen und Optionsfelder (`.checkbox-field`) sind
+  jetzt mindestens 36px hoch (vorher 17px, unter dem WCAG-Minimum von 24px),
+  auch in Einstellungen und Profil.
+
+### Beim Update zu beachten
+- Einmalig auf dem Pi die Migration ausführen:
+  `php bin/migrate_password_reset.php` (legt die zwei neuen Tabellen an).
+
+## [1.23.1] - 2026-10-11
+
+### Behoben
+- Mitarbeiter mussten sich ständig neu anmelden. Ursache waren zwei PHP-
+  Standardwerte, die die App nie überschrieben hatte: das Session-Cookie hatte
+  keine Laufzeit (weg, sobald der Browser geschlossen oder die App vom Handy aus
+  dem Speicher geworfen wurde), und serverseitig galten nur 24 Minuten
+  Inaktivität - der Aufräum-Timer des Pi (`phpsessionclean`) löscht inaktive
+  Sessions im gemeinsamen Ordner `/var/lib/php/sessions`, dessen Frist die App
+  nicht ändern kann. Jetzt bleibt die Anmeldung 30 Tage nach dem letzten
+  Besuch bestehen: dauerhaftes Cookie, das bei jedem Besuch erneuert wird
+  (PHP macht das nicht von selbst), eigener Session-Ordner `storage/sessions/`
+  (0700, nicht per Web erreichbar, nicht im Git), den die App selbst nach der
+  Frist aufräumt, und `session.use_strict_mode`, damit erfundene Session-IDs
+  abgelehnt werden. Die Dauer ist über `session_lifetime_days` in
+  app/config.php einstellbar (1-365, Standard 30). Abmelden löscht das Cookie
+  weiterhin sofort.
+- Einmalig nach dem Update: alle Nutzer müssen sich noch ein letztes Mal neu
+  anmelden, weil die Sessions in den neuen Ordner umziehen.
+
+## [1.23.0] - 2026-10-11
+
+### Hinzugefügt
+- Dieselbe Schicht für mehrere Tage in einem Schritt anlegen (admin/shifts.php,
+  "Neue Schicht anlegen"): neue Auswahl "Mehrere Tage" mit Mo bis So und den
+  Kurzwahlen "Alle", "Mo–Fr" und "Keine". Die gewählten Tage gelten für die
+  Woche des Datums und lassen sich mit "Wiederholen (Wochen)" kombinieren, z.B.
+  16:00 bis 22:00 von Montag bis Sonntag, vier Wochen lang. Ohne Auswahl
+  verhält sich das Formular wie bisher. Alle Schichten entstehen wie gewohnt
+  als Entwurf.
+- Duplikat-Schutz beim Anlegen: eine Schicht mit gleichem Titel, Tag und
+  Uhrzeit wird übersprungen statt doppelt angelegt (z.B. bei zweimal
+  Absenden), die Rückmeldung nennt die Zahl der übersprungenen Schichten.
+- Die Datumsberechnung steckt in der reinen Funktion `expandShiftDates()`
+  (app/helpers.php) und ist in `tests/run.php` abgedeckt, inklusive der
+  Sommerzeit-Umstellung am 25.10.2026.
+
+### Geändert
+- Alle neuen Schichten eines Absendens entstehen in einer Datenbank-
+  Transaktion (bis zu 7 × 26 Einträge, sonst einzeln auf die SD-Karte des Pi).
+- Ein ungültiges Datum im Formular wird jetzt als Fehler gemeldet statt
+  stillschweigend ein Datum im Jahr 1970 anzulegen.
+
 ## [1.22.3] - 2026-10-02
 
 ### Hinzugefügt

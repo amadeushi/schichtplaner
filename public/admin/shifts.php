@@ -15,9 +15,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $needed = max(1, (int)($_POST['needed_count'] ?? 1));
         $notes = trim((string)($_POST['notes'] ?? ''));
         $repeatWeeks = max(1, min(26, (int)($_POST['repeat_weeks'] ?? 1)));
+        $weekdays = (array)($_POST['weekdays'] ?? []);
         $returnDate = (string)($_POST['return_date'] ?? '');
 
-        if ($title === '' || !$date || !$start || !$end) {
+        if ($title === '' || !$date || !strtotime($date) || !$start || !$end) {
             flash('error', 'Bitte Titel, Datum sowie Start- und Endzeit angeben.');
             // Markiert fuer den naechsten Request, dass das eingeklappte Formular offen
             // starten soll - sonst waere die Fehlermeldung oben sichtbar, aber die Felder,
@@ -31,9 +32,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              VALUES (:title, :date, :start, :end, :loc, :needed, :notes, :status, :uid)'
         );
 
+        // Gewählte Wochentage (Mo-So der Woche von "Datum") x Wiederholungswochen. Eine Schicht
+        // mit identischem Titel/Tag/Zeit gibt es oft schon (z.B. zweimal abgesendet) - die wird
+        // übersprungen statt doppelt angelegt. Eine Transaktion, weil bis zu 7 x 26 Einträge sonst
+        // einzeln auf die SD-Karte des Pi geschrieben würden.
+        $dates = expandShiftDates($date, $weekdays, $repeatWeeks);
+        $exists = db()->prepare(
+            'SELECT 1 FROM shifts WHERE title = :title AND shift_date = :date AND start_time = :start AND end_time = :end'
+        );
         $createdShifts = [];
-        for ($i = 0; $i < $repeatWeeks; $i++) {
-            $shiftDate = date('Y-m-d', strtotime($date . " +{$i} week"));
+        $skipped = 0;
+        db()->beginTransaction();
+        foreach ($dates as $shiftDate) {
+            $exists->execute(['title' => $title, 'date' => $shiftDate, 'start' => $start, 'end' => $end]);
+            if ($exists->fetchColumn()) {
+                $skipped++;
+                continue;
+            }
             $ins->execute([
                 'title' => $title, 'date' => $shiftDate, 'start' => $start, 'end' => $end,
                 'loc' => $location ?: null, 'needed' => $needed, 'notes' => $notes ?: null,
@@ -41,13 +56,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             $createdShifts[] = (int)db()->lastInsertId();
         }
+        db()->commit();
 
         // Startet als Entwurf (published_at bleibt NULL) - erst beim nächsten Publish für
         // Mitarbeiter sichtbar und über den Webhook gemeldet, siehe Aktion 'publish' unten.
         $count = count($createdShifts);
-        flash('success', $count > 1
-            ? "$count Schichten als Entwurf angelegt. Über \"Veröffentlichen\" für Mitarbeiter freigeben."
-            : 'Schicht als Entwurf angelegt. Über "Veröffentlichen" für Mitarbeiter freigeben.');
+        $skippedNote = $skipped > 0 ? ' ' . $skipped . ($skipped === 1 ? ' bereits vorhandene Schicht wurde übersprungen.' : ' bereits vorhandene Schichten wurden übersprungen.') : '';
+        if ($count === 0) {
+            flash('error', 'Keine Schicht angelegt:' . ($skipped === 1 ? ' Sie existiert bereits.' : ' Alle ' . $skipped . ' gibt es bereits.'));
+        } else {
+            flash('success', ($count > 1
+                ? "$count Schichten als Entwurf angelegt. Über \"Veröffentlichen\" für Mitarbeiter freigeben."
+                : 'Schicht als Entwurf angelegt. Über "Veröffentlichen" für Mitarbeiter freigeben.') . $skippedNote);
+        }
         redirect('/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : ''));
     }
 
@@ -567,6 +588,30 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
         <input type="time" id="end_time" name="end_time" required>
       </div>
     </div>
+    <fieldset class="weekday-fieldset">
+      <legend>Mehrere Tage (optional)</legend>
+      <div class="weekday-picks">
+        <?php foreach (['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'] as $wdIndex => $wdLabel): ?>
+          <label class="weekday-pick"><input type="checkbox" name="weekdays[]" value="<?= $wdIndex + 1 ?>"> <?= $wdLabel ?></label>
+        <?php endforeach; ?>
+      </div>
+      <div class="table-actions" style="margin-top:0.5rem;">
+        <button type="button" class="btn small secondary" data-weekdays="1,2,3,4,5,6,7">Alle</button>
+        <button type="button" class="btn small secondary" data-weekdays="1,2,3,4,5">Mo&ndash;Fr</button>
+        <button type="button" class="btn small secondary" data-weekdays="">Keine</button>
+      </div>
+      <p class="muted" style="margin-top:0.5rem;">Gilt für die Woche des gewählten Datums. Ohne Auswahl wird nur dieser eine Tag angelegt.</p>
+    </fieldset>
+    <script>
+      document.querySelectorAll('[data-weekdays]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var chosen = btn.dataset.weekdays.split(',');
+          document.querySelectorAll('input[name="weekdays[]"]').forEach(function (box) {
+            box.checked = chosen.indexOf(box.value) !== -1;
+          });
+        });
+      });
+    </script>
     <label for="notes">Notiz (optional)</label>
     <textarea id="notes" name="notes" rows="2"></textarea>
     <label for="repeat_weeks">Wiederholen (Anzahl Wochen, wöchentlich ab Datum)</label>

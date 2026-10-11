@@ -200,7 +200,19 @@ function navActive(string $path, array $matches): bool
      Kontrollkästchen mit einem ganzen erklärenden Satz als Beschriftung ("Auch per E-Mail/SMS an
      alle Mitarbeiter verschicken") ist Fließtext, kein Label, und wurde als Versal-Satz schwerer
      lesbar. .checkbox-field nimmt diese eine Ausnahme von der label-Regel zurück. */
-  label.checkbox-field { display: flex; align-items: center; gap: 0.5rem; text-transform: none; letter-spacing: normal; color: var(--ink); font-size: 0.9rem; font-weight: 400; }
+  label.checkbox-field { display: flex; align-items: center; gap: 0.5rem; min-height: 2.25rem; text-transform: none; letter-spacing: normal; color: var(--ink); font-size: 0.9rem; font-weight: 400; }
+  /* Wochentag-Auswahl ("Neue Schicht anlegen"): sieben Chips mit sichtbarem Kontrollkästchen.
+     Der gewählte Zustand ist am Kästchen UND an Rahmen/Fläche erkennbar, nicht nur an einer
+     Farbe; achromatisch, Rot bleibt dem Stempel vorbehalten. Höhe 36px (Comfortable-Tap Rule). */
+  fieldset.weekday-fieldset { border: 0; margin: 0.85rem 0 0; padding: 0; min-width: 0; }
+  fieldset.weekday-fieldset legend { padding: 0; margin-bottom: 0.3rem; font-size: 0.78rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.03em; }
+  .weekday-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  label.weekday-pick {
+    display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; min-height: 2.25rem; padding: 0 0.75rem;
+    border: 1.5px solid var(--ink-line-strong); border-radius: 3px; color: var(--ink);
+    font-size: 0.78rem; font-weight: 700; cursor: pointer;
+  }
+  label.weekday-pick:has(input:checked) { border-color: var(--ink); background: var(--confirm-wash); }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
   /* Zustands-Badges ("Kassenbon-Vermerk"): kein Chip/Kasten mehr, sondern ein bedruckter

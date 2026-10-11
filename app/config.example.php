@@ -43,5 +43,9 @@ return [
     // HTTPS erreichbar ist (empfohlen, z.B. via Caddy/Let's Encrypt).
     'session_secure_cookie' => false,
 
+    // Wie lange eine Anmeldung nach dem letzten Besuch bestehen bleibt (Tage, 1-365).
+    // Ohne Eintrag gelten 30. Die Sitzungsdateien liegen in storage/sessions/.
+    'session_lifetime_days' => 30,
+
     'timezone' => 'Europe/Berlin',
 ];

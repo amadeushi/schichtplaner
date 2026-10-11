@@ -23,6 +23,61 @@ function publishConfirmMessage(int $draftCount, int $pendingNotifyCount): string
     return implode(' und ', $parts) . ' jetzt an betroffene Mitarbeiter senden?';
 }
 
+/**
+ * Datumsliste für "Neue Schicht anlegen": ohne Wochentage nur $date selbst, mit Wochentagen
+ * (1 = Montag ... 7 = Sonntag) jeder gewählte Tag der ISO-Woche, in der $date liegt. Beides
+ * wird um $repeatWeeks Wochen wiederholt. Ergebnis: aufsteigend, ohne Duplikate, 'Y-m-d'.
+ * Rechnet über Datumsstrings statt Sekunden-Offsets, damit die Sommerzeit-Umstellung
+ * (letzter Oktober-/März-Sonntag) keinen Tag verschiebt.
+ */
+function expandShiftDates(string $date, array $weekdays, int $repeatWeeks): array
+{
+    $baseTs = strtotime($date);
+    if ($baseTs === false) {
+        return [];
+    }
+    $baseDate = date('Y-m-d', $baseTs);
+    $weekdays = array_values(array_unique(array_filter(
+        array_map('intval', $weekdays),
+        fn(int $d): bool => $d >= 1 && $d <= 7
+    )));
+    sort($weekdays);
+
+    $baseDates = [$baseDate];
+    if ($weekdays) {
+        $monday = date('Y-m-d', strtotime($baseDate . ' -' . ((int)date('N', $baseTs) - 1) . ' days'));
+        $baseDates = array_map(fn(int $d): string => date('Y-m-d', strtotime($monday . ' +' . ($d - 1) . ' days')), $weekdays);
+    }
+
+    $dates = [];
+    for ($i = 0; $i < max(1, $repeatWeeks); $i++) {
+        foreach ($baseDates as $d) {
+            $dates[] = date('Y-m-d', strtotime($d . " +{$i} week"));
+        }
+    }
+    $dates = array_values(array_unique($dates));
+    sort($dates);
+    return $dates;
+}
+
+/**
+ * SMS mit dem Link zum Zurücksetzen des Passworts. Nur GSM-7-Zeichen (ein einziges Sonderzeichen
+ * würde die SMS auf 70 Zeichen Unicode drücken, siehe gsmSafe) und höchstens 160 Zeichen. Passt der Link
+ * nicht hinein, gibt es null zurück - ein abgeschnittener Link wäre wertlos, der Aufrufer nimmt dann E-Mail.
+ */
+function smsPasswordReset(string $url): ?string
+{
+    $text = 'Schichtplaner: Passwort zuruecksetzen (' . PASSWORD_RESET_TTL_MINUTES . ' Min gueltig): ' . $url;
+    return mb_strlen($text) <= 160 ? $text : null;
+}
+
+/** Session-Laufzeit in Tagen aus app/config.php ('session_lifetime_days'): Standard 30, sinnvoll begrenzt auf 1-365. */
+function sessionLifetimeDays(mixed $configured): int
+{
+    $days = is_numeric($configured) ? (int)$configured : 30;
+    return max(1, min(365, $days));
+}
+
 function redirect(string $path): never
 {
     header('Location: ' . $path);

@@ -17,17 +17,52 @@ if (!is_dir($dbDir)) {
 }
 $dbIsNew = !file_exists($config['db_path']);
 
+require_once __DIR__ . '/helpers.php';
+
+// Anmeldung bleibt standardmäßig 30 Tage ab dem letzten Besuch bestehen. Vorher galt der PHP-
+// Standard: ein Cookie ohne Laufzeit (weg beim Schließen des Browsers bzw. wenn das Handy die App
+// aus dem Speicher wirft) und serverseitig nur 24 Minuten Inaktivität - das System-Aufräumen
+// (phpsessionclean) löscht in /var/lib/php/sessions, einem Ordner, den sich alle PHP-Apps des
+// Pi teilen und dessen Frist die App nicht ändern kann. Darum ein eigener Ordner in storage/
+// (nicht per Web erreichbar), den die App selbst nach der gewünschten Frist aufräumt.
+$sessionLifetime = sessionLifetimeDays($config['session_lifetime_days'] ?? null) * 86400;
+$sessionSecure = (bool)($config['session_secure_cookie'] ?? false);
+$sessionDir = $dbDir . '/sessions';
+if (!is_dir($sessionDir)) {
+    @mkdir($sessionDir, 0700, true);
+}
+if (is_dir($sessionDir) && is_writable($sessionDir)) {
+    session_save_path($sessionDir);
+    ini_set('session.gc_maxlifetime', (string)$sessionLifetime);
+    ini_set('session.gc_probability', '1');
+    ini_set('session.gc_divisor', '100');
+}
+ini_set('session.use_strict_mode', '1');
 session_set_cookie_params([
+    'lifetime' => $sessionLifetime,
     'httponly' => true,
     'samesite' => 'Lax',
-    'secure'   => (bool)($config['session_secure_cookie'] ?? false),
+    'secure'   => $sessionSecure,
 ]);
 session_start();
 
+// PHP verlängert den Ablauf eines dauerhaften Cookies bei Folgebesuchen nicht von selbst (nur
+// beim Anlegen). Damit die Frist ab dem LETZTEN Besuch zählt, wird das Cookie hier erneuert -
+// nur wenn der Browser es mitgeschickt hat, neue Sessions bekommen es schon von PHP.
+if (isset($_COOKIE[session_name()]) && $_COOKIE[session_name()] === session_id()) {
+    setcookie(session_name(), session_id(), [
+        'expires'  => time() + $sessionLifetime,
+        'path'     => '/',
+        'secure'   => $sessionSecure,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
+
 require_once __DIR__ . '/version.php';
 require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/password_reset.php';
 require_once __DIR__ . '/services/Mailer.php';
 require_once __DIR__ . '/services/Webhook.php';
 require_once __DIR__ . '/services/Notifier.php';

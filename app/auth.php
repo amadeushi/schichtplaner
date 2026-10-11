@@ -50,8 +50,30 @@ function currentUser(): ?array
     $stmt = db()->prepare('SELECT * FROM users WHERE id = :id AND active = 1');
     $stmt->execute(['id' => $_SESSION['user_id']]);
     $row = $stmt->fetch();
+
+    // Eine Session gilt nur, solange sich das Passwort seit der Anmeldung nicht geändert hat. Mit den
+    // 30-Tage-Sitzungen ist das wichtig: wer sein Passwort ändert oder zurücksetzt (weil es bekannt
+    // wurde oder das Handy weg ist), meldet damit alle anderen Geräte ab. Sessions von vor dieser
+    // Prüfung haben noch keinen Fingerabdruck und übernehmen den aktuellen, statt abgemeldet zu werden.
+    if ($row) {
+        $fingerprint = passwordFingerprint((string)$row['password_hash']);
+        if (!isset($_SESSION['pw_fp'])) {
+            $_SESSION['pw_fp'] = $fingerprint;
+        } elseif (!hash_equals((string)$_SESSION['pw_fp'], $fingerprint)) {
+            $_SESSION = [];
+            flash('error', 'Dein Passwort wurde geändert. Bitte melde dich neu an.');
+            $row = false;
+        }
+    }
+
     $user = $row ?: null;
     return $user;
+}
+
+/** Kurzer Fingerabdruck des Passwort-Hashes für die Session-Prüfung (nicht der Hash selbst). */
+function passwordFingerprint(string $passwordHash): string
+{
+    return substr(hash('sha256', $passwordHash), 0, 16);
 }
 
 function requireLogin(): array
@@ -94,6 +116,7 @@ function attemptLogin(string $email, string $password): bool
 
     session_regenerate_id(true);
     $_SESSION['user_id'] = $user['id'];
+    $_SESSION['pw_fp'] = passwordFingerprint((string)$user['password_hash']);
     return true;
 }
 

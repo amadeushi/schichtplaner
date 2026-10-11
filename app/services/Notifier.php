@@ -21,7 +21,8 @@ declare(strict_types=1);
  * SMS und E-Mail beim Veröffentlichen neuer offener Schichten, siehe newPlanAvailable) - nur ein neutraler Hinweis
  * mit Portal-Link (smsChangeNotice), nie mit Schichten oder Bewerbungsergebnissen,
  * unter denselben Bedingungen plus: Gateway konfiguriert, Mobilnummer vorhanden, notify_sms gesetzt.
- * Passwörter (Konto angelegt/zurückgesetzt) werden bewusst nie per SMS verschickt.
+ * Passwörter (Konto angelegt/zurückgesetzt) werden bewusst nie per SMS verschickt. Einzige Ausnahme ist der
+ * Einmal-Link von "Passwort vergessen" (passwordResetLink): kein Passwort, 30 Minuten gültig, einmal nutzbar.
  */
 final class Notifier
 {
@@ -61,6 +62,15 @@ final class Notifier
             'body' => "Hallo {{name}},\n\nein Admin hat dein Passwort für {{app_name}} zurückgesetzt. Damit kommst du wieder rein:\n\nVorläufiges Passwort: {{password}}\n\nBitte vergib nach der Anmeldung unter „Profil“ ein eigenes Passwort. Falls dich das überrascht, frag kurz bei deinem Admin nach.",
             'placeholders' => ['name', 'password', 'app_name'],
             'cta' => ['label' => 'Jetzt anmelden', 'path' => '/login.php'],
+        ],
+        // Der Button mit dem persönlichen Einmal-Link kommt aus passwordResetLink() (cta['url']), nicht
+        // aus dem Text - so kann eine bearbeitete Vorlage den Link nicht versehentlich entfernen.
+        'password_reset_link' => [
+            'label' => 'Passwort vergessen (Link)',
+            'subject' => 'Neues Passwort für {{app_name}} vergeben',
+            'body' => "Hallo {{name}},\n\nfür dein Konto in {{app_name}} wurde ein neues Passwort angefordert. Über den Button unten kannst du ein neues vergeben. Der Link ist {{minutes}} Minuten gültig und lässt sich nur einmal benutzen.\n\nWar das nicht deine Anfrage? Dann ignoriere diese Nachricht einfach, dein bisheriges Passwort bleibt gültig.",
+            'placeholders' => ['name', 'app_name', 'minutes'],
+            'cta' => ['label' => 'Neues Passwort vergeben', 'path' => '/forgot_password.php'],
         ],
         'assignment_removed' => [
             'label' => 'Zuweisung entfernt',
@@ -309,6 +319,53 @@ Hast du an dem Tag Zeit? Wir freuen uns, wenn du dich meldest!",
         return $this->sendMail('password_reset', $user['email'], $user['name'], $subject, $body);
     }
 
+    /**
+     * Schickt den Einmal-Link zum Zurücksetzen des Passworts: per SMS, wenn gewünscht und möglich
+     * (Gateway an, Mobilnummer da, SMS vom Gateway tatsächlich angenommen), sonst per E-Mail. Läuft
+     * unabhängig von notify_email/notify_sms und von Abwesenheiten, denn ohne den Link kommt die Person
+     * nicht mehr in ihr Konto - das ist kein optionaler Hinweis. Ein Link ist kein Passwort: der Grundsatz
+     * "Passwörter nie per SMS" bleibt, der Link gilt nur PASSWORD_RESET_TTL_MINUTES Minuten und einmal.
+     * Gibt den benutzten Kanal zurück ('sms' | 'email') oder null, wenn nichts verschickt werden konnte.
+     */
+    public function passwordResetLink(array $user, string $token, bool $viaSms): ?string
+    {
+        $portal = SmsClient::portalUrl();
+        if ($portal === '') {
+            return null; // ohne app_url lässt sich kein absoluter Link bauen
+        }
+        $url = $portal . '/reset_password.php?t=' . $token;
+
+        if ($viaSms && SmsClient::enabled() && !empty($user['phone'])) {
+            $text = smsPasswordReset($url);
+            if ($text !== null) {
+                try {
+                    $res = SmsClient::enqueue((int)$user['id'], (string)$user['phone'], 'password_reset_link', $text);
+                    // Der Link soll nicht 30 Tage im Klartext in der Outbox liegen, und eine vom Gateway
+                    // nicht angenommene SMS darf der Cron nicht später nachschieben (Link evtl. abgelaufen) -
+                    // dann geht der Link per E-Mail.
+                    db()->prepare(
+                        "UPDATE sms_outbox SET text = '[Link zum Zuruecksetzen des Passworts, nicht gespeichert]',
+                             status = CASE WHEN status = 'queued' THEN 'failed' ELSE status END WHERE id = :id"
+                    )->execute(['id' => $res['id']]);
+                    if (($res['status'] ?? '') === 'accepted') {
+                        $this->smsQueued++;
+                        return 'sms';
+                    }
+                } catch (Throwable) {
+                    // SMS-Problem: weiter mit E-Mail
+                }
+            }
+        }
+
+        [$subject, $body] = $this->renderTemplate('password_reset_link', [
+            'name' => $user['name'],
+            'app_name' => setting('app_name', 'Schichtplaner'),
+            'minutes' => PASSWORD_RESET_TTL_MINUTES,
+        ]);
+        $mailed = $this->sendMail('password_reset_link', $user['email'], $user['name'], $subject, $body, 'none', ['label' => 'Neues Passwort vergeben', 'url' => $url]);
+        return $mailed ? 'email' : null;
+    }
+
     public function assignmentRemoved(array $shift, array $employee): void
     {
         [$subject, $body] = $this->renderTemplate('assignment_removed', [
@@ -365,9 +422,9 @@ Hast du an dem Tag Zeit? Wir freuen uns, wenn du dich meldest!",
      * zum Button.
      */
     /** $highlight: 'none'|'shift'|'notice' - siehe MailLayout::html(). */
-    private function sendMail(string $templateKey, string $toEmail, string $toName, string $subject, string $body, string $highlight = 'none'): bool
+    private function sendMail(string $templateKey, string $toEmail, string $toName, string $subject, string $body, string $highlight = 'none', ?array $ctaOverride = null): bool
     {
-        $cta = self::TEMPLATES[$templateKey]['cta'] ?? null;
+        $cta = $ctaOverride ?? self::TEMPLATES[$templateKey]['cta'] ?? null;
         $portalUrl = SmsClient::portalUrl();
         $appName = (string)setting('app_name', 'Schichtplaner');
 

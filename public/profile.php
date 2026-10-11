@@ -50,9 +50,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($new !== $confirm) {
             flash('error', 'Die Passwörter stimmen nicht überein.');
         } else {
+            $newHash = password_hash($new, PASSWORD_DEFAULT);
             db()->prepare('UPDATE users SET password_hash = :h, must_change_password = 0 WHERE id = :id')
-                ->execute(['h' => password_hash($new, PASSWORD_DEFAULT), 'id' => $user['id']]);
-            flash('success', 'Passwort wurde geändert.');
+                ->execute(['h' => $newHash, 'id' => $user['id']]);
+            // Dieses Gerät bleibt angemeldet; alle anderen verlieren mit dem neuen Hash ihre Anmeldung.
+            $_SESSION['pw_fp'] = passwordFingerprint($newHash);
+            flash('success', 'Passwort wurde geändert. Andere angemeldete Geräte wurden abgemeldet.');
         }
         redirect('/profile.php');
     }
