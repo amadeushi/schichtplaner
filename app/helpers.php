@@ -331,6 +331,39 @@ function shiftTimeHtml(string $start, string $end, bool $compact = false): strin
         . '<span class="shift-end">bis ' . e($end) . '</span></span>';
 }
 
+/** Ab so vielen Stunden vor Schichtbeginn gilt eine unbesetzte Schicht als dringend (Stempel-Rot, siehe DESIGN.md "The One Stamp Rule"). */
+const STAFFING_URGENT_HOURS = 48;
+
+/**
+ * Wie viele Leute einer noch nicht begonnenen Schicht fehlen, und ob das schon dringend ist.
+ * $shift braucht shift_date, start_time, needed_count und approved_count (bestätigte
+ * Bewerbungen/Zuweisungen). null = nichts zu melden: voll besetzt oder die Schicht hat schon
+ * begonnen (Vergangenes wird nicht hervorgehoben). Gemeinsame Quelle für Mitarbeiter-Plan
+ * ("Mein Plan") und Admin ("Personal gesucht"), damit die 48-Stunden-Grenze nicht auseinanderläuft.
+ */
+function staffingGap(array $shift, ?int $now = null): ?array
+{
+    $now ??= time();
+    $missing = (int)$shift['needed_count'] - (int)$shift['approved_count'];
+    $startTs = strtotime($shift['shift_date'] . ' ' . $shift['start_time']);
+    if ($missing < 1 || $startTs === false || $startTs <= $now) {
+        return null;
+    }
+    return ['missing' => $missing, 'urgent' => ($startTs - $now) / 3600 <= STAFFING_URGENT_HOURS];
+}
+
+function staffingGapLabel(int $missing): string
+{
+    return $missing === 1 ? '1 fehlt' : $missing . ' fehlen';
+}
+
+/** Vermerk "1 fehlt" bzw. "2 fehlen" für $gap aus staffingGap(); dringend = Stempel-Zustand. */
+function staffingGapBadgeHtml(array $gap): string
+{
+    return '<span class="badge gap-count' . ($gap['urgent'] ? ' urgent' : '') . '">'
+        . e(staffingGapLabel((int)$gap['missing'])) . '</span>';
+}
+
 /**
  * Bringt eine eingegebene Mobilnummer ins internationale E.164-Format (+436641234567) - das
  * verlangt das SMS-Gateway. Akzeptiert die üblichen Schreibweisen: "0664 1234567" (nationale

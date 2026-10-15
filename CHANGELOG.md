@@ -6,6 +6,26 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.25.0] - 2026-10-16
+
+### Hinzugefügt
+- "Mein Plan" zeigt jetzt, wo noch Leute fehlen. Über der Woche steht eine
+  Liste "3 Schichten noch frei" mit Tag, Uhrzeit, Titel und "1 fehlt" bzw.
+  "2 fehlen"; ein Tipp springt zum Bon der Schicht. Nach fünf Einträgen
+  klappt "+ n weitere" den Rest auf. Gibt es nichts Freies, erscheint die
+  Liste gar nicht.
+- Auf dem Bon selbst bekommt die Zeile einer unbesetzten Schicht eine
+  Tönung und denselben Vermerk. Beides gilt nur für Schichten, die noch nicht
+  begonnen haben und auf die man sich bewerben kann: Bereits begonnene,
+  volle oder schon angefragte Schichten bleiben ruhig.
+- Stempel-Rot nur, wenn es eilt: Innerhalb von 48 Stunden vor Schichtbeginn
+  ist der Vermerk rot, davor achromatisch mit gestricheltem Strich (wie
+  "Angefragt"). Dieselbe 48-Stunden-Grenze nutzt der Admin-Button "Personal
+  gesucht" und kommt jetzt aus einer gemeinsamen Konstante
+  (`STAFFING_URGENT_HOURS`, `staffingGap()` in app/helpers.php).
+- Tests für die Lückenberechnung (Grenzfälle: voll, überbesetzt, begonnen,
+  genau 48 Stunden).
+
 ## [1.24.0] - 2026-10-11
 
 ### Hinzugefügt

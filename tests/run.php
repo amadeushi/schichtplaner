@@ -180,6 +180,23 @@ same('Reset: ein zweiter Abschluss mit demselben Link scheitert', false, complet
 same('Reset: Fehlversuche des Kontos werden gelöscht (keine Sperre nach dem Reset)', 0, (int)$pdo->query("SELECT COUNT(*) FROM login_attempts WHERE email = 'bob@example.test'")->fetchColumn());
 same('Reset: Fehlversuche anderer Konten bleiben', 1, (int)$pdo->query("SELECT COUNT(*) FROM login_attempts WHERE email = 'anna@example.test'")->fetchColumn());
 
+// --- staffingGap(): unbesetzte Schichten hervorheben ("Mein Plan") ---
+$gapNow = strtotime('2026-10-14 12:00');
+$gapShift = fn(string $date, string $start, int $needed, int $approved) =>
+    ['shift_date' => $date, 'start_time' => $start, 'needed_count' => $needed, 'approved_count' => $approved];
+same('Gap: voll besetzt = null', null, staffingGap($gapShift('2026-10-15', '16:00', 2, 2), $gapNow));
+same('Gap: überbesetzt = null', null, staffingGap($gapShift('2026-10-15', '16:00', 1, 2), $gapNow));
+same('Gap: begonnene Schicht = null', null, staffingGap($gapShift('2026-10-14', '11:00', 2, 0), $gapNow));
+same('Gap: Beginn genau jetzt = null', null, staffingGap($gapShift('2026-10-14', '12:00', 2, 0), $gapNow));
+same('Gap: fehlende Zahl', 2, staffingGap($gapShift('2026-10-14', '16:00', 3, 1), $gapNow)['missing'] ?? null);
+same('Gap: heute Abend ist dringend', true, staffingGap($gapShift('2026-10-14', '16:00', 1, 0), $gapNow)['urgent'] ?? null);
+same('Gap: genau 48 Stunden ist noch dringend', true, staffingGap($gapShift('2026-10-16', '12:00', 1, 0), $gapNow)['urgent'] ?? null);
+same('Gap: 48 Stunden plus eine Minute ist nicht dringend', false, staffingGap($gapShift('2026-10-16', '12:01', 1, 0), $gapNow)['urgent'] ?? null);
+same('Gap: Text für eine fehlende Person', '1 fehlt', staffingGapLabel(1));
+same('Gap: Text für mehrere', '3 fehlen', staffingGapLabel(3));
+check('Gap: Vermerk ist nur bei dringend rot', str_contains(staffingGapBadgeHtml(['missing' => 1, 'urgent' => true]), 'urgent')
+    && !str_contains(staffingGapBadgeHtml(['missing' => 1, 'urgent' => false]), 'urgent'));
+
 // --- XSS-Regression: kein interpoliertes PHP in einem onsubmit-confirm('...')-Handler ---
 // (Stored XSS: htmlspecialchars schützt das Attribut, aber der Browser dekodiert Entities vor
 // der JS-Ausführung. Stattdessen data-confirm verwenden, siehe partials/header.php.)

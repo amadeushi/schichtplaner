@@ -238,6 +238,10 @@ function navActive(string $path, array $matches): bool
   .badge.pending::before { content: "\2013"; }
   .badge.declined, .badge.rejected, .badge.withdrawn, .badge.closed { color: var(--ink-soft); text-decoration: line-through; opacity: 0.75; }
   .badge.declined::before, .badge.rejected::before, .badge.withdrawn::before, .badge.closed::before { content: "\00d7"; }
+  /* Fehlende Besetzung ("1 fehlt"): achromatisch mit gestricheltem Strich = "noch nicht final",
+     wie .badge.pending. Erst innerhalb von STAFFING_URGENT_HOURS (siehe helpers.php) kommt
+     .urgent dazu und damit der Stempel - muss deshalb VOR der Stempel-Regel unten stehen. */
+  .badge.gap-count { color: var(--ink); border-bottom-style: dashed; border-bottom-color: var(--ink-line-strong); }
   /* Der Stempel-Zustand bleibt die eine gefüllte Ausnahme - der soll wie ein echter
      Stempelabdruck wirken, nicht wie ein Kassenbon-Vermerk (siehe "The One Stamp Rule"). */
   .badge.today, .badge.active-duty, .badge.urgent {
@@ -250,6 +254,26 @@ function navActive(string $path, array $matches): bool
   .notice-board { background: var(--stamp-wash); border: 1.5px solid var(--stamp); border-radius: 3px; padding: 0.9rem 1.1rem; margin-bottom: 1rem; }
   .notice-board .badge { margin-bottom: 0.5rem; }
   .notice-board-text { margin: 0; color: var(--ink); font-weight: 600; line-height: 1.45; white-space: pre-wrap; }
+
+  /* Lückenliste über "Mein Plan": welche Schichten dieser Woche noch Leute brauchen, je Zeile ein
+     Sprung zum Bon. Wie der Aushang ein Card-Bauteil (keine Perforation, die bleibt echten
+     Schichten vorbehalten), aber achromatisch und gestrichelt - "noch nicht besetzt" = "nicht final".
+     Rot kommt nur über .badge.urgent hinein, also erst innerhalb von STAFFING_URGENT_HOURS. */
+  .gap-board { background: var(--paper); border: 1.5px dashed var(--ink-line-strong); border-radius: 3px; padding: 0.8rem 1rem 0.3rem; margin-bottom: 1rem; }
+  .gap-board h2 { color: var(--ink); margin-bottom: 0.2rem; }
+  .gap-board ul { list-style: none; margin: 0; padding: 0; }
+  .gap-board li + li, .gap-board details { border-top: 1px dashed var(--ink-line); }
+  .gap-board a { display: flex; align-items: center; gap: 0.6rem; min-height: 2.75rem; padding: 0.25rem 0; text-decoration: none; }
+  .gap-board a:hover .gap-title { text-decoration: underline; }
+  /* Tag über Uhrzeit gestapelt statt nebeneinander: so bleibt dem Titel in 375px genug Breite. */
+  .gap-slot { display: flex; flex-direction: column; flex-shrink: 0; min-width: 4.6rem; line-height: 1.25; }
+  .gap-when { font-weight: 700; font-size: 0.82rem; color: var(--ink-soft); }
+  .gap-time { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.05rem; }
+  .gap-title { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+  .gap-board summary { min-height: 2.75rem; display: flex; align-items: center; cursor: pointer; font-size: 0.85rem; color: var(--ink-soft); }
+  /* Der Bon selbst: Zeile mit Lücke bekommt Papier-Tönung, dringende die Stempel-Tönung. */
+  .ticket-row.gap { scroll-margin-top: 4rem; background: var(--confirm-wash); margin: 0 -0.5rem; padding-left: 0.5rem; padding-right: 0.5rem; }
+  .ticket-row.gap.urgent { background: var(--stamp-wash); }
 
   /* Publish-Leiste: Entwürfe/ausstehende Änderungen für die Woche, gebündelt statt sofort
      verschickt (siehe admin/shifts.php Aktion 'publish'). Card-artig, damit ink/ink-soft passen. */

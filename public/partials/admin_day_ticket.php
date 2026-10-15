@@ -53,7 +53,7 @@
           // (echte Dringlichkeit), sonst eine ruhige Outline-Variante - sonst wäre Rot ein
           // Dauerzustand statt einer rationierten Ausnahme, siehe DESIGN.md.
           $shiftStartTs = strtotime($sh['shift_date'] . ' ' . $sh['start_time']);
-          $staffingUrgent = $shiftStartTs !== false && ($shiftStartTs - time()) / 3600 <= 48;
+          $staffingUrgent = $shiftStartTs !== false && ($shiftStartTs - time()) / 3600 <= STAFFING_URGENT_HOURS;
         ?>
         <div class="ticket-row" id="shift-<?= (int)$sh['id'] ?>" style="flex-direction:column;align-items:stretch;gap:0.5rem;scroll-margin-top:5rem;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem;">

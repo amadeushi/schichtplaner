@@ -58,10 +58,22 @@ function dayRows(array $dayShifts): array
         } elseif ($sh['my_status'] === 'pending') {
             $rows[] = ['shift' => $sh, 'kind' => 'pending'];
         } elseif ($canApply && $sh['status'] === 'open' && $free > 0) {
-            $rows[] = ['shift' => $sh, 'kind' => 'open'];
+            // gap = null für bereits begonnene Schichten: Vergangenes wird nicht hervorgehoben.
+            $rows[] = ['shift' => $sh, 'kind' => 'open', 'gap' => staffingGap($sh)];
         }
     }
     return $rows;
+}
+
+$rowsByDate = [];
+$gapItems = [];
+foreach ($days as $d) {
+    $rowsByDate[$d] = dayRows($shiftsByDate[$d] ?? []);
+    foreach ($rowsByDate[$d] as $row) {
+        if (!empty($row['gap'])) {
+            $gapItems[] = ['shift' => $row['shift'], 'gap' => $row['gap'], 'date' => $d];
+        }
+    }
 }
 
 require __DIR__ . '/partials/header.php';
@@ -84,10 +96,39 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
   <a href="/calendar_feed.php?token=<?= e($calendarToken) ?>&amp;start=<?= e($weekStart) ?>&amp;end=<?= e($weekEnd) ?>" class="btn small secondary">Diese Woche exportieren (.ics)</a>
 </div>
 
+<?php if ($gapItems): ?>
+  <?php
+    $tomorrowDate = date('Y-m-d', strtotime('+1 day'));
+    $gapLine = function (array $g) use ($todayDate, $tomorrowDate, $weekdayNamesFull, $days): string {
+        $sh = $g['shift'];
+        $when = $g['date'] === $todayDate ? 'Heute'
+            : ($g['date'] === $tomorrowDate ? 'Morgen'
+            : mb_substr($weekdayNamesFull[(int)array_search($g['date'], $days, true)], 0, 2) . ' ' . date('d.m.', strtotime($g['date'])));
+        return '<li><a href="#shift-' . (int)$sh['id'] . '">'
+            . '<span class="gap-slot"><span class="gap-when">' . e($when) . '</span>'
+            . '<span class="gap-time">' . e($sh['start_time']) . '</span></span>'
+            . '<span class="gap-title">' . e($sh['title']) . '</span>'
+            . staffingGapBadgeHtml($g['gap']) . '</a></li>';
+    };
+    $gapVisible = array_slice($gapItems, 0, 5);
+    $gapMore = array_slice($gapItems, 5);
+  ?>
+  <section class="gap-board" aria-labelledby="gap-board-title">
+    <h2 id="gap-board-title"><?= count($gapItems) === 1 ? '1 Schicht' : count($gapItems) . ' Schichten' ?> noch frei</h2>
+    <ul><?php foreach ($gapVisible as $g) { echo $gapLine($g); } ?></ul>
+    <?php if ($gapMore): ?>
+      <details>
+        <summary>+ <?= count($gapMore) ?> weitere</summary>
+        <ul><?php foreach ($gapMore as $g) { echo $gapLine($g); } ?></ul>
+      </details>
+    <?php endif; ?>
+  </section>
+<?php endif; ?>
+
 <?php if ($todayInThisWeek): ?>
   <?php
     $todayIndex = array_search($todayDate, $days, true);
-    $todayRows = dayRows($shiftsByDate[$todayDate] ?? []);
+    $todayRows = $rowsByDate[$todayDate];
   ?>
   <div class="ticket today hero">
     <div class="ticket-head">
@@ -108,12 +149,13 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
       <p class="ticket-empty">Frei &mdash; keine Schicht heute.</p>
     <?php else: ?>
       <?php foreach ($todayRows as $row): ?>
-        <?php $sh = $row['shift']; ?>
-        <div class="ticket-row">
+        <?php $sh = $row['shift']; $gap = $row['gap'] ?? null; ?>
+        <div class="ticket-row<?= $gap ? ' gap' . ($gap['urgent'] ? ' urgent' : '') : '' ?>" id="shift-<?= (int)$sh['id'] ?>">
           <div>
             <?= shiftTimeHtml($sh['start_time'], $sh['end_time']) ?>
             <div><strong><?= e($sh['title']) ?></strong></div>
             <?php if ($sh['location']): ?><div class="ticket-meta"><?= e($sh['location']) ?></div><?php endif; ?>
+            <?php if ($gap): ?><div style="margin-top:0.3rem;"><?= staffingGapBadgeHtml($gap) ?></div><?php endif; ?>
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <?php if ($row['kind'] === 'confirmed'): ?>
@@ -146,7 +188,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
 <div class="rail">
 <?php foreach ($days as $i => $d): ?>
   <?php if ($d === $todayDate) { continue; } // bereits oben als Hero gezeigt ?>
-  <?php $rows = dayRows($shiftsByDate[$d] ?? []); ?>
+  <?php $rows = $rowsByDate[$d]; ?>
   <div class="ticket">
     <div class="ticket-head">
       <div>
@@ -159,12 +201,13 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
       <p class="ticket-empty">Frei &mdash; keine Schicht.</p>
     <?php else: ?>
       <?php foreach ($rows as $row): ?>
-        <?php $sh = $row['shift']; ?>
-        <div class="ticket-row">
+        <?php $sh = $row['shift']; $gap = $row['gap'] ?? null; ?>
+        <div class="ticket-row<?= $gap ? ' gap' . ($gap['urgent'] ? ' urgent' : '') : '' ?>" id="shift-<?= (int)$sh['id'] ?>">
           <div>
             <?= shiftTimeHtml($sh['start_time'], $sh['end_time']) ?>
             <div><strong><?= e($sh['title']) ?></strong></div>
             <?php if ($sh['location']): ?><div class="ticket-meta"><?= e($sh['location']) ?></div><?php endif; ?>
+            <?php if ($gap): ?><div style="margin-top:0.3rem;"><?= staffingGapBadgeHtml($gap) ?></div><?php endif; ?>
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <?php if ($row['kind'] === 'confirmed'): ?>
