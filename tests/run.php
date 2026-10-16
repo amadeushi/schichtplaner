@@ -253,6 +253,32 @@ same('Rundruf: geht an alle außer beworben, überlappend, abwesend', [
     'rc-frei@example.test', 'rc-morgens@example.test', 'rc-nicht-verfuegbar@example.test',
 ], $recipientMails);
 
+// --- purgeAnonymousSessions(): Bot-Sitzungen nicht 30 Tage liegen lassen, Anmeldungen schon ---
+$sessDir = sys_get_temp_dir() . '/sp_sess_test_' . bin2hex(random_bytes(4));
+mkdir($sessDir);
+$sessNow = time();
+$mkSess = function (string $name, string $content, int $ageSeconds) use ($sessDir, $sessNow): void {
+    file_put_contents($sessDir . '/' . $name, $content);
+    touch($sessDir . '/' . $name, $sessNow - $ageSeconds);
+};
+$mkSess('sess_leer_alt', '', 7200);
+$mkSess('sess_leer_frisch', '', 600);
+$mkSess('sess_csrf_alt', 'csrf_token|s:32:"abcdefabcdefabcdefabcdefabcdefab";', 2 * 86400);
+$mkSess('sess_csrf_frisch', 'csrf_token|s:32:"abcdefabcdefabcdefabcdefabcdefab";', 7200);
+$mkSess('sess_login_alt', 'csrf_token|s:3:"abc";user_id|i:5;pw_fp|s:3:"abc";', 29 * 86400);
+$mkSess('hinweis.txt', '', 30 * 86400);
+same('Sitzungen: gelöscht werden leere (>1 h) und anonyme (>1 Tag)', 2, purgeAnonymousSessions($sessDir, $sessNow));
+same('Sitzungen: übrig bleiben frische, angemeldete und fremde Dateien',
+    ['hinweis.txt', 'sess_csrf_frisch', 'sess_leer_frisch', 'sess_login_alt'],
+    (function () use ($sessDir) { $l = array_values(array_diff(scandir($sessDir), ['.', '..'])); sort($l); return $l; })());
+$mkSess('sess_leer_a', '', 7200);
+$mkSess('sess_leer_b', '', 7200);
+$mkSess('sess_leer_c', '', 7200);
+same('Sitzungen: Obergrenze je Lauf', 2, purgeAnonymousSessions($sessDir, $sessNow, 2));
+same('Sitzungen: fehlendes Verzeichnis ist kein Fehler', 0, purgeAnonymousSessions($sessDir . '/gibt-es-nicht'));
+array_map('unlink', glob($sessDir . '/*') ?: []);
+rmdir($sessDir);
+
 // --- XSS-Regression: kein interpoliertes PHP in einem onsubmit-confirm('...')-Handler ---
 // (Stored XSS: htmlspecialchars schützt das Attribut, aber der Browser dekodiert Entities vor
 // der JS-Ausführung. Stattdessen data-confirm verwenden, siehe partials/header.php.)

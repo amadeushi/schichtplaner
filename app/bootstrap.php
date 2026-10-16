@@ -46,6 +46,12 @@ session_set_cookie_params([
 ]);
 session_start();
 
+// Sitzungen ohne Anmeldung (Bots, Scanner) nicht 30 Tage liegen lassen, siehe purgeAnonymousSessions().
+// Wie PHPs eigener Aufräumlauf nur bei etwa jeder 100. Anfrage.
+if (is_dir($sessionDir) && random_int(1, 100) === 1) {
+    purgeAnonymousSessions($sessionDir);
+}
+
 // PHP verlängert den Ablauf eines dauerhaften Cookies bei Folgebesuchen nicht von selbst (nur
 // beim Anlegen). Damit die Frist ab dem LETZTEN Besuch zählt, wird das Cookie hier erneuert -
 // nur wenn der Browser es mitgeschickt hat, neue Sessions bekommen es schon von PHP.

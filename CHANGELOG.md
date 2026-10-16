@@ -6,6 +6,18 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.26.1] - 2026-10-16
+
+### Behoben
+- Das Sitzungsverzeichnis `storage/sessions` füllte sich mit leeren Dateien: Bots und
+  Scanner legen mit jeder Anfrage an die Anmeldeseite eine Sitzung an, und seit 1.23.1
+  (30 Tage Lebensdauer) blieben die genauso lange liegen. Auf dem Pi waren das nach fünf
+  Tagen über 8.000 Dateien, nur etwa 9 davon echte Anmeldungen. Ein Aufräumlauf
+  (`purgeAnonymousSessions()`, bei etwa jeder 100. Anfrage) löscht jetzt leere
+  Sitzungen nach einer Stunde und Sitzungen ohne Anmeldung nach einem Tag, höchstens
+  2.000 pro Lauf. Angemeldete Sitzungen bleiben unberührt und laufen weiter 30 Tage nach
+  dem letzten Besuch. Mit Tests (101 Prüfungen).
+
 ## [1.26.0] - 2026-10-16
 
 Datenbank-Migration nötig: `php bin/migrate_availability.php` (als www-data).

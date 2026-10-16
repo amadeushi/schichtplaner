@@ -364,6 +364,41 @@ function staffingGapBadgeHtml(array $gap): string
         . e(staffingGapLabel((int)$gap['missing'])) . '</span>';
 }
 
+/**
+ * Räumt Sitzungsdateien auf, die nie zu einer Anmeldung geführt haben. Bots und Scanner legen mit
+ * jeder Anfrage eine Sitzung an (bei Weitem die meisten Dateien); bei 30 Tagen Lebensdauer für
+ * angemeldete Sitzungen würden die sonst ebenso lange liegen bleiben und das Verzeichnis füllen,
+ * das PHP bei jedem Aufräumlauf komplett durchsieht. Gelöscht werden: leere Dateien (die Anfrage hat
+ * die Sitzung nie benutzt) nach einer Stunde, und Dateien ohne Anmeldung (kein user_id, z. B. nur
+ * ein CSRF-Token der Login-Seite) nach einem Tag. Angemeldete Sitzungen bleiben unberührt - deren
+ * Ablauf regelt PHP über gc_maxlifetime. $maxDeletes begrenzt die Arbeit einer einzelnen Anfrage.
+ * Gibt die Zahl der gelöschten Dateien zurück.
+ */
+function purgeAnonymousSessions(string $dir, ?int $now = null, int $maxDeletes = 2000): int
+{
+    $now ??= time();
+    if (!is_dir($dir)) {
+        return 0;
+    }
+    $deleted = 0;
+    foreach (new DirectoryIterator($dir) as $file) {
+        if ($deleted >= $maxDeletes) {
+            break;
+        }
+        if (!$file->isFile() || strncmp($file->getFilename(), 'sess_', 5) !== 0) {
+            continue;
+        }
+        $age = $now - $file->getMTime();
+        $path = $file->getPathname();
+        $stale = ($file->getSize() === 0 && $age > 3600)
+            || ($age > 86400 && !str_contains((string)@file_get_contents($path), 'user_id|'));
+        if ($stale && @unlink($path)) {
+            $deleted++;
+        }
+    }
+    return $deleted;
+}
+
 /** Wochentagsnamen nach ISO-Nummer (1 = Montag … 7 = Sonntag). */
 function weekdayNamesDe(): array
 {
