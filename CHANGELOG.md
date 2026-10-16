@@ -6,6 +6,23 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.27.0] - 2026-10-16
+
+### Hinzugefügt
+- Erinnerung vor Schichtbeginn: Jede Schicht im Kalender-Abo und im .ics-Download
+  trägt eine Erinnerung 2 Stunden vorher (`VALARM`, Konstante
+  `IcsBuilder::REMINDER_MINUTES_BEFORE`). Das Handy löst sie selbst aus, der Server
+  tut dafür nichts. Apple Kalender übernimmt sie aus dem Abo; Google Kalender
+  ignoriert Erinnerungen aus abonnierten Kalendern, der Profil-Text erklärt, wo man
+  dort die eigene Erinnerung einstellt.
+- Schichtplaner als App auf dem Startbildschirm: Web-App-Manifest
+  (`public/manifest.json`, Vollbild, Zeus-Icon in 192, 512 und maskierbar) und die
+  passenden Meta-Tags in jeder Seite. Bewusst ohne Service Worker, weil die Seiten
+  sitzungsgebunden sind und auf geteilten Handys keine zwischengespeicherten
+  Dienstpläne liegen sollen. Neue Profil-Karte "Als App aufs Handy" mit der Anleitung
+  für iPhone und Android.
+- Tests für die Erinnerung (Anzahl, Abstand, Aufbau, Zeilenlänge; 108 Prüfungen).
+
 ## [1.26.1] - 2026-10-16
 
 ### Behoben

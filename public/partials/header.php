@@ -21,6 +21,11 @@ function navActive(string $path, array $matches): bool
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#faf3e3">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="<?= e($appName) ?>">
 <style>
   :root {
     --paper-surround: #332b1c;

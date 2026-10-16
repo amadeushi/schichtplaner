@@ -117,11 +117,20 @@ require __DIR__ . '/partials/header.php';
     <a class="btn secondary" href="<?= e($calendarFeedUrl) ?>">Jetzt herunterladen</a>
   </div>
   <p class="muted" style="margin-top:0.5rem;">iPhone/iPad/Mac: "Zum Kalender hinzufügen". Android/Google Kalender: "Zu Google Kalender hinzufügen" — Androids Google-Kalender-App unterstützt den ersten Weg oft nicht direkt.</p>
+  <p class="muted" style="margin-top:0.5rem;">Erinnerung: Jede Schicht bringt eine Erinnerung <?= (int)(IcsBuilder::REMINDER_MINUTES_BEFORE / 60) ?> Stunden vor Beginn mit, dein Handy löst sie selbst aus. Apple Kalender übernimmt sie. Google Kalender ignoriert Erinnerungen aus Abos; dort stellst du in den Einstellungen dieses Kalenders unter "Benachrichtigungen" eine Erinnerung für Termine ein.</p>
   <form method="post" style="margin-top:0.75rem;" onsubmit="return confirm('Neue Adresse erzeugen? Die alte funktioniert danach nicht mehr und muss in der Kalender-App neu eingetragen werden.');">
     <?= csrfField() ?>
     <input type="hidden" name="action" value="regenerate_calendar_token">
     <button type="submit" class="btn danger small">Adresse neu erzeugen</button>
   </form>
+</div>
+
+<div class="card">
+  <h2>Als App aufs Handy</h2>
+  <p class="muted">Den Schichtplaner wie eine App vom Startbildschirm öffnen, ohne Browserleiste.</p>
+  <p style="margin:0.5rem 0 0;font-size:0.9rem;"><strong>iPhone:</strong> in Safari auf "Teilen", dann "Zum Home-Bildschirm".</p>
+  <p style="margin:0.4rem 0 0;font-size:0.9rem;"><strong>Android:</strong> in Chrome im Menü (drei Punkte) "App installieren" bzw. "Zum Startbildschirm hinzufügen".</p>
+  <p class="muted" style="margin-top:0.75rem;">Melde dich in der App einmal an, danach bleibst du <?= (int)sessionLifetimeDays($config['session_lifetime_days'] ?? null) ?> Tage angemeldet.</p>
 </div>
 
 <div class="card">

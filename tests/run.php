@@ -279,6 +279,22 @@ same('Sitzungen: fehlendes Verzeichnis ist kein Fehler', 0, purgeAnonymousSessio
 array_map('unlink', glob($sessDir . '/*') ?: []);
 rmdir($sessDir);
 
+// --- Kalender-Abo: Erinnerung vor Schichtbeginn (VALARM) ---
+require_once __DIR__ . '/../app/services/IcsBuilder.php';
+$icsShifts = [
+    ['id' => 1, 'title' => 'Fahrer', 'shift_date' => '2026-10-20', 'start_time' => '16:00', 'end_time' => '22:00', 'location' => 'Wien'],
+    ['id' => 2, 'title' => 'Küche, Spätschicht; mit einem sehr langen Titel, damit die Zeile über 75 Zeichen hinaus gefaltet werden muss', 'shift_date' => '2026-10-21', 'start_time' => '11:00', 'end_time' => '15:00', 'location' => ''],
+];
+$ics = IcsBuilder::build($icsShifts, 'Test', 'example.test');
+same('ICS: je Schicht genau eine Erinnerung', 2, substr_count($ics, 'BEGIN:VALARM'));
+same('ICS: Erinnerung und Ende stimmen überein', substr_count($ics, 'BEGIN:VALARM'), substr_count($ics, 'END:VALARM'));
+same('ICS: Erinnerung zwei Stunden vorher', 2, substr_count($ics, "TRIGGER:-PT120M\r\n"));
+same('ICS: Erinnerung liegt innerhalb des Termins', 2, preg_match_all('/BEGIN:VEVENT.*?BEGIN:VALARM.*?END:VALARM\r\nEND:VEVENT/s', $ics));
+check('ICS: Erinnerungstext nennt die Startzeit', str_contains($ics, 'DESCRIPTION:Schicht um 16:00: Fahrer'));
+$longestLine = max(array_map('strlen', explode("\r\n", $ics)));
+check('ICS: keine Zeile über 75 Oktette (Folding bleibt gültig)', $longestLine <= 75, 'längste Zeile: ' . $longestLine);
+check('ICS: Zeilenende ist CRLF', !preg_match('/(?<!\r)\n/', $ics));
+
 // --- XSS-Regression: kein interpoliertes PHP in einem onsubmit-confirm('...')-Handler ---
 // (Stored XSS: htmlspecialchars schützt das Attribut, aber der Browser dekodiert Entities vor
 // der JS-Ausführung. Stattdessen data-confirm verwenden, siehe partials/header.php.)

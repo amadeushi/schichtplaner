@@ -9,6 +9,14 @@ declare(strict_types=1);
  */
 final class IcsBuilder
 {
+    /**
+     * Wie lange vor Schichtbeginn der Kalender erinnert. Die Erinnerung steckt in der Datei
+     * (VALARM), das Handy löst sie selbst aus - der Server tut dafür nichts. Apple Kalender
+     * übernimmt sie aus einem Abo; Google Kalender ignoriert Erinnerungen aus abonnierten Feeds
+     * und nutzt stattdessen seine eigenen Standard-Erinnerungen.
+     */
+    public const REMINDER_MINUTES_BEFORE = 120;
+
     public static function build(array $shifts, string $calendarName, string $domain): string
     {
         $tz = new DateTimeZone('Europe/Berlin');
@@ -43,6 +51,11 @@ final class IcsBuilder
                 $lines[] = self::foldLine('LOCATION:' . self::escape((string)$sh['location']));
             }
             $lines[] = 'STATUS:CONFIRMED';
+            $lines[] = 'BEGIN:VALARM';
+            $lines[] = 'ACTION:DISPLAY';
+            $lines[] = self::foldLine('DESCRIPTION:' . self::escape('Schicht um ' . $sh['start_time'] . ': ' . $sh['title']));
+            $lines[] = 'TRIGGER:-PT' . self::REMINDER_MINUTES_BEFORE . 'M';
+            $lines[] = 'END:VALARM';
             $lines[] = 'END:VEVENT';
         }
 
