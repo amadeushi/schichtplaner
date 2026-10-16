@@ -166,6 +166,17 @@ CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
 CREATE INDEX IF NOT EXISTS idx_password_reset_requests_email ON password_reset_requests(email, created_at);
 CREATE INDEX IF NOT EXISTS idx_password_reset_requests_ip ON password_reset_requests(ip_address, created_at);
 
+-- Feste Verfügbarkeit je Wochentag (nur Einschränkungen; keine Zeile = jederzeit). Reiner Hinweis
+-- für den Admin bei der Planung und Dämpfung der "noch frei"-Markierung, nie eine Sperre.
+-- weekday ist ISO (1 = Montag … 7 = Sonntag); 'from' = erst ab from_time, 'none' = gar nicht.
+CREATE TABLE IF NOT EXISTS availability (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    weekday    INTEGER NOT NULL CHECK (weekday BETWEEN 1 AND 7),
+    mode       TEXT NOT NULL CHECK (mode IN ('from', 'none')),
+    from_time  TEXT,                           -- HH:MM, nur bei mode 'from'
+    PRIMARY KEY (user_id, weekday)
+);
+
 -- Default-Einstellungen
 INSERT OR IGNORE INTO settings (key, value) VALUES ('webhook_url', '');
 INSERT OR IGNORE INTO settings (key, value) VALUES ('webhook_enabled', '0');

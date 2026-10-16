@@ -250,23 +250,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect($backTo);
         }
 
-        // Alle aktiven Mitarbeiter ohne laufende Bewerbung/Zuweisung für GENAU diese Schicht - wer
-        // schon beworben oder zugewiesen ist, weiß bereits Bescheid und braucht keinen Rundruf.
-        $recipStmt = db()->prepare(
-            "SELECT u.* FROM users u
-             WHERE u.role = 'employee' AND u.active = 1
-               AND NOT EXISTS (
-                   SELECT 1 FROM shift_applications sa
-                   WHERE sa.shift_id = :sid AND sa.user_id = u.id AND sa.status IN ('pending', 'approved')
-               )
-             ORDER BY u.name"
-        );
-        $recipStmt->execute(['sid' => $shiftId]);
-        $today = date('Y-m-d');
-        $recipients = array_values(array_filter($recipStmt->fetchAll(), function ($u) use ($shift, $today) {
-            // heute abwesend (globale Benachrichtigungs-Sperre) oder am Schichttag selbst abwesend
-            return !isUserAbsentOn((int)$u['id'], $today) && !isUserAbsentOn((int)$u['id'], $shift['shift_date']);
-        }));
+        // Alle außer: schon für diese Schicht beworben/zugewiesen, am Schichttag bereits in einer
+        // überlappenden Schicht, oder abwesend (siehe urgentReminderRecipients). Die feste
+        // Verfügbarkeit zählt hier bewusst nicht - der Rundruf geht an alle.
+        $recipients = urgentReminderRecipients($shift);
 
         $notifier = new Notifier($config['smtp']);
         $mailedCount = 0;
@@ -277,7 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$recipients) {
-            flash('error', 'Rundruf nicht verschickt: Niemand verfügbar (alle bereits beworben/zugewiesen oder abwesend).');
+            flash('error', 'Rundruf nicht verschickt: Niemand verfügbar (alle bereits beworben/zugewiesen, schon in einer anderen Schicht oder abwesend).');
         } else {
             $smsPart = SmsClient::enabled() ? ', ' . $notifier->smsCount() . ' SMS' : '';
             flash('success', 'Rundruf "Personal gesucht" an ' . count($recipients) . ' Mitarbeiter verschickt (' . $mailedCount . " E-Mails$smsPart).");
@@ -411,6 +398,8 @@ $employees = db()->query("SELECT id, name FROM users WHERE active = 1 ORDER BY n
 // Verfügung steht (siehe absences.php/admin/absences.php), ohne die Zuweisung technisch zu
 // verhindern - der Admin entscheidet weiterhin selbst, das ist hier nur ein Hinweis.
 $absencesByUser = absencesOverlapping($weekStart, $weekEnd);
+// Feste Verfügbarkeit (siehe absences.php, "Feste Zeiten") - ebenfalls nur ein Hinweis im Bon-Strang.
+$availabilityByUser = availabilityByUser();
 
 $editId = (int)($_GET['edit'] ?? 0);
 $editShift = null;
@@ -436,7 +425,7 @@ if ($weekShifts) {
         if ($row['status'] === 'approved') {
             $approvedByShiftId[(int)$row['shift_id']][] = ['id' => (int)$row['user_id'], 'name' => $row['name']];
         } else {
-            $pendingByShiftId[(int)$row['shift_id']][] = ['application_id' => (int)$row['application_id'], 'name' => $row['name']];
+            $pendingByShiftId[(int)$row['shift_id']][] = ['application_id' => (int)$row['application_id'], 'user_id' => (int)$row['user_id'], 'name' => $row['name']];
         }
     }
 }

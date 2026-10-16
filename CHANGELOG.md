@@ -6,6 +6,38 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.26.0] - 2026-10-16
+
+Datenbank-Migration nötig: `php bin/migrate_availability.php` (als www-data).
+
+### Hinzugefügt
+- Feste Zeiten pro Wochentag (Seite "Abwesenheiten", neue Karte "Feste Zeiten"):
+  je Wochentag "Jederzeit", "Erst ab" (mit Uhrzeit) oder "Gar nicht". Was nicht
+  eingetragen ist, gilt als jederzeit. Gespeichert in der neuen Tabelle
+  `availability`; sie enthält nur Einschränkungen.
+- Der Admin sieht die festen Zeiten als Hinweis im Schichtplan: neben
+  Bewerbungen und in der Auswahl "+ zuweisen" steht z. B. "(nicht verfügbar)"
+  oder "(erst ab 14:00)". Maßgeblich ist der Schichtbeginn. Es ist nur ein
+  Hinweis, nichts wird gesperrt; wer an dem Tag abwesend ist, bekommt nur
+  "(abwesend)".
+- "Mein Plan": Für Tage, an denen jemand "nicht verfügbar" oder "erst ab"
+  eingetragen hat, wird eine freie Schicht nicht als "fehlt" hervorgehoben und
+  taucht nicht in der Liste "noch frei" auf. Stattdessen steht dort ruhig
+  "Dein Eintrag für Samstag: erst ab 14:00". Bewerben bleibt möglich.
+- Tests für Formular, Abgleich und Rundruf-Empfänger (97 Prüfungen).
+
+### Geändert
+- Rundruf "Personal gesucht": Wer am Schichttag bereits in einer zeitlich
+  überlappenden Schicht eingeplant ist, bekommt ihn nicht mehr. Weiter
+  ausgenommen sind wie bisher bereits Beworbene/Zugewiesene und Abwesende
+  (Urlaub, Krankheit, Sonstiges). Die festen Zeiten wirken beim Rundruf bewusst
+  nicht: er geht an alle. Die Logik steht jetzt in
+  `urgentReminderRecipients()` (app/helpers.php).
+
+### Behoben
+- Die Auswahl "+ zuweisen" im Schichtplan konnte mit längerem Optionstext
+  (z. B. mit Hinweis) über den Rand des Tickets ragen.
+
 ## [1.25.0] - 2026-10-16
 
 ### Hinzugefügt

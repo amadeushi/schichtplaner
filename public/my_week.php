@@ -47,7 +47,7 @@ if ($user['time_tracking_enabled']) {
 // shift_id/start+end eingegrenzt statt des vollen laufenden Abos.
 $calendarToken = ensureCalendarToken((int)$user['id'], $user['calendar_token'] ?? null);
 
-function dayRows(array $dayShifts): array
+function dayRows(array $dayShifts, array $availability): array
 {
     $rows = [];
     foreach ($dayShifts as $sh) {
@@ -59,16 +59,25 @@ function dayRows(array $dayShifts): array
             $rows[] = ['shift' => $sh, 'kind' => 'pending'];
         } elseif ($canApply && $sh['status'] === 'open' && $free > 0) {
             // gap = null für bereits begonnene Schichten: Vergangenes wird nicht hervorgehoben.
-            $rows[] = ['shift' => $sh, 'kind' => 'open', 'gap' => staffingGap($sh)];
+            // Wer für den Tag "nicht verfügbar"/"erst ab" eingetragen hat, bekommt keine Aufforderung,
+            // sondern eine ruhige Erklärung ('quiet') - nichts verschwindet still, bewerben bleibt möglich.
+            $gap = staffingGap($sh);
+            $quiet = null;
+            if ($gap && ($conflict = availabilityConflict($availability, $sh['shift_date'], $sh['start_time']))) {
+                $gap = null;
+                $quiet = availabilityNote($conflict, $sh['shift_date']);
+            }
+            $rows[] = ['shift' => $sh, 'kind' => 'open', 'gap' => $gap, 'quiet' => $quiet];
         }
     }
     return $rows;
 }
 
+$myAvailability = userAvailability((int)$user['id']);
 $rowsByDate = [];
 $gapItems = [];
 foreach ($days as $d) {
-    $rowsByDate[$d] = dayRows($shiftsByDate[$d] ?? []);
+    $rowsByDate[$d] = dayRows($shiftsByDate[$d] ?? [], $myAvailability);
     foreach ($rowsByDate[$d] as $row) {
         if (!empty($row['gap'])) {
             $gapItems[] = ['shift' => $row['shift'], 'gap' => $row['gap'], 'date' => $d];
@@ -156,6 +165,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
             <div><strong><?= e($sh['title']) ?></strong></div>
             <?php if ($sh['location']): ?><div class="ticket-meta"><?= e($sh['location']) ?></div><?php endif; ?>
             <?php if ($gap): ?><div style="margin-top:0.3rem;"><?= staffingGapBadgeHtml($gap) ?></div><?php endif; ?>
+            <?php if (!empty($row['quiet'])): ?><div class="ticket-meta"><?= e($row['quiet']) ?></div><?php endif; ?>
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <?php if ($row['kind'] === 'confirmed'): ?>
@@ -208,6 +218,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
             <div><strong><?= e($sh['title']) ?></strong></div>
             <?php if ($sh['location']): ?><div class="ticket-meta"><?= e($sh['location']) ?></div><?php endif; ?>
             <?php if ($gap): ?><div style="margin-top:0.3rem;"><?= staffingGapBadgeHtml($gap) ?></div><?php endif; ?>
+            <?php if (!empty($row['quiet'])): ?><div class="ticket-meta"><?= e($row['quiet']) ?></div><?php endif; ?>
           </div>
           <div style="text-align:right;flex-shrink:0;">
             <?php if ($row['kind'] === 'confirmed'): ?>

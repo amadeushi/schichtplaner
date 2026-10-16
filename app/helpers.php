@@ -364,6 +364,144 @@ function staffingGapBadgeHtml(array $gap): string
         . e(staffingGapLabel((int)$gap['missing'])) . '</span>';
 }
 
+/** Wochentagsnamen nach ISO-Nummer (1 = Montag … 7 = Sonntag). */
+function weekdayNamesDe(): array
+{
+    return [1 => 'Montag', 2 => 'Dienstag', 3 => 'Mittwoch', 4 => 'Donnerstag', 5 => 'Freitag', 6 => 'Samstag', 7 => 'Sonntag'];
+}
+
+/**
+ * Formularwerte der festen Verfügbarkeit ($modes[1..7] = any|from|none, $times[1..7] = HH:MM) in die
+ * zu speichernden Einschränkungen übersetzen. 'any' (jederzeit) ergibt keine Zeile. Fehlt bei
+ * "Ab Uhrzeit" eine gültige Uhrzeit, kommt eine Fehlermeldung statt stillem Raten zurück.
+ *
+ * @return array{rows: array<int, array{mode: string, from_time: ?string}>, error: ?string}
+ */
+function parseAvailabilityInput(array $modes, array $times): array
+{
+    $names = weekdayNamesDe();
+    $rows = [];
+    foreach ($names as $wd => $name) {
+        $mode = (string)($modes[$wd] ?? 'any');
+        if ($mode === 'none') {
+            $rows[$wd] = ['mode' => 'none', 'from_time' => null];
+        } elseif ($mode === 'from') {
+            $time = trim((string)($times[$wd] ?? ''));
+            if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $time)) {
+                return ['rows' => [], 'error' => 'Bitte für ' . $name . ' eine Uhrzeit angeben.'];
+            }
+            $rows[$wd] = ['mode' => 'from', 'from_time' => $time];
+        }
+    }
+    return ['rows' => $rows, 'error' => null];
+}
+
+/** Ersetzt die gesamte feste Verfügbarkeit von $userId durch $rows (aus parseAvailabilityInput). */
+function saveUserAvailability(int $userId, array $rows): void
+{
+    $pdo = db();
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare('DELETE FROM availability WHERE user_id = :u')->execute(['u' => $userId]);
+        $ins = $pdo->prepare('INSERT INTO availability (user_id, weekday, mode, from_time) VALUES (:u, :w, :m, :t)');
+        foreach ($rows as $weekday => $row) {
+            $ins->execute(['u' => $userId, 'w' => (int)$weekday, 'm' => $row['mode'], 't' => $row['from_time']]);
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+}
+
+/** Feste Verfügbarkeit eines Mitarbeiters: Wochentag (1-7) => ['mode', 'from_time']; leer = keine Einschränkung. */
+function userAvailability(int $userId): array
+{
+    $stmt = db()->prepare('SELECT weekday, mode, from_time FROM availability WHERE user_id = :u');
+    $stmt->execute(['u' => $userId]);
+    $byDay = [];
+    foreach ($stmt as $row) {
+        $byDay[(int)$row['weekday']] = $row;
+    }
+    return $byDay;
+}
+
+/** Alle festen Verfügbarkeiten, gruppiert: user_id => Wochentag => Zeile (ein Abruf für eine ganze Planungswoche). */
+function availabilityByUser(): array
+{
+    $byUser = [];
+    foreach (db()->query('SELECT user_id, weekday, mode, from_time FROM availability') as $row) {
+        $byUser[(int)$row['user_id']][(int)$row['weekday']] = $row;
+    }
+    return $byUser;
+}
+
+/**
+ * Widerspricht die Schicht (Datum + Beginn) der festen Verfügbarkeit $userRows (aus userAvailability())?
+ * Maßgeblich ist der Schichtbeginn. null = kein Widerspruch. Immer nur ein Hinweis, nie eine Sperre.
+ */
+function availabilityConflict(array $userRows, string $date, string $startTime): ?array
+{
+    $ts = strtotime($date);
+    $row = $ts ? ($userRows[(int)date('N', $ts)] ?? null) : null;
+    if (!$row) {
+        return null;
+    }
+    if ($row['mode'] === 'none') {
+        return ['mode' => 'none', 'from_time' => null];
+    }
+    if ($row['mode'] === 'from' && $row['from_time'] !== null && $startTime < $row['from_time']) {
+        return ['mode' => 'from', 'from_time' => $row['from_time']];
+    }
+    return null;
+}
+
+/** Kurztext für den Admin neben dem Namen: "nicht verfügbar" bzw. "erst ab 16:00". */
+function availabilityHint(array $conflict): string
+{
+    return $conflict['mode'] === 'none' ? 'nicht verfügbar' : 'erst ab ' . $conflict['from_time'];
+}
+
+/** Erklärung für den Mitarbeiter, warum eine freie Schicht für ihn nicht hervorgehoben wird. */
+function availabilityNote(array $conflict, string $date): string
+{
+    return 'Dein Eintrag für ' . weekdayDe($date) . ': ' . availabilityHint($conflict);
+}
+
+/**
+ * Empfänger des Rundrufs "Personal gesucht" für $shift: alle aktiven Mitarbeiter außer wer für genau
+ * diese Schicht schon beworben/zugewiesen ist, wer am Schichttag eine andere, zeitlich überlappende
+ * Schicht hat (arbeitet dann bereits), und wer heute oder am Schichttag abwesend ist (Urlaub,
+ * Krankheit, Sonstiges). Die feste Verfügbarkeit zählt hier bewusst nicht: der Rundruf geht an alle.
+ * $shift braucht id, shift_date, start_time, end_time.
+ */
+function urgentReminderRecipients(array $shift, ?string $today = null): array
+{
+    $today ??= date('Y-m-d');
+    // Eine Schicht über Mitternacht (Ende <= Beginn) reicht bis 24:00 desselben Tages.
+    $end = $shift['end_time'] > $shift['start_time'] ? $shift['end_time'] : '24:00';
+    $stmt = db()->prepare(
+        "SELECT u.* FROM users u
+         WHERE u.role = 'employee' AND u.active = 1
+           AND NOT EXISTS (
+               SELECT 1 FROM shift_applications sa
+               WHERE sa.shift_id = :sid AND sa.user_id = u.id AND sa.status IN ('pending', 'approved')
+           )
+           AND NOT EXISTS (
+               SELECT 1 FROM shift_applications sb JOIN shifts s2 ON s2.id = sb.shift_id
+               WHERE sb.user_id = u.id AND sb.status = 'approved'
+                 AND s2.shift_date = :d AND s2.id != :sid
+                 AND s2.start_time < :end
+                 AND (CASE WHEN s2.end_time > s2.start_time THEN s2.end_time ELSE '24:00' END) > :start
+           )
+         ORDER BY u.name"
+    );
+    $stmt->execute(['sid' => $shift['id'], 'd' => $shift['shift_date'], 'start' => $shift['start_time'], 'end' => $end]);
+    return array_values(array_filter($stmt->fetchAll(), function ($u) use ($shift, $today) {
+        return !isUserAbsentOn((int)$u['id'], $today) && !isUserAbsentOn((int)$u['id'], $shift['shift_date']);
+    }));
+}
+
 /**
  * Bringt eine eingegebene Mobilnummer ins internationale E.164-Format (+436641234567) - das
  * verlangt das SMS-Gateway. Akzeptiert die üblichen Schreibweisen: "0664 1234567" (nationale

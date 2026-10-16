@@ -28,6 +28,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/absences.php');
     }
 
+    if ($action === 'save_availability') {
+        $parsed = parseAvailabilityInput((array)($_POST['avail_mode'] ?? []), (array)($_POST['avail_time'] ?? []));
+        if ($parsed['error'] !== null) {
+            flash('error', $parsed['error']);
+            redirect('/absences.php#feste-zeiten');
+        }
+        saveUserAvailability((int)$user['id'], $parsed['rows']);
+        flash('success', 'Feste Zeiten wurden gespeichert.');
+        redirect('/absences.php#feste-zeiten');
+    }
+
     if ($action === 'delete') {
         $id = (int)($_POST['absence_id'] ?? 0);
         $stmt = db()->prepare('DELETE FROM absences WHERE id = :id AND user_id = :u');
@@ -41,6 +52,7 @@ $stmt = db()->prepare('SELECT * FROM absences WHERE user_id = :u ORDER BY start_
 $stmt->execute(['u' => $user['id']]);
 $absences = $stmt->fetchAll();
 $today = date('Y-m-d');
+$myAvailability = userAvailability((int)$user['id']);
 
 require __DIR__ . '/partials/header.php';
 ?>
@@ -105,5 +117,39 @@ require __DIR__ . '/partials/header.php';
   </table>
   <?php endif; ?>
 </div>
+
+<div class="card" id="feste-zeiten">
+  <h2>Feste Zeiten</h2>
+  <p class="muted">Wann kannst du an einem Wochentag regelmäßig nicht oder erst später? Der Admin sieht das bei der Planung als Hinweis. Eine Sperre ist es nicht, du kannst dich trotzdem bewerben. Was du nicht einträgst, gilt als „jederzeit".</p>
+  <form method="post">
+    <?= csrfField() ?>
+    <input type="hidden" name="action" value="save_availability">
+    <div class="avail-list">
+    <?php foreach (weekdayNamesDe() as $wd => $dayName): ?>
+      <?php $row = $myAvailability[$wd] ?? null; $mode = $row['mode'] ?? 'any'; ?>
+      <div class="avail-row">
+        <label for="avail-mode-<?= $wd ?>"><?= e($dayName) ?></label>
+        <select id="avail-mode-<?= $wd ?>" name="avail_mode[<?= $wd ?>]" data-avail-mode>
+          <option value="any"<?= $mode === 'any' ? ' selected' : '' ?>>Jederzeit</option>
+          <option value="from"<?= $mode === 'from' ? ' selected' : '' ?>>Erst ab</option>
+          <option value="none"<?= $mode === 'none' ? ' selected' : '' ?>>Gar nicht</option>
+        </select>
+        <input type="time" name="avail_time[<?= $wd ?>]" value="<?= e((string)($row['from_time'] ?? '')) ?>" aria-label="<?= e($dayName) ?>: erst ab Uhrzeit" data-avail-time>
+      </div>
+    <?php endforeach; ?>
+    </div>
+    <button type="submit" class="btn" style="margin-top:1rem;">Speichern</button>
+  </form>
+</div>
+<script>
+  // Die Uhrzeit ist nur bei "Erst ab" relevant; ohne Skript bleibt das Feld einfach sichtbar.
+  document.querySelectorAll('.avail-row').forEach(function (row) {
+    var select = row.querySelector('[data-avail-mode]');
+    var time = row.querySelector('[data-avail-time]');
+    function sync() { time.hidden = select.value !== 'from'; }
+    select.addEventListener('change', sync);
+    sync();
+  });
+</script>
 
 <?php require __DIR__ . '/partials/footer.php'; ?>

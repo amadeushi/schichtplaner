@@ -271,6 +271,12 @@ function navActive(string $path, array $matches): bool
   .gap-time { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.05rem; }
   .gap-title { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
   .gap-board summary { min-height: 2.75rem; display: flex; align-items: center; cursor: pointer; font-size: 0.85rem; color: var(--ink-soft); }
+  /* Feste Zeiten (absences.php): je Wochentag Tag | Art | Uhrzeit in einer Zeile, auch in 375px. */
+  .avail-row { display: grid; grid-template-columns: 5.2rem 1fr 6.2rem; gap: 0.5rem; align-items: center; padding: 0.35rem 0; border-top: 1px dashed var(--ink-line); }
+  .avail-row:first-child { border-top: none; }
+  .avail-row label { margin: 0; font-weight: 700; font-size: 0.9rem; text-transform: none; letter-spacing: normal; color: var(--ink); }
+  .avail-row select, .avail-row input { margin: 0; min-height: 2.5rem; min-width: 0; }
+  .avail-row input[type="time"] { padding-left: 0.45rem; padding-right: 0.3rem; font-size: 0.9rem; }
   /* Der Bon selbst: Zeile mit Lücke bekommt Papier-Tönung, dringende die Stempel-Tönung. */
   .ticket-row.gap { scroll-margin-top: 4rem; background: var(--confirm-wash); margin: 0 -0.5rem; padding-left: 0.5rem; padding-right: 0.5rem; }
   .ticket-row.gap.urgent { background: var(--stamp-wash); }
@@ -494,7 +500,10 @@ function navActive(string $path, array $matches): bool
      welche Schicht ein Drop genau träfe (siehe findRetargetChip() im Kalender-Skript). */
   .shift-chip.retarget-target { outline: 2px dashed var(--stamp); outline-offset: -2px; background: var(--stamp-wash); }
   .chip-remove { position: absolute; top: 0.15rem; right: 0.3rem; background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1rem; line-height: 1; padding: 0.1rem; }
-  .cell-assign select { font-size: 0.78rem; padding: 0.3rem; width: auto; }
+  /* min-width 0 + Schrumpfen: der Hinweis in der Option ("(erst ab 14:00)") macht den Text länger und darf das Ticket nicht sprengen. */
+  .cell-assign select { font-size: 0.78rem; padding: 0.3rem; width: auto; min-width: 0; flex: 0 1 auto; max-width: 100%; }
+  .cell-assign .btn { flex-shrink: 0; }
+  form.cell-assign { min-width: 0; max-width: 100%; }
   .day-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; }
   .day-card { border: 1px solid var(--ink-line); border-radius: 3px; padding: 0.75rem; }
   .day-card.weekend { background: var(--confirm-wash); }

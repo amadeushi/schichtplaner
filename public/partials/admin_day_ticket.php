@@ -27,6 +27,15 @@
         }
         return false;
     };
+    // Hinweis aus der festen Verfügbarkeit ("nicht verfügbar", "erst ab 16:00") oder ''. Wer an dem
+    // Tag ohnehin abwesend ist, bekommt nur "abwesend" - das eine Signal genügt.
+    $availHint = function (int $uid, array $shiftRow) use ($availabilityByUser, $isAbsentOnDay): string {
+        if ($isAbsentOnDay($uid)) {
+            return '';
+        }
+        $conflict = availabilityConflict($availabilityByUser[$uid] ?? [], $shiftRow['shift_date'], $shiftRow['start_time']);
+        return $conflict ? availabilityHint($conflict) : '';
+    };
   ?>
   <div class="ticket<?= $isToday ? ' today hero' : '' ?>">
     <div class="ticket-head">
@@ -82,7 +91,7 @@
 
           <?php foreach ($pending as $p): ?>
             <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.4rem;font-size:0.85rem;">
-              <span><span class="badge pending" style="margin-right:0.4rem;">Bewerbung</span><?= e($p['name']) ?></span>
+              <span><span class="badge pending" style="margin-right:0.4rem;">Bewerbung</span><?= e($p['name']) ?><?php if ($isAbsentOnDay($p['user_id'])): ?> <span class="muted">(abwesend)</span><?php elseif ($hint = $availHint($p['user_id'], $sh)): ?> <span class="muted">(<?= e($hint) ?>)</span><?php endif; ?></span>
               <span style="display:flex;gap:0.4rem;">
                 <form class="inline" method="post">
                   <?= csrfField() ?>
@@ -117,7 +126,7 @@
                   <select name="employee_id">
                     <option value="">+ zuweisen</option>
                     <?php foreach ($assignable as $e): ?>
-                      <option value="<?= (int)$e['id'] ?>"><?= e($e['name']) ?><?= $isAbsentOnDay((int)$e['id']) ? ' (abwesend)' : '' ?></option>
+                      <option value="<?= (int)$e['id'] ?>"><?= e($e['name']) ?><?php $optHint = $isAbsentOnDay((int)$e['id']) ? 'abwesend' : $availHint((int)$e['id'], $sh); ?><?= $optHint !== '' ? ' (' . e($optHint) . ')' : '' ?></option>
                     <?php endforeach; ?>
                   </select>
                   <button type="submit" class="btn small secondary">Zuweisen</button>

@@ -16,7 +16,7 @@ if ($user['role'] === 'admin') {
 } else {
     $links[] = ['href' => '/my_week.php', 'label' => 'Mein Plan', 'desc' => 'Wochenübersicht'];
     $links[] = ['href' => '/my_applications.php', 'label' => 'Meine Bewerbungen', 'desc' => 'Verlauf aller Bewerbungen'];
-    $links[] = ['href' => '/absences.php', 'label' => 'Abwesenheiten', 'desc' => 'Urlaub oder Krankheit eintragen'];
+    $links[] = ['href' => '/absences.php', 'label' => 'Abwesenheiten', 'desc' => 'Urlaub, Krankheit, feste Zeiten'];
     if (!empty($user['time_tracking_enabled'])) {
         $links[] = ['href' => '/time_tracking.php', 'label' => 'Zeiterfassung', 'desc' => 'Ein-/Ausstempeln'];
     }

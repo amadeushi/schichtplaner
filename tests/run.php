@@ -197,6 +197,62 @@ same('Gap: Text für mehrere', '3 fehlen', staffingGapLabel(3));
 check('Gap: Vermerk ist nur bei dringend rot', str_contains(staffingGapBadgeHtml(['missing' => 1, 'urgent' => true]), 'urgent')
     && !str_contains(staffingGapBadgeHtml(['missing' => 1, 'urgent' => false]), 'urgent'));
 
+// --- Feste Verfügbarkeit: Formular, Speichern, Abgleich mit einer Schicht ---
+$parsed = parseAvailabilityInput([1 => 'none', 2 => 'from', 3 => 'any', 4 => 'quatsch'], [2 => '16:00']);
+same('Verfügbarkeit: Formular ergibt nur Einschränkungen', [1, 2], array_keys($parsed['rows']));
+same('Verfügbarkeit: "Erst ab" behält die Uhrzeit', '16:00', $parsed['rows'][2]['from_time'] ?? null);
+same('Verfügbarkeit: unbekannter Wert gilt als jederzeit', false, isset($parsed['rows'][4]));
+same('Verfügbarkeit: "Erst ab" ohne Uhrzeit ist ein Fehler mit Tagesname', 'Bitte für Dienstag eine Uhrzeit angeben.',
+    parseAvailabilityInput([2 => 'from'], [])['error']);
+check('Verfügbarkeit: ungültige Uhrzeit wird abgelehnt', parseAvailabilityInput([5 => 'from'], [5 => '25:00'])['error'] !== null);
+$availRows = [2 => ['mode' => 'from', 'from_time' => '16:00'], 4 => ['mode' => 'none', 'from_time' => null]];
+same('Verfügbarkeit: Dienstag 15:59 liegt vor "erst ab 16:00"', 'from', availabilityConflict($availRows, '2026-10-20', '15:59')['mode'] ?? null);
+same('Verfügbarkeit: Dienstag 16:00 ist erlaubt', null, availabilityConflict($availRows, '2026-10-20', '16:00'));
+same('Verfügbarkeit: Montag ist ohne Eintrag frei', null, availabilityConflict($availRows, '2026-10-19', '08:00'));
+same('Verfügbarkeit: Donnerstag "gar nicht"', 'none', availabilityConflict($availRows, '2026-10-22', '23:00')['mode'] ?? null);
+same('Verfügbarkeit: Hinweis "erst ab"', 'erst ab 16:00', availabilityHint(['mode' => 'from', 'from_time' => '16:00']));
+same('Verfügbarkeit: Hinweis "gar nicht"', 'nicht verfügbar', availabilityHint(['mode' => 'none', 'from_time' => null]));
+same('Verfügbarkeit: Erklärung für den Mitarbeiter', 'Dein Eintrag für Dienstag: erst ab 16:00',
+    availabilityNote(['mode' => 'from', 'from_time' => '16:00'], '2026-10-20'));
+saveUserAvailability($annaId, $parsed['rows']);
+same('Verfügbarkeit: gespeichert und gelesen', [1, 2], array_keys(userAvailability($annaId)));
+saveUserAvailability($annaId, [3 => ['mode' => 'none', 'from_time' => null]]);
+same('Verfügbarkeit: Speichern ersetzt alles', [3], array_keys(userAvailability($annaId)));
+saveUserAvailability($annaId, []);
+same('Verfügbarkeit: leer = jederzeit', [], userAvailability($annaId));
+
+// --- Rundruf "Personal gesucht": wer ihn bekommt ---
+$mkShift = function (string $date, string $start, string $end) use ($pdo, $annaId): array {
+    $pdo->prepare("INSERT INTO shifts (title, shift_date, start_time, end_time, needed_count, created_by) VALUES ('T', :d, :s, :e, 3, :c)")
+        ->execute(['d' => $date, 's' => $start, 'e' => $end, 'c' => $annaId]);
+    return ['id' => (int)$pdo->lastInsertId(), 'shift_date' => $date, 'start_time' => $start, 'end_time' => $end];
+};
+$assign = fn(int $shiftId, int $userId, string $status) =>
+    $pdo->prepare('INSERT INTO shift_applications (shift_id, user_id, status) VALUES (:s, :u, :st)')->execute(['s' => $shiftId, 'u' => $userId, 'st' => $status]);
+$target = $mkShift('2026-10-20', '16:00', '22:00');
+$cara = $mkUser('rc-frei@example.test');
+$dan = $mkUser('rc-ueberlappt@example.test');
+$emil = $mkUser('rc-morgens@example.test');
+$fritz = $mkUser('rc-beworben@example.test');
+$gina = $mkUser('rc-urlaub@example.test');
+$hans = $mkUser('rc-nicht-verfuegbar@example.test');
+$ida = $mkUser('rc-nachtschicht@example.test');
+$assign($mkShift('2026-10-20', '20:00', '23:00')['id'], $dan, 'approved');
+$assign($mkShift('2026-10-20', '08:00', '12:00')['id'], $emil, 'approved');
+$assign($mkShift('2026-10-20', '12:00', '16:00')['id'], $cara, 'pending');
+$assign($mkShift('2026-10-20', '21:00', '02:00')['id'], $ida, 'approved');
+$assign($target['id'], $fritz, 'pending');
+$pdo->prepare("INSERT INTO absences (user_id, start_date, end_date, type, created_by) VALUES (:u, '2026-10-19', '2026-10-21', 'sonstiges', :u)")->execute(['u' => $gina]);
+saveUserAvailability($hans, [2 => ['mode' => 'none', 'from_time' => null]]);
+$recipientMails = array_values(array_filter(
+    array_column(urgentReminderRecipients($target, '2026-10-16'), 'email'),
+    fn($m) => str_starts_with($m, 'rc-')
+));
+sort($recipientMails);
+same('Rundruf: geht an alle außer beworben, überlappend, abwesend', [
+    'rc-frei@example.test', 'rc-morgens@example.test', 'rc-nicht-verfuegbar@example.test',
+], $recipientMails);
+
 // --- XSS-Regression: kein interpoliertes PHP in einem onsubmit-confirm('...')-Handler ---
 // (Stored XSS: htmlspecialchars schützt das Attribut, aber der Browser dekodiert Entities vor
 // der JS-Ausführung. Stattdessen data-confirm verwenden, siehe partials/header.php.)
