@@ -16,7 +16,7 @@ function navActive(string $path, array $matches): bool
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title><?= e($appName) ?></title>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png">
@@ -38,6 +38,7 @@ function navActive(string $path, array $matches): bool
     --ink-line-strong: #b9ad91;
     --stamp: #c8391f;
     --stamp-wash: #f7e3dc;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1); /* kräftiges Ease-out für UI-Bewegung, siehe Seitenübergang und Hinweis */
     --stamp-ink: #a92c17;     /* Stempel-Text auf stamp-wash: 5,55:1 statt 4,18:1 von --stamp (WCAG 1.4.3) */
     --control-line: #8c7f63;  /* Rand von Eingabefeldern: 3,56:1 auf Papier statt 2,01:1 von --ink-line-strong (WCAG 1.4.11) */
     --danger: #b3261e;
@@ -166,14 +167,53 @@ function navActive(string $path, array $matches): bool
        ein Button-Label bricht höchstens zwischen Wörtern, wie "ZURÜCKSETZEN" ungeteilt. */
     overflow-wrap: normal; word-break: normal;
   }
-  .btn:hover { background: #000000; }
   .btn:active { transform: translateY(1px); }
+
+  /* Hover nur, wo es wirklich ein Hover gibt: am Handy bleibt :hover nach dem Antippen sonst hängen. Druck-Rückmeldung läuft über :active. */
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover { background: #000000; }
+    .btn.secondary:hover { background: var(--confirm-wash); }
+    .btn.stamp-btn:hover { background: #a92c17; }
+    .btn.danger:hover { background: var(--danger-wash); }
+    .gap-board a:hover .gap-title { text-decoration: underline; }
+    .chip-pending:hover { background: var(--confirm-wash); border-color: var(--ink-soft); }
+    .settings-jump a:hover { color: var(--surround-ink); border-bottom-color: var(--surround-ink-soft); }
+  }
+
+  /* Handy-Feinheiten: kein graues Aufblitzen beim Antippen, kein 300-ms-Warten, Bedienelemente nicht markierbar. */
+  html { -webkit-tap-highlight-color: transparent; }
+  a, button, summary, label.weekday-pick { touch-action: manipulation; }
+  .btn, nav.tabbar a, summary, label.weekday-pick { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  /* Kleine Icon-Knöpfe: Trefferfläche größer als das Zeichen (36px + 2 x 4px = 44px), ohne das Layout zu ändern. */
+  .btn.icon-only { position: relative; }
+  .btn.icon-only::after { content: ""; position: absolute; inset: -0.25rem; }
+
+  /* Seitenwechsel: kurzes Überblenden (150 ms, nur Deckkraft), Kopf- und Tab-Leiste bleiben stehen. Seitenwechsel
+     passieren dutzende Male am Tag, also kaum wahrnehmbar. Wo der Browser es nicht kann, wechselt die Seite wie bisher. */
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition { navigation: auto; }
+  }
+  header.topbar { view-transition-name: topbar; }
+  nav.tabbar { view-transition-name: tabbar; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 150ms; animation-timing-function: var(--ease-out); }
+
+  /* Rückgängig-Hinweis (statt "Sind Sie sicher?"): kommt von oben herein, geht nach 10 s wieder. Übergang statt Keyframes,
+     damit er bei schnellem Wiederholen von der aktuellen Stelle weiterläuft. */
+  .undo-toast { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 0; transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out); }
+  .undo-toast span { min-width: 0; }
+  .undo-toast .btn { flex-shrink: 0; margin: 0; }
+  @starting-style { .undo-toast { opacity: 0; transform: translateY(-4px); } }
+  .undo-toast.is-leaving { opacity: 0; transform: translateY(-4px); }
+
+  /* Wer weniger Bewegung will, bekommt keine: keine Übergänge, kein Druck-Versatz, kein Seitenübergang. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    .btn:active, .duty-stamp:active, .duty-stamp.on-duty:active { transform: none; }
+    .undo-toast, .undo-toast.is-leaving { transform: none; }
+  }
   .btn.secondary { background: var(--paper); color: var(--ink); border-color: var(--ink-line-strong); }
-  .btn.secondary:hover { background: var(--confirm-wash); }
   .btn.stamp-btn { background: var(--stamp); border-color: var(--stamp); color: #fff8f4; }
-  .btn.stamp-btn:hover { background: #a92c17; }
   .btn.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
-  .btn.danger:hover { background: var(--danger-wash); }
   /* .small bleibt kompakt für dichte Reihen, aber nie unter 36px Kantenlänge */
   .btn.small { min-height: 2.25rem; min-width: 2.25rem; padding: 0.4rem 0.75rem; font-size: 0.85rem; }
   /* Für einen Umschalt-Button, dessen zwei Zustände unterschiedlich lange Labels haben
@@ -215,7 +255,7 @@ function navActive(string $path, array $matches): bool
      Kontrollkästchen mit einem ganzen erklärenden Satz als Beschriftung ("Auch per E-Mail/SMS an
      alle Mitarbeiter verschicken") ist Fließtext, kein Label, und wurde als Versal-Satz schwerer
      lesbar. .checkbox-field nimmt diese eine Ausnahme von der label-Regel zurück. */
-  label.checkbox-field { display: flex; align-items: center; gap: 0.5rem; min-height: 2.25rem; text-transform: none; letter-spacing: normal; color: var(--ink); font-size: 0.9rem; font-weight: 400; }
+  label.checkbox-field { display: flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; text-transform: none; letter-spacing: normal; color: var(--ink); font-size: 0.9rem; font-weight: 400; }
   /* Wochentag-Auswahl ("Neue Schicht anlegen"): sieben Chips mit sichtbarem Kontrollkästchen.
      Der gewählte Zustand ist am Kästchen UND an Rahmen/Fläche erkennbar, nicht nur an einer
      Farbe; achromatisch, Rot bleibt dem Stempel vorbehalten. Höhe 36px (Comfortable-Tap Rule). */
@@ -223,7 +263,7 @@ function navActive(string $path, array $matches): bool
   fieldset.weekday-fieldset legend { padding: 0; margin-bottom: 0.3rem; font-size: 0.78rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.03em; }
   .weekday-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; }
   label.weekday-pick {
-    display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; min-height: 2.25rem; padding: 0 0.75rem;
+    display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; min-height: 2.75rem; padding: 0 0.75rem;
     border: 1.5px solid var(--control-line); border-radius: 3px; color: var(--ink);
     font-size: 0.78rem; font-weight: 700; cursor: pointer;
   }
@@ -279,7 +319,6 @@ function navActive(string $path, array $matches): bool
   .gap-board ul { list-style: none; margin: 0; padding: 0; }
   .gap-board li + li, .gap-board details { border-top: 1px dashed var(--ink-line); }
   .gap-board a { display: flex; align-items: center; gap: 0.6rem; min-height: 2.75rem; padding: 0.25rem 0; text-decoration: none; }
-  .gap-board a:hover .gap-title { text-decoration: underline; }
   /* Tag über Uhrzeit gestapelt statt nebeneinander: so bleibt dem Titel in 375px genug Breite. */
   .gap-slot { display: flex; flex-direction: column; flex-shrink: 0; min-width: 4.6rem; line-height: 1.25; }
   .gap-when { font-weight: 700; font-size: 0.85rem; color: var(--ink-soft); }
@@ -324,7 +363,7 @@ function navActive(string $path, array $matches): bool
     font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
     color: var(--surround-ink-soft); text-decoration: none; border-bottom: 1.5px solid transparent;
   }
-  .settings-jump a:hover, .settings-jump a:focus-visible { color: var(--surround-ink); border-bottom-color: var(--surround-ink-soft); }
+  .settings-jump a:focus-visible { color: var(--surround-ink); border-bottom-color: var(--surround-ink-soft); }
   .ticket.hero { padding: 1.4rem 1.4rem 1.6rem; }
   .ticket.hero .ticket-day { font-size: 1.25rem; }
   .ticket.hero .ticket-date { font-size: 0.85rem; }
@@ -484,7 +523,6 @@ function navActive(string $path, array $matches): bool
     background: transparent; font-family: inherit; line-height: normal;
     text-decoration: none; cursor: pointer;
   }
-  .chip-pending:hover { background: var(--confirm-wash); border-color: var(--ink-soft); }
   /* Bewerbungs-Bon (.applicant-chip): dieselbe Schicht wie jeder andere Kalender-Bon, aber in
      der Zeile der bewerbenden Person statt einer zugewiesenen - ziehbar auf eine andere
      Schicht, um die Bewerbung dorthin umzuhängen (siehe retarget_application in
@@ -581,3 +619,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 <?php foreach (getFlashes() as $f): ?>
   <div class="flash <?= e($f['type']) ?>"><?= e($f['message']) ?></div>
 <?php endforeach; ?>
+<?php $undoToast = !empty($user) ? undoForDisplay() : null; if ($undoToast): ?>
+  <form class="flash success undo-toast" method="post" action="/undo.php" role="status">
+    <?= csrfField() ?>
+    <input type="hidden" name="undo_token" value="<?= e($undoToast['token']) ?>">
+    <span><?= e($undoToast['label']) ?></span>
+    <button type="submit" class="btn small secondary">Rückgängig</button>
+  </form>
+<?php endif; ?>

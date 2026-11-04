@@ -41,9 +41,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'delete') {
         $id = (int)($_POST['absence_id'] ?? 0);
-        $stmt = db()->prepare('DELETE FROM absences WHERE id = :id AND user_id = :u');
-        $stmt->execute(['id' => $id, 'u' => $user['id']]);
-        flash($stmt->rowCount() > 0 ? 'success' : 'error', $stmt->rowCount() > 0 ? 'Abwesenheit wurde gelöscht.' : 'Eintrag nicht gefunden.');
+        $find = db()->prepare('SELECT start_date, end_date, type, note FROM absences WHERE id = :id AND user_id = :u');
+        $find->execute(['id' => $id, 'u' => $user['id']]);
+        $gone = $find->fetch();
+        if (!$gone) {
+            flash('error', 'Eintrag nicht gefunden.');
+            redirect('/absences.php');
+        }
+        db()->prepare('DELETE FROM absences WHERE id = :id AND user_id = :u')->execute(['id' => $id, 'u' => $user['id']]);
+        // Kein "Löschen?"-Dialog: der Hinweis oben bietet "Rückgängig" an (stellt den Eintrag wieder her).
+        rememberUndo('absence', $gone, 'Abwesenheit wurde gelöscht.', '/absences.php');
         redirect('/absences.php');
     }
 }
@@ -104,7 +111,7 @@ require __DIR__ . '/partials/header.php';
         <td data-label="Art"><?= e(absenceTypeLabelDe($a['type'])) ?></td>
         <td data-label="Notiz"><?= $a['note'] ? e($a['note']) : '<span class="muted">—</span>' ?></td>
         <td data-label="Aktion">
-          <form class="inline" method="post" onsubmit="return confirm('Abwesenheit löschen?');">
+          <form class="inline" method="post">
             <?= csrfField() ?>
             <input type="hidden" name="action" value="delete">
             <input type="hidden" name="absence_id" value="<?= (int)$a['id'] ?>">

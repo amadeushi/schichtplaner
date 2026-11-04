@@ -295,6 +295,50 @@ $longestLine = max(array_map('strlen', explode("\r\n", $ics)));
 check('ICS: keine Zeile über 75 Oktette (Folding bleibt gültig)', $longestLine <= 75, 'längste Zeile: ' . $longestLine);
 check('ICS: Zeilenende ist CRLF', !preg_match('/(?<!\r)\n/', $ics));
 
+// --- Rückgängig statt "Sind Sie sicher?": Bewerbung zurückziehen und Abwesenheit löschen ---
+$_SESSION = [];
+$undoShift = $mkShift('2026-10-27', '10:00', '14:00');
+$assign($undoShift['id'], $annaId, 'withdrawn');
+$statusOf = fn(int $shiftId, int $userId) => $pdo->query("SELECT status FROM shift_applications WHERE shift_id = $shiftId AND user_id = $userId")->fetchColumn();
+
+rememberUndo('withdraw', ['shift_id' => $undoShift['id']], 'Bewerbung wurde zurückgezogen.', '/my_week.php?date=2026-10-26');
+$shown = undoForDisplay();
+same('Rückgängig: der Hinweis erscheint genau einmal', [true, null], [$shown !== null && $shown['label'] === 'Bewerbung wurde zurückgezogen.', undoForDisplay()]);
+same('Rückgängig: falsches Token macht nichts', null, performUndo(str_repeat('0', 32), $annaId));
+same('Rückgängig: ...und verbraucht die Möglichkeit', 'withdrawn', $statusOf($undoShift['id'], $annaId));
+rememberUndo('withdraw', ['shift_id' => $undoShift['id']], 'x', '/my_week.php?date=2026-10-26');
+$token = $_SESSION['undo']['token'];
+$done = performUndo($token, $annaId);
+same('Rückgängig: Bewerbung ist wieder angefragt', 'pending', $statusOf($undoShift['id'], $annaId));
+same('Rückgängig: Rücksprung führt zur selben Woche', '/my_week.php?date=2026-10-26', $done['back'] ?? null);
+same('Rückgängig: zweiter Versuch mit demselben Token geht nicht', null, performUndo($token, $annaId));
+
+rememberUndo('withdraw', ['shift_id' => $undoShift['id']], 'x', '/my_week.php');
+$pdo->exec("UPDATE shift_applications SET status = 'approved' WHERE shift_id = {$undoShift['id']}");
+same('Rückgängig: nicht mehr möglich, wenn der Admin inzwischen entschieden hat', null, performUndo($_SESSION['undo']['token'], $annaId));
+same('Rückgängig: Entscheidung des Admins bleibt unverändert', 'approved', $statusOf($undoShift['id'], $annaId));
+
+rememberUndo('withdraw', ['shift_id' => $undoShift['id']], 'x', '/my_week.php');
+same('Rückgängig: abgelaufene Möglichkeit wird abgelehnt', null, performUndo($_SESSION['undo']['token'], $annaId, time() + UNDO_TTL_SECONDS + 1));
+
+rememberUndo('absence', ['start_date' => '2026-11-10', 'end_date' => '2026-11-12', 'type' => 'urlaub', 'note' => 'Wien'], 'Abwesenheit wurde gelöscht.', '/absences.php');
+$before = (int)$pdo->query("SELECT COUNT(*) FROM absences WHERE user_id = $annaId")->fetchColumn();
+$res = performUndo($_SESSION['undo']['token'], $annaId);
+$row = $pdo->query("SELECT start_date, end_date, type, note FROM absences WHERE user_id = $annaId ORDER BY id DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+same('Rückgängig: gelöschte Abwesenheit kommt zurück', [$before + 1, ['start_date' => '2026-11-10', 'end_date' => '2026-11-12', 'type' => 'urlaub', 'note' => 'Wien']],
+    [(int)$pdo->query("SELECT COUNT(*) FROM absences WHERE user_id = $annaId")->fetchColumn(), $row]);
+same('Rückgängig: Abwesenheit führt zurück zur Abwesenheitsseite', '/absences.php', $res['back'] ?? null);
+
+rememberUndo('absence', ['start_date' => '2026-11-12', 'end_date' => '2026-11-10', 'type' => 'urlaub', 'note' => ''], 'x', '//boese.example');
+same('Rückgängig: ungültiger Zeitraum wird nicht eingetragen', null, performUndo($_SESSION['undo']['token'], $annaId));
+rememberUndo('absence', ['start_date' => '2026-12-01', 'end_date' => '2026-12-01', 'type' => 'quatsch', 'note' => ''], 'x', '//boese.example');
+$res = performUndo($_SESSION['undo']['token'], $annaId);
+same('Rückgängig: fremder Rücksprung-Pfad wird ersetzt, unbekannte Art wird "sonstiges"', ['/my_week.php', 'sonstiges'],
+    [$res['back'] ?? null, $pdo->query("SELECT type FROM absences WHERE user_id = $annaId AND start_date = '2026-12-01'")->fetchColumn()]);
+rememberUndo('unbekannt', [], 'x', '/my_week.php');
+same('Rückgängig: unbekannter Typ tut nichts', null, performUndo($_SESSION['undo']['token'], $annaId));
+$_SESSION = [];
+
 // --- Barrierefreiheit/Design-Tokens: Kontrast der Farbpaare und Regeln für Bedienelemente ---
 $luminance = function (string $hex): float {
     $hex = ltrim($hex, '#');

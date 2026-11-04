@@ -17,5 +17,10 @@ $stmt = db()->prepare(
 );
 $stmt->execute(['s' => $shiftId, 'u' => $user['id']]);
 
-flash('success', 'Bewerbung wurde zurückgezogen.');
+if ($stmt->rowCount() > 0) {
+    // Statt "Sicher?" vorher: sofort zurückziehen, und der Hinweis oben bietet "Rückgängig" an.
+    rememberUndo('withdraw', ['shift_id' => $shiftId], 'Bewerbung wurde zurückgezogen.', $backTo);
+} else {
+    flash('error', 'Keine offene Bewerbung gefunden.');
+}
 redirect($backTo);

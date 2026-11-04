@@ -23,6 +23,7 @@
     $tabs[] = ['href' => '/more.php', 'label' => 'Mehr', 'match' => ['/more.php', '/profile.php']];
     $currentScript = $scriptName ?? ($_SERVER['SCRIPT_NAME'] ?? '');
 ?>
+<script type="speculationrules">{"prefetch":[{"where":{"selector_matches":"nav.tabbar a"},"eagerness":"moderate"}]}</script>
 <nav class="tabbar" aria-label="Hauptnavigation">
   <div class="tabbar-inner">
     <?php foreach ($tabs as $tab): ?>
@@ -43,6 +44,15 @@
       body.hidden = !opening;
       button.setAttribute('aria-expanded', opening ? 'true' : 'false');
     });
+  });
+</script>
+<script>
+  // Rückgängig-Hinweis nach 10 Sekunden ausblenden (die Möglichkeit selbst gilt serverseitig 60 s).
+  document.querySelectorAll('.undo-toast').forEach(function (toast) {
+    setTimeout(function () {
+      toast.classList.add('is-leaving');
+      setTimeout(function () { toast.remove(); }, 250);
+    }, 10000);
   });
 </script>
 </body>

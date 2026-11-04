@@ -170,7 +170,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
               <a href="/calendar_feed.php?token=<?= e($calendarToken) ?>&amp;shift_id=<?= (int)$sh['id'] ?>" class="btn small secondary">Kalender</a>
             <?php elseif ($row['kind'] === 'pending'): ?>
               <div class="badge pending" style="margin-bottom:0.4rem;">Angefragt</div><br>
-              <form class="inline" method="post" action="/withdraw.php" onsubmit="return confirm('Bewerbung zurückziehen?');">
+              <form class="inline" method="post" action="/withdraw.php">
                 <?= csrfField() ?>
                 <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                 <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
@@ -223,7 +223,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
               <a href="/calendar_feed.php?token=<?= e($calendarToken) ?>&amp;shift_id=<?= (int)$sh['id'] ?>" class="btn small secondary">Kalender</a>
             <?php elseif ($row['kind'] === 'pending'): ?>
               <div class="badge pending" style="margin-bottom:0.4rem;">Angefragt</div><br>
-              <form class="inline" method="post" action="/withdraw.php" onsubmit="return confirm('Bewerbung zurückziehen?');">
+              <form class="inline" method="post" action="/withdraw.php">
                 <?= csrfField() ?>
                 <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                 <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">

@@ -399,6 +399,71 @@ function purgeAnonymousSessions(string $dir, ?int $now = null, int $maxDeletes =
     return $deleted;
 }
 
+/** So lange gilt die Rückgängig-Möglichkeit nach einer Aktion (Sekunden). */
+const UNDO_TTL_SECONDS = 60;
+
+/**
+ * Merkt sich in der Sitzung, wie eine gerade ausgeführte Aktion rückgängig zu machen ist, statt vorher
+ * "Sind Sie sicher?" zu fragen. $type: 'withdraw' (Bewerbung zurückgezogen, $data['shift_id']) oder
+ * 'absence' (Abwesenheit gelöscht, $data: start_date, end_date, type, note). $back ist der Pfad, zu dem
+ * nach dem Rückgängigmachen weitergeleitet wird. Es gibt immer nur eine Möglichkeit, die jüngste.
+ */
+function rememberUndo(string $type, array $data, string $label, string $back): void
+{
+    $_SESSION['undo'] = [
+        'type' => $type, 'data' => $data, 'label' => $label, 'back' => $back,
+        'until' => time() + UNDO_TTL_SECONDS, 'shown' => false, 'token' => bin2hex(random_bytes(16)),
+    ];
+}
+
+/** Die Rückgängig-Möglichkeit für den Hinweis oben auf der Seite - genau einmal, danach null. */
+function undoForDisplay(): ?array
+{
+    $undo = $_SESSION['undo'] ?? null;
+    if (!is_array($undo) || !empty($undo['shown']) || $undo['until'] < time()) {
+        return null;
+    }
+    $_SESSION['undo']['shown'] = true;
+    return $undo;
+}
+
+/**
+ * Führt das Rückgängigmachen aus, wenn $token zur gemerkten Möglichkeit passt und sie noch gilt.
+ * Die Möglichkeit ist einmalig: sie verfällt bei jedem Versuch. Gibt ['message', 'back'] zurück oder
+ * null, wenn nichts (mehr) rückgängig zu machen ist.
+ */
+function performUndo(string $token, int $userId, ?int $now = null): ?array
+{
+    $now ??= time();
+    $undo = $_SESSION['undo'] ?? null;
+    unset($_SESSION['undo']);
+    if (!is_array($undo) || !hash_equals((string)$undo['token'], $token) || $undo['until'] < $now) {
+        return null;
+    }
+    $back = (is_string($undo['back']) && preg_match('#^/(?!/)#', $undo['back'])) ? $undo['back'] : '/my_week.php';
+    $data = (array)$undo['data'];
+
+    if ($undo['type'] === 'withdraw') {
+        $stmt = db()->prepare("UPDATE shift_applications SET status = 'pending' WHERE shift_id = :s AND user_id = :u AND status = 'withdrawn'");
+        $stmt->execute(['s' => (int)($data['shift_id'] ?? 0), 'u' => $userId]);
+        return $stmt->rowCount() > 0 ? ['message' => 'Bewerbung ist wieder angefragt.', 'back' => $back] : null;
+    }
+
+    if ($undo['type'] === 'absence') {
+        $start = (string)($data['start_date'] ?? '');
+        $end = (string)($data['end_date'] ?? '');
+        if (!strtotime($start) || !strtotime($end) || $end < $start) {
+            return null;
+        }
+        $type = in_array($data['type'] ?? '', ['urlaub', 'krankheit', 'sonstiges'], true) ? $data['type'] : 'sonstiges';
+        db()->prepare('INSERT INTO absences (user_id, start_date, end_date, type, note, created_by) VALUES (:u, :s, :e, :t, :n, :u)')
+            ->execute(['u' => $userId, 's' => $start, 'e' => $end, 't' => $type, 'n' => ($data['note'] ?? '') !== '' ? $data['note'] : null]);
+        return ['message' => 'Abwesenheit ist wieder eingetragen.', 'back' => $back];
+    }
+
+    return null;
+}
+
 /** Wochentagsnamen nach ISO-Nummer (1 = Montag … 7 = Sonntag). */
 function weekdayNamesDe(): array
 {

@@ -6,6 +6,35 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.29.0] - 2026-11-04
+
+Feinschliff für das Handy und weniger "Sind Sie sicher?". Keine Migration.
+
+### Hinzugefügt
+- Rückgängig statt Rückfrage: "Bewerbung zurückziehen" und "Abwesenheit löschen" fragen nicht mehr
+  vorher, sondern führen sofort aus. Oben erscheint ein Hinweis mit "Rückgängig", der nach 10
+  Sekunden verschwindet (die Möglichkeit gilt 60 Sekunden, einmalig, nur für die eigene Sitzung).
+  Rückgängig stellt die Bewerbung als "angefragt" wieder her bzw. trägt die Abwesenheit mit denselben
+  Daten neu ein; hat der Admin inzwischen über die Bewerbung entschieden, geht es nicht mehr.
+  Neue Seite `public/undo.php`, Funktionen `rememberUndo()`, `undoForDisplay()`, `performUndo()`.
+  Schichten löschen und Zuweisungen entfernen behalten ihre Rückfrage (daran hängen Mitteilungen).
+- Seitenübergänge: Seitenwechsel blenden kurz über (150 ms, nur Deckkraft, `@view-transition`);
+  Kopf- und Tab-Leiste bleiben dabei stehen. Browser ohne Unterstützung wechseln wie bisher.
+- Die Tab-Leiste lädt ihre Ziele beim Antippen schon vor (Speculation Rules, "moderate"); Browser
+  ohne Unterstützung ignorieren das.
+
+### Geändert
+- Hover nur für Mäuse: alle `:hover`-Regeln stehen jetzt in `@media (hover: hover) and (pointer: fine)`,
+  damit am Handy nach dem Antippen nichts hängen bleibt.
+- Handy-Feinheiten: `touch-action: manipulation` (kein Warten beim Tippen), kein graues Aufblitzen
+  beim Antippen, Knöpfe und Tab-Leiste lassen sich nicht markieren, `interactive-widget=resizes-content`
+  (die Tastatur verkleinert die Ansicht auch unter Android).
+- Tippflächen: das × zum Löschen einer Schicht hat eine 44px-Trefferfläche (Zeichen bleibt 36px),
+  Wochentag-Chips und Haken-Zeilen sind 44px hoch.
+- `prefers-reduced-motion`: wer weniger Bewegung eingestellt hat, bekommt keine Übergänge, keinen
+  Druck-Versatz an Knöpfen und keinen Seitenübergang.
+- Tests: 128 Prüfungen (Rückgängig: Einmaligkeit, Ablauf, Token, fremde Ziele, Entscheidung des Admins).
+
 ## [1.28.0] - 2026-11-04
 
 Barrierefreiheit und Bedienung nach einer UI/UX-Prüfung der neuen Seiten (WCAG 2.2 AA). Keine Migration.
