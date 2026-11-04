@@ -6,6 +6,24 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.30.1] - 2026-11-04
+
+Fund einer Stresstest-Runde mit Worst-Case-Daten (lange Namen und E-Mails, ein Buchstabe, Emoji, 50 und 0
+benötigte Plätze, Nachtschicht, sechs Bewerber auf einer Schicht) bei 375px und bei 100, 150 und 200 %
+Schriftgröße. Keine Migration.
+
+### Behoben
+- Bei 150 % Systemschrift (oder Browser-Zoom) lief das Paar "Annehmen/Ablehnen" im Schichtplan rechts aus dem
+  Ticket und machte die Seite seitlich scrollbar; es bricht jetzt um. Bei 200 % schob außerdem ein langer Name
+  ("Aleksandra Wiśniewska-Kowalczyk-Montgomery III") den Knopf "Entfernen" hinaus; die Zeile bricht jetzt um.
+- Fokusring: Tastaturfokus hat jetzt einen eigenen Ring in der Palette (Tinte, beidseitig von Papier gefasst,
+  sichtbar auf Papier und auf dem dunklen Tresen) statt des Browser-Standards.
+
+### Geändert
+- Druck-Rückmeldung: Knöpfe federn weich zurück (120 ms, `ease-out`), Tab-Leiste, Lückenliste, Wochentag-Chips
+  und eingeklappte Bereiche färben sich beim Antippen kurz ein.
+- Am Handy blieb ohne Hover keine Rückmeldung für diese Flächen; jetzt gibt `:active` sie.
+
 ## [1.30.0] - 2026-11-04
 
 Feinschliff aus der zweiten Hälfte der Liste (Handy-Details). Keine Migration.

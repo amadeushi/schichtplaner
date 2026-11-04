@@ -166,6 +166,7 @@ function navActive(string $path, array $matches): bool
     /* nie mitten im Wort brechen (z.B. eine Tabellenzelle, die sonst Umbruch erzwingt) -
        ein Button-Label bricht höchstens zwischen Wörtern, wie "ZURÜCKSETZEN" ungeteilt. */
     overflow-wrap: normal; word-break: normal;
+    transition: transform 120ms var(--ease-out), background-color 120ms var(--ease-out);
   }
   .btn:active { transform: translateY(1px); }
 
@@ -194,6 +195,7 @@ function navActive(string $path, array $matches): bool
   a, button, summary, label.weekday-pick { touch-action: manipulation; }
   .btn, nav.tabbar a, summary, label.weekday-pick { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   /* Kleine Icon-Knöpfe: Trefferfläche größer als das Zeichen (36px + 2 x 4px = 44px), ohne das Layout zu ändern. */
+  nav.tabbar a:active, .gap-board a:active, label.weekday-pick:active, summary:active { background: var(--confirm-wash); }
   .btn.icon-only { position: relative; }
   .btn.icon-only::after { content: ""; position: absolute; inset: -0.25rem; }
 
@@ -252,6 +254,12 @@ function navActive(string $path, array $matches): bool
   }
   input:focus, select:focus, textarea:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
   ::placeholder { color: var(--ink-soft); opacity: 1; }
+  /* Fokusring aus der Palette statt Browser-Standard: Tinte, beidseitig von Papier gefasst - sichtbar auf Papier und auf dem dunklen Tresen. */
+  a:focus-visible, button:focus-visible, summary:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 4px var(--paper);
+  }
+  main:focus-visible { outline: none; box-shadow: none; }
+  label.weekday-pick:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; box-shadow: 0 0 0 4px var(--paper); }
   input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent-color: var(--stamp); }
   textarea { min-height: 5rem; }
   select.select-inline { width: auto; min-height: 2.25rem; padding: 0.4rem 0.5rem; font-size: 0.85rem; }
@@ -422,7 +430,7 @@ function navActive(string $path, array $matches): bool
     width: 10rem; height: 10rem; border-radius: 50%; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.35rem;
     cursor: pointer; font-family: var(--font-sans); -webkit-tap-highlight-color: transparent;
-    transition: transform 0.15s ease; background: var(--paper);
+    transition: transform 0.15s var(--ease-out); background: var(--paper);
   }
   .duty-stamp:active { transform: scale(0.96); }
   .duty-stamp.off-duty {

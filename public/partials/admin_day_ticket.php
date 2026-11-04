@@ -76,8 +76,8 @@
           </div>
 
           <?php foreach ($assigned as $person): ?>
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.85rem;">
-              <span>&#10003; <?= e($person['name']) ?><?php if ($isAbsentOnDay((int)$person['id'])): ?> <span class="muted">(abwesend)</span><?php endif; ?></span>
+            <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.4rem;font-size:0.85rem;">
+              <span style="min-width:0;overflow-wrap:anywhere;">&#10003; <?= e($person['name']) ?><?php if ($isAbsentOnDay((int)$person['id'])): ?> <span class="muted">(abwesend)</span><?php endif; ?></span>
               <form class="inline" method="post" data-confirm="<?= e($person['name']) ?> von &quot;<?= e($sh['title']) ?>&quot; entfernen?">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="unassign">
@@ -93,7 +93,7 @@
             <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.4rem;font-size:0.85rem;">
               <span><span class="badge pending" style="margin-right:0.4rem;">Bewerbung</span><?= e($p['name']) ?><?php if ($isAbsentOnDay($p['user_id'])): ?> <span class="muted">(abwesend)</span><?php elseif ($hint = $availHint($p['user_id'], $sh)): ?> <span class="muted">(<?= e($hint) ?>)</span><?php endif; ?></span>
               <?php if (!shiftDayHasPassed($sh['shift_date'])): ?>
-              <span style="display:flex;gap:0.4rem;">
+              <span style="display:flex;gap:0.4rem;flex-wrap:wrap;">
                 <form class="inline" method="post">
                   <?= csrfField() ?>
                   <input type="hidden" name="action" value="decide">
