@@ -331,6 +331,16 @@ function shiftTimeHtml(string $start, string $end, bool $compact = false): strin
         . '<span class="shift-end">bis ' . e($end) . '</span></span>';
 }
 
+/**
+ * Ob der Kalendertag einer Schicht schon vorbei ist (gestern oder früher). Für vergangene Tage gibt es
+ * keine Bewerbung, keinen Rundruf und keine Zurückziehen-Taste mehr: ihre Schichten sind nur noch Verlauf.
+ * Heute zählt noch nicht als vergangen, auch wenn die Schicht schon begonnen hat.
+ */
+function shiftDayHasPassed(string $shiftDate, ?string $today = null): bool
+{
+    return $shiftDate < ($today ?? date('Y-m-d'));
+}
+
 /** Ab so vielen Stunden vor Schichtbeginn gilt eine unbesetzte Schicht als dringend (Stempel-Rot, siehe DESIGN.md "The One Stamp Rule"). */
 const STAFFING_URGENT_HOURS = 48;
 

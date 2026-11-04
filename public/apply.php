@@ -23,6 +23,11 @@ if (!$shift) {
     redirect($backTo);
 }
 
+if (shiftDayHasPassed($shift['shift_date'])) {
+    flash('error', 'Für vergangene Tage kann man sich nicht mehr bewerben.');
+    redirect($backTo);
+}
+
 if ((int)$shift['approved_count'] >= (int)$shift['needed_count']) {
     flash('error', 'Diese Schicht ist bereits voll besetzt.');
     redirect($backTo);

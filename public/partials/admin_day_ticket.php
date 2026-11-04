@@ -134,7 +134,7 @@
               <?php else: ?>
                 <span></span>
               <?php endif; ?>
-              <?php if (!$full && $sh['status'] === 'open' && $sh['published_at'] !== null): ?>
+              <?php if (!$full && $sh['status'] === 'open' && $sh['published_at'] !== null && !shiftDayHasPassed($sh['shift_date'])): ?>
                 <form class="inline" method="post" data-confirm="Allen verfügbaren, noch nicht eingeplanten Mitarbeitern eine dringende Erinnerung zu &quot;<?= e($sh['title']) ?>&quot; am <?= e(formatDateDe($d)) ?> schicken?">
                   <?= csrfField() ?>
                   <input type="hidden" name="action" value="urgent_reminder">

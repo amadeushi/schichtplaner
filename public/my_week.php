@@ -56,8 +56,8 @@ function dayRows(array $dayShifts, array $availability): array
         if ($sh['my_status'] === 'approved') {
             $rows[] = ['shift' => $sh, 'kind' => 'confirmed'];
         } elseif ($sh['my_status'] === 'pending') {
-            $rows[] = ['shift' => $sh, 'kind' => 'pending'];
-        } elseif ($canApply && $sh['status'] === 'open' && $free > 0) {
+            $rows[] = ['shift' => $sh, 'kind' => 'pending', 'past' => shiftDayHasPassed($sh['shift_date'])];
+        } elseif ($canApply && $sh['status'] === 'open' && $free > 0 && !shiftDayHasPassed($sh['shift_date'])) {
             // gap = null für bereits begonnene Schichten: Vergangenes wird nicht hervorgehoben.
             // Wer für den Tag "nicht verfügbar"/"erst ab" eingetragen hat, bekommt keine Aufforderung,
             // sondern eine ruhige Erklärung ('quiet') - nichts verschwindet still, bewerben bleibt möglich.
@@ -223,12 +223,14 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
               <a href="/calendar_feed.php?token=<?= e($calendarToken) ?>&amp;shift_id=<?= (int)$sh['id'] ?>" class="btn small secondary">Kalender</a>
             <?php elseif ($row['kind'] === 'pending'): ?>
               <div class="badge pending" style="margin-bottom:0.4rem;">Angefragt</div><br>
+              <?php if (empty($row['past'])): ?>
               <form class="inline" method="post" action="/withdraw.php">
                 <?= csrfField() ?>
                 <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                 <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
                 <button type="submit" class="btn small secondary">Zurückziehen</button>
               </form>
+              <?php endif; ?>
             <?php elseif ($row['kind'] === 'open'): ?>
               <form class="inline" method="post" action="/apply.php">
                 <?= csrfField() ?>

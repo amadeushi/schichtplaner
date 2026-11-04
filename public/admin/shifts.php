@@ -245,6 +245,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash('error', 'Für diese Schicht ist gerade kein Rundruf möglich (nicht veröffentlicht oder nicht offen).');
             redirect($backTo);
         }
+        if (shiftDayHasPassed($shift['shift_date'])) {
+            flash('error', 'Für vergangene Tage gibt es keinen Rundruf mehr.');
+            redirect($backTo);
+        }
         if ((int)$shift['approved_count'] >= (int)$shift['needed_count']) {
             flash('error', 'Diese Schicht ist bereits voll besetzt.');
             redirect($backTo);

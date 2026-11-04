@@ -295,6 +295,12 @@ $longestLine = max(array_map('strlen', explode("\r\n", $ics)));
 check('ICS: keine Zeile über 75 Oktette (Folding bleibt gültig)', $longestLine <= 75, 'längste Zeile: ' . $longestLine);
 check('ICS: Zeilenende ist CRLF', !preg_match('/(?<!\r)\n/', $ics));
 
+// --- Vergangene Tage: keine Bewerbung, kein Rundruf ---
+same('Vergangen: gestern ist vorbei', true, shiftDayHasPassed('2026-11-03', '2026-11-04'));
+same('Vergangen: heute ist noch nicht vorbei (auch wenn die Schicht begonnen hat)', false, shiftDayHasPassed('2026-11-04', '2026-11-04'));
+same('Vergangen: morgen ist nicht vorbei', false, shiftDayHasPassed('2026-11-05', '2026-11-04'));
+same('Vergangen: Monats- und Jahreswechsel', [true, false], [shiftDayHasPassed('2026-12-31', '2027-01-01'), shiftDayHasPassed('2027-01-01', '2026-12-31')]);
+
 // --- Rückgängig statt "Sind Sie sicher?": Bewerbung zurückziehen und Abwesenheit löschen ---
 $_SESSION = [];
 $undoShift = $mkShift('2026-10-27', '10:00', '14:00');

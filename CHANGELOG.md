@@ -6,6 +6,18 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.29.1] - 2026-11-04
+
+### Geändert
+- Vergangene Tage sind nur noch Verlauf: Für Schichten, deren Tag vorbei ist (gestern oder früher),
+  gibt es in "Mein Plan" kein "Bewerben" mehr, und eine noch offene Bewerbung dort zeigt "Angefragt"
+  ohne "Zurückziehen". Der Server lehnt eine Bewerbung für einen vergangenen Tag ebenfalls ab (auch
+  bei einem alten Formular oder einer manuellen Anfrage). Heute zählt noch nicht als vergangen, auch
+  wenn die Schicht schon begonnen hat.
+- Im Admin-Schichtplan fehlt der Knopf "Personal gesucht" für vergangene Tage, und der Rundruf wird
+  für sie auch serverseitig abgelehnt (es gingen sonst Mitteilungen zu einer Schicht raus, die vorbei ist).
+- Funktion `shiftDayHasPassed()` in app/helpers.php, mit Tests (132 Prüfungen).
+
 ## [1.29.0] - 2026-11-04
 
 Feinschliff für das Handy und weniger "Sind Sie sicher?". Keine Migration.
