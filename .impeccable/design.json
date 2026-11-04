@@ -282,7 +282,7 @@
     "rules": [
       {
         "name": "The One Stamp Rule",
-        "body": "Stamp red appears in exactly one register: today, on duty, \"yes,\" or an admin-posted urgent notice (.notice-board) — all four read as the order rail getting something stamped onto it that needs immediate attention. A destructive action (delete, remove assignment, logout, decline) never borrows it — that is danger (#b3261e), a separate, visually adjacent but distinct token. Rationed by time like the admin's 'Personal gesucht' button: a staffing gap (.badge.gap-count) is achromatic with a dashed rule and only earns the stamp (.urgent) within STAFFING_URGENT_HOURS (48 h) of the shift's start.",
+        "body": "Stamp red appears in exactly one register: today, on duty, \"yes,\" or an admin-posted urgent notice (.notice-board) — all four read as the order rail getting something stamped onto it that needs immediate attention. A destructive action (delete, remove assignment, logout, decline) never borrows it — that is danger (#b3261e), a separate, visually adjacent but distinct token. Text in stamp red uses stamp-ink (#a92c17, 5.55:1 on stamp-wash); control borders use control-line (#8c7f63, 3.56:1). Rationed by time like the admin's 'Personal gesucht' button: a staffing gap (.badge.gap-count) is achromatic with a dashed rule and only earns the stamp (.urgent) within STAFFING_URGENT_HOURS (48 h) of the shift's start.",
         "section": "colors"
       },
       {

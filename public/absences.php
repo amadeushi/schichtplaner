@@ -124,7 +124,7 @@ require __DIR__ . '/partials/header.php';
   <form method="post">
     <?= csrfField() ?>
     <input type="hidden" name="action" value="save_availability">
-    <div class="avail-list">
+    <div class="avail-list" role="group" aria-label="Feste Zeiten pro Wochentag">
     <?php foreach (weekdayNamesDe() as $wd => $dayName): ?>
       <?php $row = $myAvailability[$wd] ?? null; $mode = $row['mode'] ?? 'any'; ?>
       <div class="avail-row">

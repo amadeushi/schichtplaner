@@ -455,17 +455,17 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
 $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht in der angezeigten Woche liegt
 ?>
 <h1>Schichtplan</h1>
-<p class="muted" style="color:var(--surround-ink-soft);"><a href="/admin/calendar.php?date=<?= e($weekStart) ?>" style="color:var(--surround-ink);text-decoration:underline;">Kalenderansicht &rsaquo;</a> (nur am Desktop, zum Umsortieren per Drag &amp; Drop)</p>
+<p class="muted" style="color:var(--surround-ink-soft);"><a href="/admin/calendar.php?date=<?= e($weekStart) ?>" style="color:var(--surround-ink);text-decoration:underline;display:inline-block;padding:0.4rem 0;">Kalenderansicht &rsaquo;</a><span class="desktop-only-hint"> (nur am Desktop, zum Umsortieren per Drag &amp; Drop)</span></p>
 
 <?php require __DIR__ . '/../partials/urgent_notice.php'; ?>
 
 <div class="week-nav">
-  <a class="btn secondary small" href="?date=<?= e($prevWeek) ?>">&lsaquo;</a>
+  <a class="btn secondary" href="?date=<?= e($prevWeek) ?>" aria-label="Vorherige Woche">&lsaquo;</a>
   <div class="week-nav-label">
     <strong>KW <?= e($weekNumber) ?></strong>
     <span class="muted"><?= e(formatDateDe($weekStart)) ?> &ndash; <?= e(formatDateDe($weekEnd)) ?></span>
   </div>
-  <a class="btn secondary small" href="?date=<?= e($nextWeek) ?>">&rsaquo;</a>
+  <a class="btn secondary" href="?date=<?= e($nextWeek) ?>" aria-label="Nächste Woche">&rsaquo;</a>
 </div>
 
 <?php if ($draftCount > 0 || $pendingNotifyCount > 0): ?>

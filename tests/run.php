@@ -295,6 +295,47 @@ $longestLine = max(array_map('strlen', explode("\r\n", $ics)));
 check('ICS: keine Zeile über 75 Oktette (Folding bleibt gültig)', $longestLine <= 75, 'längste Zeile: ' . $longestLine);
 check('ICS: Zeilenende ist CRLF', !preg_match('/(?<!\r)\n/', $ics));
 
+// --- Barrierefreiheit/Design-Tokens: Kontrast der Farbpaare und Regeln für Bedienelemente ---
+$luminance = function (string $hex): float {
+    $hex = ltrim($hex, '#');
+    $sum = 0.0;
+    foreach ([0.2126, 0.7152, 0.0722] as $i => $weight) {
+        $v = hexdec(substr($hex, $i * 2, 2)) / 255;
+        $sum += $weight * ($v <= 0.03928 ? $v / 12.92 : (($v + 0.055) / 1.055) ** 2.4);
+    }
+    return $sum;
+};
+$contrast = function (string $a, string $b) use ($luminance): float {
+    $la = $luminance($a) + 0.05;
+    $lb = $luminance($b) + 0.05;
+    return max($la, $lb) / min($la, $lb);
+};
+$headerCss = (string)file_get_contents(__DIR__ . '/../public/partials/header.php');
+$token = function (string $name) use ($headerCss): string {
+    preg_match('/--' . preg_quote($name, '/') . ':\s*(#[0-9a-fA-F]{6})/', $headerCss, $m);
+    return $m[1] ?? '#000000';
+};
+check('Kontrast: Stempel-Text auf Stempel-Tönung mindestens 4,5:1 (WCAG 1.4.3)', $contrast($token('stamp-ink'), $token('stamp-wash')) >= 4.5,
+    'ist ' . round($contrast($token('stamp-ink'), $token('stamp-wash')), 2));
+check('Kontrast: Stempel-Text auf Papier mindestens 4,5:1', $contrast($token('stamp-ink'), $token('paper')) >= 4.5);
+check('Kontrast: Feldrand auf Papier mindestens 3:1 (WCAG 1.4.11)', $contrast($token('control-line'), $token('paper')) >= 3.0,
+    'ist ' . round($contrast($token('control-line'), $token('paper')), 2));
+check('Kontrast: Grau-Text auf Papier und auf Tönung mindestens 4,5:1',
+    $contrast($token('ink-soft'), $token('paper')) >= 4.5 && $contrast($token('ink-soft'), $token('confirm-wash')) >= 4.5);
+check('Kontrast: Text auf dem Tresen (surround-ink-soft auf dunklem Verlaufsanfang) mindestens 4,5:1',
+    $contrast($token('surround-ink-soft'), $token('paper-surround-top')) >= 4.5);
+foreach (['public/partials/admin_day_ticket.php', 'public/admin/shifts.php', 'public/admin/calendar.php', 'public/my_week.php', 'public/absences.php'] as $rel) {
+    foreach (file(__DIR__ . '/../' . $rel) as $i => $line) {
+        if (preg_match('/<select\b/', $line) && !preg_match('/aria-label=|\bid="/', $line)) {
+            check('Auswahlfeld hat einen Namen: ' . $rel . ':' . ($i + 1), false, trim($line));
+        }
+        if (preg_match('/class="btn small stamp-btn"/', $line)) {
+            check('Hauptaktion (Stempel-Knopf) ist nicht "small", also 44px: ' . $rel . ':' . ($i + 1), false, trim($line));
+        }
+    }
+}
+check('Auswahlfeld- und Knopf-Scan lief', true);
+
 // --- XSS-Regression: kein interpoliertes PHP in einem onsubmit-confirm('...')-Handler ---
 // (Stored XSS: htmlspecialchars schützt das Attribut, aber der Browser dekodiert Entities vor
 // der JS-Ausführung. Stattdessen data-confirm verwenden, siehe partials/header.php.)

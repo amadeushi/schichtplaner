@@ -23,7 +23,7 @@
     $tabs[] = ['href' => '/more.php', 'label' => 'Mehr', 'match' => ['/more.php', '/profile.php']];
     $currentScript = $scriptName ?? ($_SERVER['SCRIPT_NAME'] ?? '');
 ?>
-<nav class="tabbar">
+<nav class="tabbar" aria-label="Hauptnavigation">
   <div class="tabbar-inner">
     <?php foreach ($tabs as $tab): ?>
       <a href="<?= e($tab['href']) ?>" class="<?= navActive($currentScript, $tab['match']) ? 'active' : '' ?>"><?= e($tab['label']) ?></a>
@@ -31,5 +31,19 @@
   </div>
 </nav>
 <?php endif; ?>
+<script>
+  // "Mehr" im Schichtplan: seltene Aktionen einklappen. Ohne Skript bleiben sie sichtbar.
+  document.querySelectorAll('[data-more-toggle]').forEach(function (button) {
+    var body = document.getElementById(button.getAttribute('aria-controls'));
+    if (!body) { return; }
+    button.hidden = false;
+    body.hidden = true;
+    button.addEventListener('click', function () {
+      var opening = body.hidden;
+      body.hidden = !opening;
+      button.setAttribute('aria-expanded', opening ? 'true' : 'false');
+    });
+  });
+</script>
 </body>
 </html>

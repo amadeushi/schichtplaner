@@ -38,6 +38,8 @@ function navActive(string $path, array $matches): bool
     --ink-line-strong: #b9ad91;
     --stamp: #c8391f;
     --stamp-wash: #f7e3dc;
+    --stamp-ink: #a92c17;     /* Stempel-Text auf stamp-wash: 5,55:1 statt 4,18:1 von --stamp (WCAG 1.4.3) */
+    --control-line: #8c7f63;  /* Rand von Eingabefeldern: 3,56:1 auf Papier statt 2,01:1 von --ink-line-strong (WCAG 1.4.11) */
     --danger: #b3261e;
     --danger-wash: #f7e3dc;
     --confirm-wash: #eee8d8;
@@ -64,6 +66,13 @@ function navActive(string $path, array $matches): bool
     min-height: 100vh;
   }
   a { color: inherit; }
+  /* Sticky Kopfleiste + feste Tab-Leiste dürfen ein per Tastatur fokussiertes Feld nicht verdecken (WCAG 2.4.11). */
+  html { scroll-padding-top: 4rem; scroll-padding-bottom: 5rem; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  /* Sprunglink zum Inhalt: unsichtbar, bis er per Tab Fokus bekommt (WCAG 2.4.1). */
+  .skip-link { position: absolute; left: 0.5rem; top: -4rem; z-index: 40; padding: 0.7rem 1rem; background: var(--paper); color: var(--ink); border: 1.5px solid var(--ink); border-radius: 3px; font-weight: 700; text-decoration: none; }
+  .skip-link:focus { top: 0.5rem; }
+  main:focus { outline: none; }
 
   /* Kopfleiste: schmal, nur Marke + Kontext */
   header.topbar {
@@ -85,7 +94,7 @@ function navActive(string $path, array $matches): bool
     border: 1.5px solid var(--stamp); overflow: hidden;
   }
   .brand-emblem img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  header.topbar .who { font-size: 0.8rem; color: var(--ink-soft); text-decoration: none; }
+  header.topbar .who { font-size: 0.85rem; color: var(--ink-soft); text-decoration: none; display: inline-flex; align-items: center; min-height: 2.25rem; }
 
   main { max-width: 640px; margin: 0 auto; padding: 1rem 1rem 1.5rem; }
   /* Ausnahme für admin/calendar.php: 7 Tagspalten + Namensspalte brauchen mehr als die
@@ -94,7 +103,7 @@ function navActive(string $path, array $matches): bool
   main.wide { max-width: 1200px; }
 
   .site-footer { margin-top: 1.5rem; text-align: center; font-size: 0.72rem; color: var(--surround-ink-soft); letter-spacing: 0.02em; }
-  .site-footer a { color: var(--surround-ink); text-decoration: underline; text-underline-offset: 2px; }
+  .site-footer a { color: var(--surround-ink); text-decoration: underline; text-underline-offset: 2px; display: inline-block; padding: 0.45rem 0.2rem; }
 
   h1 { font-size: 1.3rem; margin: 0.2rem 0 1rem; letter-spacing: -0.01em; color: var(--surround-ink); }
   .card h1 { color: var(--ink); }
@@ -150,7 +159,7 @@ function navActive(string $path, array $matches): bool
     display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;
     box-sizing: border-box; min-height: 2.75rem; padding: 0.55rem 1.1rem; border-radius: 3px;
     border: 1.5px solid var(--ink); background: var(--ink); color: var(--paper);
-    cursor: pointer; font-size: 0.88rem; font-weight: 700; text-decoration: none;
+    cursor: pointer; font-size: 0.85rem; font-weight: 700; text-decoration: none;
     text-transform: uppercase; font-family: var(--font-sans); letter-spacing: 0.04em;
     -webkit-tap-highlight-color: transparent;
     /* nie mitten im Wort brechen (z.B. eine Tabellenzelle, die sonst Umbruch erzwingt) -
@@ -166,7 +175,7 @@ function navActive(string $path, array $matches): bool
   .btn.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
   .btn.danger:hover { background: var(--danger-wash); }
   /* .small bleibt kompakt für dichte Reihen, aber nie unter 36px Kantenlänge */
-  .btn.small { min-height: 2.25rem; min-width: 2.25rem; padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+  .btn.small { min-height: 2.25rem; min-width: 2.25rem; padding: 0.4rem 0.75rem; font-size: 0.85rem; }
   /* Für einen Umschalt-Button, dessen zwei Zustände unterschiedlich lange Labels haben
      (z.B. "Aktiv"/"Gesperrt") - gleiche Breite für beide Zustände statt springender Spalte.
      Muss .btn.small (2 Klassen) an Spezifität schlagen, sonst gewinnt dessen min-width. */
@@ -182,20 +191,21 @@ function navActive(string $path, array $matches): bool
      eigene Marker, kein gezeichnetes Icon. */
   .tpl-editor { border: 1px solid var(--ink-line); border-radius: 3px; padding: 0.7rem 0.9rem; margin-bottom: 0.6rem; }
   .tpl-editor + .tpl-editor { margin-top: 0.6rem; }
-  .tpl-editor summary { cursor: pointer; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; }
+  .tpl-editor summary { cursor: pointer; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; }
   .tpl-editor summary .badge { padding: 0.1rem 0.4rem; }
   .tpl-editor form { margin-top: 0.85rem; }
-  .tpl-editor textarea { font-family: var(--font-mono); font-size: 0.82rem; }
+  .tpl-editor textarea { font-family: var(--font-mono); font-size: 0.85rem; }
 
   input, select, textarea {
-    width: 100%; padding: 0.55rem 0.6rem; border: 1.5px solid var(--ink-line-strong);
+    width: 100%; padding: 0.55rem 0.6rem; border: 1.5px solid var(--control-line);
     border-radius: 3px; font-size: 0.95rem; font-family: inherit; background: var(--paper); color: var(--ink);
     box-sizing: border-box; min-height: 2.75rem;
   }
   input:focus, select:focus, textarea:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+  ::placeholder { color: var(--ink-soft); opacity: 1; }
   input[type="checkbox"], input[type="radio"] { width: auto; min-height: 0; accent-color: var(--stamp); }
   textarea { min-height: 5rem; }
-  select.select-inline { width: auto; min-height: 2.25rem; padding: 0.4rem 0.5rem; font-size: 0.82rem; }
+  select.select-inline { width: auto; min-height: 2.25rem; padding: 0.4rem 0.5rem; font-size: 0.85rem; }
   /* Kompaktes Eingabefeld für Tabellenzeilen (Mobilnummer in admin/users.php) - wie select-inline
      kein Unterschreiten der 36px-Kante, nur schmaler als das Standardfeld. */
   input.input-inline { width: 10.5rem; min-height: 2.25rem; padding: 0.4rem 0.5rem; font-size: 0.9rem; }
@@ -214,7 +224,7 @@ function navActive(string $path, array $matches): bool
   .weekday-picks { display: flex; flex-wrap: wrap; gap: 0.4rem; }
   label.weekday-pick {
     display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; min-height: 2.25rem; padding: 0 0.75rem;
-    border: 1.5px solid var(--ink-line-strong); border-radius: 3px; color: var(--ink);
+    border: 1.5px solid var(--control-line); border-radius: 3px; color: var(--ink);
     font-size: 0.78rem; font-weight: 700; cursor: pointer;
   }
   label.weekday-pick:has(input:checked) { border-color: var(--ink); background: var(--confirm-wash); }
@@ -246,11 +256,11 @@ function navActive(string $path, array $matches): bool
   /* Fehlende Besetzung ("1 fehlt"): achromatisch mit gestricheltem Strich = "noch nicht final",
      wie .badge.pending. Erst innerhalb von STAFFING_URGENT_HOURS (siehe helpers.php) kommt
      .urgent dazu und damit der Stempel - muss deshalb VOR der Stempel-Regel unten stehen. */
-  .badge.gap-count { color: var(--ink); border-bottom-style: dashed; border-bottom-color: var(--ink-line-strong); }
+  .badge.gap-count, .badge.fill-count { color: var(--ink); border-bottom-style: dashed; border-bottom-color: var(--ink-line-strong); }
   /* Der Stempel-Zustand bleibt die eine gefüllte Ausnahme - der soll wie ein echter
      Stempelabdruck wirken, nicht wie ein Kassenbon-Vermerk (siehe "The One Stamp Rule"). */
   .badge.today, .badge.active-duty, .badge.urgent {
-    color: var(--stamp); background: var(--stamp-wash); border: 1.5px solid var(--stamp);
+    color: var(--stamp-ink); background: var(--stamp-wash); border: 1.5px solid var(--stamp);
     border-radius: 3px; padding: 0.15rem 0.5rem; line-height: normal;
   }
 
@@ -272,7 +282,7 @@ function navActive(string $path, array $matches): bool
   .gap-board a:hover .gap-title { text-decoration: underline; }
   /* Tag über Uhrzeit gestapelt statt nebeneinander: so bleibt dem Titel in 375px genug Breite. */
   .gap-slot { display: flex; flex-direction: column; flex-shrink: 0; min-width: 4.6rem; line-height: 1.25; }
-  .gap-when { font-weight: 700; font-size: 0.82rem; color: var(--ink-soft); }
+  .gap-when { font-weight: 700; font-size: 0.85rem; color: var(--ink-soft); }
   .gap-time { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.05rem; }
   .gap-title { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
   .gap-board summary { min-height: 2.75rem; display: flex; align-items: center; cursor: pointer; font-size: 0.85rem; color: var(--ink-soft); }
@@ -285,6 +295,8 @@ function navActive(string $path, array $matches): bool
   /* Der Bon selbst: Zeile mit Lücke bekommt Papier-Tönung, dringende die Stempel-Tönung. */
   .ticket-row.gap { scroll-margin-top: 4rem; background: var(--confirm-wash); margin: 0 -0.5rem; padding-left: 0.5rem; padding-right: 0.5rem; }
   .ticket-row.gap.urgent { background: var(--stamp-wash); }
+  /* Heute ist die Karte schon über den roten Rand markiert: nicht dieselbe Dringlichkeit noch einmal rot hinterlegen. */
+  .ticket.today .ticket-row.gap.urgent { background: var(--confirm-wash); }
 
   /* Publish-Leiste: Entwürfe/ausstehende Änderungen für die Woche, gebündelt statt sofort
      verschickt (siehe admin/shifts.php Aktion 'publish'). Card-artig, damit ink/ink-soft passen. */
@@ -315,7 +327,7 @@ function navActive(string $path, array $matches): bool
   .settings-jump a:hover, .settings-jump a:focus-visible { color: var(--surround-ink); border-bottom-color: var(--surround-ink-soft); }
   .ticket.hero { padding: 1.4rem 1.4rem 1.6rem; }
   .ticket.hero .ticket-day { font-size: 1.25rem; }
-  .ticket.hero .ticket-date { font-size: 0.88rem; }
+  .ticket.hero .ticket-date { font-size: 0.85rem; }
   .ticket {
     background: var(--paper); border: 1.5px solid var(--ink-line); border-radius: 2px;
     position: relative; padding: 1.1rem 1.1rem 1.25rem; margin-top: 8px;
@@ -336,11 +348,15 @@ function navActive(string $path, array $matches): bool
   .ticket.today, .ticket.on-duty { border-color: var(--stamp); }
   .ticket-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin-bottom: 0.5rem; }
   .ticket-day { font-weight: 700; font-size: 0.95rem; }
-  .ticket-date { font-family: var(--font-mono); color: var(--ink-soft); font-size: 0.8rem; }
+  .ticket-date { font-family: var(--font-mono); color: var(--ink-soft); font-size: 0.85rem; }
   .ticket-row { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.55rem 0; border-top: 1px dashed var(--ink-line); }
   .ticket-row:first-of-type { border-top: none; }
   .ticket-time { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 0.92rem; white-space: nowrap; }
-  .ticket-meta { font-size: 0.82rem; color: var(--ink-soft); }
+  .ticket-meta { font-size: 0.85rem; color: var(--ink-soft); }
+  /* Titel, Zeit und Ort als eigene Teile mit Abstand statt Mittelpunkt-Trennung: bricht nie mit hängendem "·" um. */
+  .ticket-title-line { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.55rem; row-gap: 0.1rem; min-width: 0; }
+  /* Seltene Aktionen (Status, Löschen) hinter "Mehr"; ohne Skript bleiben sie sichtbar. */
+  [data-more-body][hidden] { display: none; }
   /* Schichtzeit: der Beginn ist die eine Zahl, die Mitarbeiter am Bon zuerst suchen - groß,
      fett, in Druckerschwarz; das Ende ("bis 18:00") tritt klein und weich dahinter zurück.
      Stufen aus der bestehenden Skala (Headline 1.3rem / Title 0.95rem / Mono 0.9rem), Register-
@@ -352,7 +368,7 @@ function navActive(string $path, array $matches): bool
   .shift-time.compact { display: inline-flex; margin-bottom: 0; }
   .shift-time.compact .shift-start { font-size: 0.95rem; line-height: 1.3; }
   .shift-time.compact .shift-end { font-size: 0.9rem; }
-  .ticket-empty { color: var(--ink-soft); font-size: 0.88rem; padding: 0.3rem 0; }
+  .ticket-empty { color: var(--ink-soft); font-size: 0.85rem; padding: 0.3rem 0; }
 
   .duty-stamp {
     width: 10rem; height: 10rem; border-radius: 50%; margin: 0 auto;
@@ -427,6 +443,8 @@ function navActive(string $path, array $matches): bool
 
   /* Admin-Wochenraster (weniger Komposition, erbt Tokens) */
   .week-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .week-nav .btn { min-width: 2.75rem; padding: 0.4rem 0.6rem; }
+  @media (max-width: 640px) { .desktop-only-hint { display: none; } }
   .week-nav-label { text-align: center; display: flex; flex-direction: column; gap: 0.1rem; color: var(--surround-ink); }
   .week-nav-label .muted { color: var(--surround-ink-soft); }
   .grid-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -526,6 +544,7 @@ function navActive(string $path, array $matches): bool
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main">Zum Inhalt springen</a>
 <script>
   // Sichere Ersetzung für ein per PHP interpoliertes onsubmit="return confirm('...')":
   // htmlspecialchars() schützt zwar das umgebende HTML-Attribut,
@@ -558,7 +577,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     <a href="/more.php" class="who"><?= e($user['name']) ?></a>
   <?php endif; ?>
 </header>
-<main<?= !empty($mainWide) ? ' class="wide"' : '' ?>>
+<main id="main" tabindex="-1"<?= !empty($mainWide) ? ' class="wide"' : '' ?>>
 <?php foreach (getFlashes() as $f): ?>
   <div class="flash <?= e($f['type']) ?>"><?= e($f['message']) ?></div>
 <?php endforeach; ?>

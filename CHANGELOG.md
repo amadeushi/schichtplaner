@@ -6,6 +6,38 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.28.0] - 2026-11-04
+
+Barrierefreiheit und Bedienung nach einer UI/UX-Prüfung der neuen Seiten (WCAG 2.2 AA). Keine Migration.
+
+### Behoben
+- Auswahlfelder ohne Namen: "Mitarbeiter zuweisen" und "Status" im Schichtplan tragen jetzt
+  `aria-label` mit dem Schichttitel; ein Test sucht künftig jedes unbenannte `<select>`.
+- Kontrast: roter Text auf der Stempel-Tönung ("2 fehlen", "Heute", "Wichtig") hat jetzt 5,55:1
+  statt 4,18:1 (neues Token `--stamp-ink`); der Rand von Eingabefeldern 3,56:1 statt 2,01:1
+  (`--control-line`); Platzhalter 5,29:1 statt 4,17:1. Ein Test rechnet die Farbpaare aus
+  `header.php` nach.
+- Fokus nicht verdeckt: `scroll-padding` oben und unten, damit die feste Kopf- und Tab-Leiste kein
+  fokussiertes Feld überdeckt; neuer Sprunglink "Zum Inhalt springen" (nur bei Fokus sichtbar).
+- Zu kleine Links: Name oben rechts, Versionslink im Fuß, "Kalenderansicht" und die Zeile
+  "Neue Schicht anlegen" haben jetzt mindestens 24px Trefferfläche.
+- Zähler "0/2" im Schichtplan hatte ein führendes "–" und las sich wie "minus null"; jetzt ohne
+  Zeichen, für Screenreader "besetzt".
+- Trennzeichen "·" blieb am Zeilenende stehen, wenn der Ort umbrach; Titel, Zeit und Ort stehen
+  jetzt mit Abstand nebeneinander.
+
+### Geändert
+- Hauptaktionen sind 44px hoch statt 36px: "Bewerben", "Annehmen", "Ablehnen",
+  "Personal gesucht" und die Wochenpfeile.
+- Schichtplan: Status und Löschen liegen hinter "Mehr" (ohne Skript sichtbar), das Ticket ist rund
+  40px kürzer. Der Hinweis "nur am Desktop" erscheint auf dem Handy nicht mehr.
+- "Diese Woche exportieren (.ics)" steht unter dem Plan statt über der Lückenliste.
+- Die dringende Zeile im roten Heute-Ticket ist nicht mehr zusätzlich rot hinterlegt.
+- Tagesnamen sind Überschriften (Ebene 2), die Wochentage in "Feste Zeiten" eine benannte
+  Gruppe, die Tab-Leiste heißt "Hauptnavigation", die Wochenpfeile haben Namen.
+- Kleine Schriftstufen zusammengelegt: 0,8 / 0,82 / 0,88 rem sind jetzt 0,85 rem.
+- Tests: 114 Prüfungen.
+
 ## [1.27.0] - 2026-10-16
 
 ### Hinzugefügt

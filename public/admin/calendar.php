@@ -431,7 +431,7 @@ require __DIR__ . '/../partials/header.php';
               <input type="hidden" name="action" value="decide">
               <input type="hidden" name="application_id" value="<?= $p['application_id'] ?>">
               <input type="hidden" name="decision" value="approved">
-              <button type="submit" class="btn small stamp-btn">Annehmen</button>
+              <button type="submit" class="btn stamp-btn">Annehmen</button>
             </form>
             <form method="post" class="inline decide-form">
               <?= csrfField() ?>

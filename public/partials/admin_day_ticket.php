@@ -40,7 +40,7 @@
   <div class="ticket<?= $isToday ? ' today hero' : '' ?>">
     <div class="ticket-head">
       <div>
-        <div class="ticket-day"><?= $isToday ? 'Heute &middot; ' : '' ?><?= e($weekdayNamesFull[$i]) ?></div>
+        <div class="ticket-day" role="heading" aria-level="2"><?= $isToday ? 'Heute &middot; ' : '' ?><?= e($weekdayNamesFull[$i]) ?></div>
         <div class="ticket-date"><?= e(formatDateDe($d)) ?></div>
       </div>
     </div>
@@ -66,13 +66,13 @@
         ?>
         <div class="ticket-row" id="shift-<?= (int)$sh['id'] ?>" style="flex-direction:column;align-items:stretch;gap:0.5rem;scroll-margin-top:5rem;">
           <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem;">
-            <div>
+            <div class="ticket-title-line">
               <strong><?= e($sh['title']) ?></strong>
               <?php if ($sh['published_at'] === null): ?><span class="badge pending">Entwurf</span><?php endif; ?>
-              <span class="ticket-meta mono"> <?= e($sh['start_time']) ?>&ndash;<?= e($sh['end_time']) ?></span>
-              <?php if ($sh['location']): ?><span class="ticket-meta"> &middot; <?= e($sh['location']) ?></span><?php endif; ?>
+              <span class="ticket-meta mono"><?= e($sh['start_time']) ?>&ndash;<?= e($sh['end_time']) ?></span>
+              <?php if ($sh['location']): ?><span class="ticket-meta"><?= e($sh['location']) ?></span><?php endif; ?>
             </div>
-            <span class="badge <?= $full ? 'confirmed' : 'pending' ?>"><?= (int)$sh['approved_count'] ?>/<?= (int)$sh['needed_count'] ?></span>
+            <span class="badge <?= $full ? 'confirmed' : 'fill-count' ?>"><?= (int)$sh['approved_count'] ?>/<?= (int)$sh['needed_count'] ?><span class="visually-hidden"> besetzt</span></span>
           </div>
 
           <?php foreach ($assigned as $person): ?>
@@ -99,7 +99,7 @@
                   <input type="hidden" name="application_id" value="<?= (int)$p['application_id'] ?>">
                   <input type="hidden" name="decision" value="approved">
                   <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                  <button type="submit" class="btn small stamp-btn">Annehmen</button>
+                  <button type="submit" class="btn stamp-btn">Annehmen</button>
                 </form>
                 <form class="inline" method="post">
                   <?= csrfField() ?>
@@ -107,7 +107,7 @@
                   <input type="hidden" name="application_id" value="<?= (int)$p['application_id'] ?>">
                   <input type="hidden" name="decision" value="rejected">
                   <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                  <button type="submit" class="btn small secondary">Ablehnen</button>
+                  <button type="submit" class="btn secondary">Ablehnen</button>
                 </form>
               </span>
             </div>
@@ -123,7 +123,7 @@
                   <input type="hidden" name="action" value="assign">
                   <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                   <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                  <select name="employee_id">
+                  <select name="employee_id" aria-label="Mitarbeiter zuweisen: <?= e($sh['title']) ?>">
                     <option value="">+ zuweisen</option>
                     <?php foreach ($assignable as $e): ?>
                       <option value="<?= (int)$e['id'] ?>"><?= e($e['name']) ?><?php $optHint = $isAbsentOnDay((int)$e['id']) ? 'abwesend' : $availHint((int)$e['id'], $sh); ?><?= $optHint !== '' ? ' (' . e($optHint) . ')' : '' ?></option>
@@ -140,7 +140,7 @@
                   <input type="hidden" name="action" value="urgent_reminder">
                   <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                   <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                  <button type="submit" class="btn small <?= $staffingUrgent ? 'stamp-btn' : 'secondary' ?>">Personal gesucht</button>
+                  <button type="submit" class="btn <?= $staffingUrgent ? 'stamp-btn' : 'secondary' ?>">Personal gesucht</button>
                 </form>
               <?php endif; ?>
             </div>
@@ -149,12 +149,16 @@
                  stehen; .table-actions bricht bei Bedarf um, statt über den Rand zu laufen. -->
             <div class="table-actions" style="justify-content:flex-end;">
               <a class="btn small secondary" href="?edit=<?= (int)$sh['id'] ?>&date=<?= e($weekStart) ?>#edit-shift">Bearbeiten</a>
+              <button type="button" class="btn small secondary" data-more-toggle aria-expanded="false" aria-controls="more-<?= (int)$sh['id'] ?>" hidden>Mehr</button>
+            </div>
+            <!-- Status und Löschen: selten gebraucht, hinter "Mehr" eingeklappt (footer.php); ohne Skript sichtbar. -->
+            <div class="table-actions" id="more-<?= (int)$sh['id'] ?>" data-more-body style="justify-content:flex-end;">
               <form class="inline" method="post" style="display:inline-flex;gap:0.3rem;">
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="status">
                 <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                 <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                <select name="status" class="select-inline">
+                <select name="status" class="select-inline" aria-label="Status: <?= e($sh['title']) ?>">
                   <option value="open" <?= $sh['status'] === 'open' ? 'selected' : '' ?>>Offen</option>
                   <option value="filled" <?= $sh['status'] === 'filled' ? 'selected' : '' ?>>Besetzt</option>
                   <option value="closed" <?= $sh['status'] === 'closed' ? 'selected' : '' ?>>Geschlossen</option>

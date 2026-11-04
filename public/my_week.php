@@ -94,15 +94,12 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
 <?php require __DIR__ . '/partials/urgent_notice.php'; ?>
 
 <div class="week-nav">
-  <a class="btn secondary small" href="?date=<?= e($prevWeek) ?>">&lsaquo;</a>
+  <a class="btn secondary" href="?date=<?= e($prevWeek) ?>" aria-label="Vorherige Woche">&lsaquo;</a>
   <div class="week-nav-label">
     <strong>KW <?= e($weekNumber) ?></strong>
     <span class="muted"><?= e(formatDateDe($weekStart)) ?> &ndash; <?= e(formatDateDe($weekEnd)) ?></span>
   </div>
-  <a class="btn secondary small" href="?date=<?= e($nextWeek) ?>">&rsaquo;</a>
-</div>
-<div style="text-align:right;margin:-0.5rem 0 1rem;">
-  <a href="/calendar_feed.php?token=<?= e($calendarToken) ?>&amp;start=<?= e($weekStart) ?>&amp;end=<?= e($weekEnd) ?>" class="btn small secondary">Diese Woche exportieren (.ics)</a>
+  <a class="btn secondary" href="?date=<?= e($nextWeek) ?>" aria-label="Nächste Woche">&rsaquo;</a>
 </div>
 
 <?php if ($gapItems): ?>
@@ -142,7 +139,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
   <div class="ticket today hero">
     <div class="ticket-head">
       <div>
-        <div class="ticket-day">Heute &middot; <?= e($weekdayNamesFull[$todayIndex]) ?></div>
+        <div class="ticket-day" role="heading" aria-level="2">Heute &middot; <?= e($weekdayNamesFull[$todayIndex]) ?></div>
         <div class="ticket-date"><?= e(formatDateDe($todayDate)) ?></div>
       </div>
       <?php if ($user['time_tracking_enabled']): ?>
@@ -184,7 +181,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
                 <?= csrfField() ?>
                 <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                 <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                <button type="submit" class="btn small stamp-btn">Bewerben</button>
+                <button type="submit" class="btn stamp-btn">Bewerben</button>
               </form>
             <?php endif; ?>
           </div>
@@ -202,7 +199,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
   <div class="ticket">
     <div class="ticket-head">
       <div>
-        <div class="ticket-day"><?= e($weekdayNamesFull[$i]) ?></div>
+        <div class="ticket-day" role="heading" aria-level="2"><?= e($weekdayNamesFull[$i]) ?></div>
         <div class="ticket-date"><?= e(formatDateDe($d)) ?></div>
       </div>
     </div>
@@ -237,7 +234,7 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
                 <?= csrfField() ?>
                 <input type="hidden" name="shift_id" value="<?= (int)$sh['id'] ?>">
                 <input type="hidden" name="return_date" value="<?= e($weekStart) ?>">
-                <button type="submit" class="btn small stamp-btn">Bewerben</button>
+                <button type="submit" class="btn stamp-btn">Bewerben</button>
               </form>
             <?php endif; ?>
           </div>
@@ -246,6 +243,10 @@ $weekdayNamesFull = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 
     <?php endif; ?>
   </div>
 <?php endforeach; ?>
+</div>
+
+<div style="text-align:center;margin-top:1rem;">
+  <a href="/calendar_feed.php?token=<?= e($calendarToken) ?>&amp;start=<?= e($weekStart) ?>&amp;end=<?= e($weekEnd) ?>" class="btn small secondary">Diese Woche exportieren (.ics)</a>
 </div>
 
 <?php require __DIR__ . '/partials/footer.php'; ?>
