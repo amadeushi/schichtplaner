@@ -295,6 +295,16 @@ $longestLine = max(array_map('strlen', explode("\r\n", $ics)));
 check('ICS: keine Zeile über 75 Oktette (Folding bleibt gültig)', $longestLine <= 75, 'längste Zeile: ' . $longestLine);
 check('ICS: Zeilenende ist CRLF', !preg_match('/(?<!\r)\n/', $ics));
 
+// --- Längenbegrenzung freier Texte ---
+same('Länge: genau am Limit ist erlaubt', null, tooLongError(['Titel' => [str_repeat('a', 100), FIELD_MAX['title']]]));
+same('Länge: ein Zeichen darüber wird abgelehnt', 'Titel ist zu lang (höchstens 100 Zeichen).', tooLongError(['Titel' => [str_repeat('a', 101), FIELD_MAX['title']]]));
+same('Länge: Umlaute zählen als ein Zeichen (nicht als zwei Bytes)', null, tooLongError(['Name' => [str_repeat('ü', 100), FIELD_MAX['name']]]));
+same('Länge: Emoji zählen als ein Zeichen', null, tooLongError(['Name' => [str_repeat('🙂', 100), FIELD_MAX['name']]]));
+same('Länge: die erste zu lange Eingabe wird gemeldet', 'Ort ist zu lang (höchstens 100 Zeichen).',
+    tooLongError(['Titel' => ['kurz', 100], 'Ort' => [str_repeat('o', 101), 100], 'Notiz' => [str_repeat('n', 501), 500]]));
+same('Länge: leere Eingabe ist in Ordnung', null, tooLongError(['Notiz' => ['', FIELD_MAX['notes']]]));
+same('Länge: die längste mögliche E-Mail-Adresse (254 Zeichen) passt gerade noch', null, tooLongError(['E-Mail' => [str_repeat('a', 64) . '@' . str_repeat('b', 63) . '.' . str_repeat('c', 63) . '.' . str_repeat('d', 58) . '.de', FIELD_MAX['email']]]));
+
 // --- Vergangene Tage: keine Bewerbung, kein Rundruf ---
 same('Vergangen: gestern ist vorbei', true, shiftDayHasPassed('2026-11-03', '2026-11-04'));
 same('Vergangen: heute ist noch nicht vorbei (auch wenn die Schicht begonnen hat)', false, shiftDayHasPassed('2026-11-04', '2026-11-04'));

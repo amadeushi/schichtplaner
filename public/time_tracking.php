@@ -38,6 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $start = (string)($_POST['start_time'] ?? '');
         $end = (string)($_POST['end_time'] ?? '');
         $note = trim((string)($_POST['note'] ?? ''));
+        if (($tooLong = tooLongError(['Die Notiz' => [$note, FIELD_MAX['note']]])) !== null) {
+            flash('error', $tooLong);
+            redirect('/time_tracking.php');
+        }
 
         if (!$date || !$start || !$end || $end <= $start) {
             flash('error', 'Bitte Datum sowie Start- und Endzeit angeben (Ende muss nach Start liegen).');
@@ -223,7 +227,7 @@ require __DIR__ . '/partials/header.php';
       </div>
     </div>
     <label for="note">Notiz (optional)</label>
-    <input type="text" id="note" name="note" placeholder="z.B. vergessen auszustempeln">
+    <input type="text" id="note" name="note" maxlength="<?= FIELD_MAX['note'] ?>" placeholder="z.B. vergessen auszustempeln">
     <button type="submit" class="btn" style="margin-top:1rem;">Nachtragen</button>
   </form>
 </div>

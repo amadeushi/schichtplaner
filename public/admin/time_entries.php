@@ -25,6 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $start = (string)($_POST['start_time'] ?? '');
         $end = (string)($_POST['end_time'] ?? '');
         $note = trim((string)($_POST['note'] ?? ''));
+        if (($tooLong = tooLongError(['Die Notiz' => [$note, FIELD_MAX['note']]])) !== null) {
+            flash('error', $tooLong);
+            redirect($backUrl);
+        }
 
         if (!$date || !$start || !$end || $end <= $start) {
             flash('error', 'Bitte Datum sowie Start- und Endzeit angeben (Ende muss nach Start liegen).');
@@ -177,7 +181,7 @@ require __DIR__ . '/../partials/header.php';
       </div>
     </div>
     <label for="note">Notiz (optional)</label>
-    <input type="text" id="note" name="note">
+    <input type="text" id="note" name="note" maxlength="<?= FIELD_MAX['note'] ?>">
     <button type="submit" class="btn" style="margin-top:1rem;">Hinzufügen</button>
   </form>
 </div>

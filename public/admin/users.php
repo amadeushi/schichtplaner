@@ -22,6 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash('error', 'Bitte gültigen Namen und E-Mail angeben.');
             redirect('/admin/users.php');
         }
+        $tooLong = tooLongError(['Name' => [$name, FIELD_MAX['name']], 'E-Mail' => [$email, FIELD_MAX['email']]]);
+        if ($tooLong !== null) {
+            flash('error', $tooLong);
+            redirect('/admin/users.php');
+        }
 
         $phone = null;
         $rawPhone = trim((string)($_POST['phone'] ?? ''));
@@ -135,11 +140,11 @@ require __DIR__ . '/../partials/header.php';
     <div class="grid-2">
       <div>
         <label for="name">Name</label>
-        <input type="text" id="name" name="name" required>
+        <input type="text" id="name" name="name" required maxlength="<?= FIELD_MAX['name'] ?>">
       </div>
       <div>
         <label for="email">E-Mail</label>
-        <input type="email" id="email" name="email" required autocomplete="off" inputmode="email" autocapitalize="none" spellcheck="false">
+        <input type="email" id="email" name="email" required maxlength="<?= FIELD_MAX['email'] ?>" autocomplete="off" inputmode="email" autocapitalize="none" spellcheck="false">
       </div>
     </div>
     <?php if ($smsOn): ?>

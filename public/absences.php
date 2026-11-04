@@ -11,6 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $end = (string)($_POST['end_date'] ?? '');
         $type = (string)($_POST['type'] ?? 'urlaub');
         $note = trim((string)($_POST['note'] ?? ''));
+        if (($tooLong = tooLongError(['Die Notiz' => [$note, FIELD_MAX['note']]])) !== null) {
+            flash('error', $tooLong);
+            redirect('/absences.php');
+        }
 
         if (!in_array($type, ['urlaub', 'krankheit', 'sonstiges'], true)) {
             $type = 'sonstiges';
@@ -95,7 +99,7 @@ require __DIR__ . '/partials/header.php';
       <option value="sonstiges">Sonstiges</option>
     </select>
     <label for="note">Notiz (optional)</label>
-    <input type="text" id="note" name="note" placeholder="z.B. nur eingeschränkt erreichbar">
+    <input type="text" id="note" name="note" maxlength="<?= FIELD_MAX['note'] ?>" placeholder="z.B. nur eingeschränkt erreichbar">
     <button type="submit" class="btn" style="margin-top:1rem;">Eintragen</button>
   </form>
 </div>

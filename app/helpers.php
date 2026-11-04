@@ -413,6 +413,27 @@ function purgeAnonymousSessions(string $dir, ?int $now = null, int $maxDeletes =
     return $deleted;
 }
 
+/**
+ * Höchstlängen für freie Texteingaben (Zeichen, nicht Bytes). Die Oberfläche hält auch deutlich längere Werte aus
+ * (Stresstest), aber ohne Grenze kann ein einziger Eintrag Listen, Mails und SMS sprengen. Die Formulare setzen sie
+ * als maxlength, der Server prüft sie zusätzlich (tooLongError). Bestehende Daten werden nicht gekürzt.
+ */
+const FIELD_MAX = ['name' => 100, 'email' => 254, 'title' => 100, 'location' => 100, 'notes' => 500, 'note' => 200];
+
+/**
+ * Meldung für die erste zu lange Eingabe oder null. $fields: Bezeichnung => [Wert, Höchstlänge],
+ * z. B. ['Titel' => [$title, FIELD_MAX['title']]].
+ */
+function tooLongError(array $fields): ?string
+{
+    foreach ($fields as $label => [$value, $max]) {
+        if (mb_strlen((string)$value) > $max) {
+            return $label . ' ist zu lang (höchstens ' . $max . ' Zeichen).';
+        }
+    }
+    return null;
+}
+
 /** Mindestabstand zwischen zwei Rundrufen "Personal gesucht" für dieselbe Schicht (Sekunden): schützt vor Doppeltipp und Doppelversand. */
 const URGENT_REMINDER_COOLDOWN_SECONDS = 600;
 

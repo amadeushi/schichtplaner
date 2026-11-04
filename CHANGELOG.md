@@ -6,6 +6,19 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.31.0] - 2026-11-04
+
+### Hinzugefügt
+- Längenbegrenzung für freie Texte, damit ein einzelner Eintrag Listen, Mails und SMS nicht sprengen kann
+  (Konstante `FIELD_MAX` in app/helpers.php, Prüfung `tooLongError()`):
+  Name 100, E-Mail 254, Schicht-Titel 100, Ort 100, Schicht-Notiz 500, Notizen zu Abwesenheiten und
+  Zeiteinträgen 200 Zeichen. Gezählt werden Zeichen, nicht Bytes (Umlaute und Emoji zählen als eins).
+  Die Formulare setzen die Grenze als `maxlength`, der Server lehnt Längeres mit einer klaren Meldung ab
+  ("Titel ist zu lang (höchstens 100 Zeichen)."), auch bei einer manuellen Anfrage.
+  Bestehende Daten werden nicht gekürzt; in Produktion ist der längste vorhandene Wert weit darunter
+  (Name 6, E-Mail 28, Titel 13, Ort 7 Zeichen).
+- Tests: 146 Prüfungen (Grenzfälle am Limit, Umlaute, Emoji, längste mögliche E-Mail).
+
 ## [1.30.1] - 2026-11-04
 
 Fund einer Stresstest-Runde mit Worst-Case-Daten (lange Namen und E-Mails, ein Buchstabe, Emoji, 50 und 0

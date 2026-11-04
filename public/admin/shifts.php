@@ -27,6 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : ''));
         }
 
+        $tooLong = tooLongError(['Titel' => [$title, FIELD_MAX['title']], 'Ort' => [$location, FIELD_MAX['location']], 'Notiz' => [$notes, FIELD_MAX['notes']]]);
+        if ($tooLong !== null) {
+            flash('error', $tooLong);
+            $_SESSION['open_create_form'] = true;
+            redirect('/admin/shifts.php' . ($returnDate ? '?date=' . urlencode($returnDate) : ''));
+        }
+
         $ins = db()->prepare(
             'INSERT INTO shifts (title, shift_date, start_time, end_time, location, needed_count, notes, status, created_by)
              VALUES (:title, :date, :start, :end, :loc, :needed, :notes, :status, :uid)'
@@ -86,6 +93,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($title === '' || !$date || !strtotime($date) || !$start || !$end) {
             flash('error', 'Bitte Titel, Datum sowie Start- und Endzeit angeben.');
+            redirect($backTo);
+        }
+
+        $tooLong = tooLongError(['Titel' => [$title, FIELD_MAX['title']], 'Ort' => [$location, FIELD_MAX['location']], 'Notiz' => [$notes, FIELD_MAX['notes']]]);
+        if ($tooLong !== null) {
+            flash('error', $tooLong);
             redirect($backTo);
         }
 
@@ -505,11 +518,11 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
     <div class="grid-2">
       <div>
         <label for="edit_title">Titel</label>
-        <input type="text" id="edit_title" name="title" required value="<?= e($editShift['title']) ?>">
+        <input type="text" id="edit_title" name="title" required maxlength="<?= FIELD_MAX['title'] ?>" value="<?= e($editShift['title']) ?>">
       </div>
       <div>
         <label for="edit_location">Ort</label>
-        <input type="text" id="edit_location" name="location" value="<?= e((string)$editShift['location']) ?>">
+        <input type="text" id="edit_location" name="location" maxlength="<?= FIELD_MAX['location'] ?>" value="<?= e((string)$editShift['location']) ?>">
       </div>
     </div>
     <div class="grid-2">
@@ -533,7 +546,7 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
       </div>
     </div>
     <label for="edit_notes">Notiz (optional)</label>
-    <textarea id="edit_notes" name="notes" rows="2"><?= e((string)$editShift['notes']) ?></textarea>
+    <textarea id="edit_notes" name="notes" rows="2" maxlength="<?= FIELD_MAX['notes'] ?>"><?= e((string)$editShift['notes']) ?></textarea>
     <button type="submit" class="btn" style="margin-top:1rem;">Speichern</button>
     <a href="/admin/shifts.php?date=<?= e($weekStart) ?>" class="btn secondary">Abbrechen</a>
   </form>
@@ -562,11 +575,11 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
     <div class="grid-2">
       <div>
         <label for="title">Titel</label>
-        <input type="text" id="title" name="title" required placeholder="z.B. Spätschicht Küche">
+        <input type="text" id="title" name="title" required maxlength="<?= FIELD_MAX['title'] ?>" placeholder="z.B. Spätschicht Küche">
       </div>
       <div>
         <label for="location">Ort</label>
-        <input type="text" id="location" name="location" placeholder="z.B. Filiale Nord">
+        <input type="text" id="location" name="location" maxlength="<?= FIELD_MAX['location'] ?>" placeholder="z.B. Filiale Nord">
       </div>
     </div>
     <div class="grid-2">
@@ -614,7 +627,7 @@ $todayIndex = array_search($todayDate, $days, true); // false, wenn heute nicht 
       });
     </script>
     <label for="notes">Notiz (optional)</label>
-    <textarea id="notes" name="notes" rows="2"></textarea>
+    <textarea id="notes" name="notes" rows="2" maxlength="<?= FIELD_MAX['notes'] ?>"></textarea>
     <label for="repeat_weeks">Wiederholen (Anzahl Wochen, wöchentlich ab Datum)</label>
     <input type="number" id="repeat_weeks" name="repeat_weeks" min="1" max="26" value="1">
     <button type="submit" class="btn" style="margin-top:1rem;">Als Entwurf anlegen</button>
