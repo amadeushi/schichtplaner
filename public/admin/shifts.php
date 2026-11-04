@@ -249,6 +249,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash('error', 'Für vergangene Tage gibt es keinen Rundruf mehr.');
             redirect($backTo);
         }
+        $cooldown = urgentReminderCooldownLeft($shiftId);
+        if ($cooldown > 0) {
+            flash('error', 'Der Rundruf für diese Schicht ging gerade erst raus. Ein neuer ist in ' . (int)ceil($cooldown / 60) . ' Min. möglich.');
+            redirect($backTo);
+        }
         if ((int)$shift['approved_count'] >= (int)$shift['needed_count']) {
             flash('error', 'Diese Schicht ist bereits voll besetzt.');
             redirect($backTo);
@@ -260,6 +265,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $recipients = urgentReminderRecipients($shift);
 
         $notifier = new Notifier($config['smtp']);
+        if ($recipients) {
+            markUrgentReminderSent($shiftId);
+        }
         $mailedCount = 0;
         foreach ($recipients as $rec) {
             if ($notifier->urgentReminder($shift, $rec)) {

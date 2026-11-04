@@ -139,11 +139,11 @@ require __DIR__ . '/partials/header.php';
     <?= csrfField() ?>
     <input type="hidden" name="action" value="password">
     <label for="current_password">Aktuelles Passwort</label>
-    <input type="password" id="current_password" name="current_password" required>
+    <input type="password" id="current_password" name="current_password" required autocomplete="current-password">
     <label for="new_password">Neues Passwort</label>
-    <input type="password" id="new_password" name="new_password" required minlength="8">
+    <input type="password" id="new_password" name="new_password" required minlength="8" autocomplete="new-password">
     <label for="confirm_password">Neues Passwort bestätigen</label>
-    <input type="password" id="confirm_password" name="confirm_password" required minlength="8">
+    <input type="password" id="confirm_password" name="confirm_password" required minlength="8" autocomplete="new-password">
     <button type="submit" class="btn" style="margin-top:1rem;">Passwort ändern</button>
   </form>
 </div>

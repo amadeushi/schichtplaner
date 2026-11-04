@@ -44,6 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('/time_tracking.php');
         }
 
+        $dup = db()->prepare('SELECT 1 FROM time_entries WHERE user_id = :u AND clock_in = :in AND clock_out = :out');
+        $dup->execute(['u' => $user['id'], 'in' => "$date $start:00", 'out' => "$date $end:00"]);
+        if ($dup->fetchColumn()) {
+            flash('error', 'Diesen Eintrag gibt es schon.');
+            redirect('/time_tracking.php');
+        }
+
         db()->prepare('INSERT INTO time_entries (user_id, clock_in, clock_out, note, created_by) VALUES (:u, :in, :out, :note, :u)')
             ->execute(['u' => $user['id'], 'in' => "$date $start:00", 'out' => "$date $end:00", 'note' => $note ?: null]);
         flash('success', 'Eintrag wurde nachgetragen.');

@@ -6,6 +6,30 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.30.0] - 2026-11-04
+
+Feinschliff aus der zweiten Hälfte der Liste (Handy-Details). Keine Migration.
+
+### Hinzugefügt
+- Doppeltipp-Schutz: Ein abgeschicktes POST-Formular nimmt keine zweite Absendung an und sperrt seinen
+  Absenden-Knopf, bis die Seite wechselt (nach 8 Sekunden und beim Zurück-Navigieren wird wieder
+  freigegeben). Abgebrochene Rückfragen und Formulare, die per Skript senden, bleiben unberührt.
+- Doppelte Einträge werden auch serverseitig abgefangen: dieselbe Abwesenheit ("Diese Abwesenheit ist schon
+  eingetragen.") und derselbe nachgetragene Zeiteintrag ("Diesen Eintrag gibt es schon.").
+- Rundruf "Personal gesucht": Für dieselbe Schicht ist ein neuer Rundruf erst nach 10 Minuten möglich
+  (`URGENT_REMINDER_COOLDOWN_SECONDS`), damit ein doppelter Klick nicht zweimal E-Mails und SMS an alle schickt.
+  Die Sperre gilt je Schicht und steht in `settings` (`urgent_reminder_sent_<id>`).
+
+### Geändert
+- Ziffern sind überall gleich breit (`font-variant-numeric: tabular-nums`): Uhrzeiten, Zähler und Summen
+  springen nicht mehr.
+- Überschriften brechen ausgewogen um (`text-wrap: balance`, kein einzelnes Wort in der letzten Zeile),
+  Fließtext ohne Waisen (`text-wrap: pretty`).
+- Querformat mit Notch: Kopfleiste, Inhalt und Tab-Leiste rücken um die seitlichen Sicherheitsabstände ein.
+- Autofill: Anmeldung (`username`/`current-password`), Passwort ändern (`current-password`/`new-password`);
+  im Konto-Anlegen des Admins ist Autofill der eigenen Adresse aus.
+- Tests: 139 Prüfungen.
+
 ## [1.29.2] - 2026-11-04
 
 ### Behoben

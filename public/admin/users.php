@@ -139,7 +139,7 @@ require __DIR__ . '/../partials/header.php';
       </div>
       <div>
         <label for="email">E-Mail</label>
-        <input type="email" id="email" name="email" required>
+        <input type="email" id="email" name="email" required autocomplete="off" inputmode="email" autocapitalize="none" spellcheck="false">
       </div>
     </div>
     <?php if ($smsOn): ?>

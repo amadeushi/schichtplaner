@@ -413,6 +413,24 @@ function purgeAnonymousSessions(string $dir, ?int $now = null, int $maxDeletes =
     return $deleted;
 }
 
+/** Mindestabstand zwischen zwei Rundrufen "Personal gesucht" für dieselbe Schicht (Sekunden): schützt vor Doppeltipp und Doppelversand. */
+const URGENT_REMINDER_COOLDOWN_SECONDS = 600;
+
+/** Wie viele Sekunden es noch dauert, bis für $shiftId wieder ein Rundruf möglich ist (0 = jetzt möglich). */
+function urgentReminderCooldownLeft(int $shiftId, ?int $now = null): int
+{
+    // Direkt aus der Datenbank statt über setting(): dessen Zwischenspeicher gilt je Anfrage und sähe einen eben gesetzten Wert nicht.
+    $stmt = db()->prepare('SELECT value FROM settings WHERE key = :k');
+    $stmt->execute(['k' => 'urgent_reminder_sent_' . $shiftId]);
+    $last = (int)$stmt->fetchColumn();
+    return max(0, $last + URGENT_REMINDER_COOLDOWN_SECONDS - ($now ?? time()));
+}
+
+function markUrgentReminderSent(int $shiftId, ?int $now = null): void
+{
+    setSetting('urgent_reminder_sent_' . $shiftId, (string)($now ?? time()));
+}
+
 /** So lange gilt die Rückgängig-Möglichkeit nach einer Aktion (Sekunden). */
 const UNDO_TTL_SECONDS = 60;
 

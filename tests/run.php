@@ -311,6 +311,16 @@ $res = decideApplication($appIdOf($pastShift['id']), 'approved', $annaId, []);
 same('Vergangen: Entscheiden für einen vergangenen Tag wird abgelehnt', [false, 'Für vergangene Tage wird nicht mehr entschieden.'], [$res['ok'], $res['message']]);
 same('Vergangen: die Bewerbung bleibt unverändert', 'pending', $pdo->query("SELECT status FROM shift_applications WHERE id = " . $appIdOf($pastShift['id']))->fetchColumn());
 
+// --- Rundruf nicht doppelt: Mindestabstand je Schicht ---
+$cdShift = $mkShift('2026-12-20', '10:00', '14:00')['id'];
+$t0 = 1_800_000_000;
+same('Rundruf-Abstand: vor dem ersten Versand frei', 0, urgentReminderCooldownLeft($cdShift, $t0));
+markUrgentReminderSent($cdShift, $t0);
+same('Rundruf-Abstand: direkt danach gesperrt', URGENT_REMINDER_COOLDOWN_SECONDS, urgentReminderCooldownLeft($cdShift, $t0));
+same('Rundruf-Abstand: nach 4 Minuten noch 6 Minuten', 360, urgentReminderCooldownLeft($cdShift, $t0 + 240));
+same('Rundruf-Abstand: nach 10 Minuten wieder frei', 0, urgentReminderCooldownLeft($cdShift, $t0 + URGENT_REMINDER_COOLDOWN_SECONDS));
+same('Rundruf-Abstand: gilt nur für diese Schicht', 0, urgentReminderCooldownLeft($cdShift + 1, $t0));
+
 // --- Rückgängig statt "Sind Sie sicher?": Bewerbung zurückziehen und Abwesenheit löschen ---
 $_SESSION = [];
 $undoShift = $mkShift('2026-10-27', '10:00', '14:00');

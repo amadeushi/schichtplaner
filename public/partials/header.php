@@ -182,6 +182,15 @@ function navActive(string $path, array $matches): bool
 
   /* Handy-Feinheiten: kein graues Aufblitzen beim Antippen, kein 300-ms-Warten, Bedienelemente nicht markierbar. */
   html { -webkit-tap-highlight-color: transparent; }
+  /* Ziffern gleich breit: Uhrzeiten, Zähler und Summen springen nicht, wenn sich eine Zahl ändert. */
+  body { font-variant-numeric: tabular-nums; }
+  /* Überschriften ausgewogen umbrechen (kein einzelnes Wort in der letzten Zeile), Fließtext ohne Waise. */
+  h1, h2, h3, .ticket-day, .gap-board h2, .week-nav-label { text-wrap: balance; }
+  p, .muted, .flash, .ticket-meta, .ticket-empty { text-wrap: pretty; }
+  /* Querformat mit Notch: Kopfleiste, Inhalt und Tab-Leiste rücken von den Seitenrändern ab. */
+  header.topbar { padding-left: max(1.1rem, env(safe-area-inset-left)); padding-right: max(1.1rem, env(safe-area-inset-right)); }
+  main { padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+  nav.tabbar .tabbar-inner { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
   a, button, summary, label.weekday-pick { touch-action: manipulation; }
   .btn, nav.tabbar a, summary, label.weekday-pick { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   /* Kleine Icon-Knöpfe: Trefferfläche größer als das Zeichen (36px + 2 x 4px = 44px), ohne das Layout zu ändern. */

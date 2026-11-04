@@ -47,6 +47,30 @@
   });
 </script>
 <script>
+  // Doppeltipp-Schutz: ein abgeschicktes POST-Formular nimmt keine zweite Absendung an, bis die Seite gewechselt hat.
+  // Nach 8 Sekunden (Download, Netzfehler) und beim Zurück-Navigieren (bfcache) wird es wieder freigegeben.
+  (function () {
+    function release(form) {
+      delete form.dataset.submitting;
+      form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (b) { b.disabled = false; });
+    }
+    document.addEventListener('submit', function (event) {
+      var form = event.target;
+      if (!(form instanceof HTMLFormElement) || String(form.method).toLowerCase() !== 'post') { return; }
+      if (form.dataset.submitting === '1') { event.preventDefault(); return; }
+      form.dataset.submitting = '1'; // sofort markieren, damit auch eine zweite Absendung im selben Augenblick geblockt wird
+      setTimeout(function () {
+        if (event.defaultPrevented) { release(form); return; } // z. B. abgebrochene Rückfrage oder ein Formular, das per Skript sendet
+        form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(function (b) { b.disabled = true; });
+        setTimeout(function () { release(form); }, 8000);
+      }, 0);
+    });
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) { document.querySelectorAll('form[data-submitting]').forEach(release); }
+    });
+  })();
+</script>
+<script>
   // Rückgängig-Hinweis nach 10 Sekunden ausblenden (die Möglichkeit selbst gilt serverseitig 60 s).
   document.querySelectorAll('.undo-toast').forEach(function (toast) {
     setTimeout(function () {

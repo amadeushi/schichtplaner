@@ -35,9 +35,9 @@ require __DIR__ . '/partials/header.php';
   <form method="post">
     <?= csrfField() ?>
     <label for="email">E-Mail</label>
-    <input type="email" id="email" name="email" required autofocus>
+    <input type="email" id="email" name="email" required autofocus autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false">
     <label for="password">Passwort</label>
-    <input type="password" id="password" name="password" required>
+    <input type="password" id="password" name="password" required autocomplete="current-password">
     <button type="submit" class="btn" style="margin-top:1.25rem;width:100%;">Anmelden</button>
   </form>
   <p class="muted" style="margin-top:1rem;"><a href="/forgot_password.php" style="display:inline-block;padding:0.5rem 0;">Passwort vergessen?</a></p>

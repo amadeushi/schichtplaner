@@ -21,6 +21,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('/absences.php');
         }
 
+        $dup = db()->prepare('SELECT 1 FROM absences WHERE user_id = :u AND start_date = :s AND end_date = :e AND type = :t');
+        $dup->execute(['u' => $user['id'], 's' => $start, 'e' => $end, 't' => $type]);
+        if ($dup->fetchColumn()) {
+            flash('error', 'Diese Abwesenheit ist schon eingetragen.');
+            redirect('/absences.php');
+        }
+
         db()->prepare(
             'INSERT INTO absences (user_id, start_date, end_date, type, note, created_by) VALUES (:u, :s, :e, :t, :n, :u)'
         )->execute(['u' => $user['id'], 's' => $start, 'e' => $end, 't' => $type, 'n' => $note ?: null]);
