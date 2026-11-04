@@ -218,7 +218,7 @@ function decideApplication(int $appId, string $decision, int $adminUserId, array
     }
 
     $stmt = db()->prepare(
-        "SELECT sa.*, sh.needed_count,
+        "SELECT sa.*, sh.needed_count, sh.shift_date,
             (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sh.id AND a.status = 'approved') AS approved_count
          FROM shift_applications sa JOIN shifts sh ON sh.id = sa.shift_id
          WHERE sa.id = :id AND sa.status = 'pending'"
@@ -228,6 +228,10 @@ function decideApplication(int $appId, string $decision, int $adminUserId, array
 
     if (!$app) {
         return ['ok' => false, 'message' => 'Bewerbung wurde bereits bearbeitet oder existiert nicht.'];
+    }
+
+    if (shiftDayHasPassed($app['shift_date'])) {
+        return ['ok' => false, 'message' => 'Für vergangene Tage wird nicht mehr entschieden.'];
     }
 
     if ($decision === 'approved' && (int)$app['approved_count'] >= (int)$app['needed_count']) {

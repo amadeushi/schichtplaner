@@ -92,6 +92,7 @@
           <?php foreach ($pending as $p): ?>
             <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:0.4rem;font-size:0.85rem;">
               <span><span class="badge pending" style="margin-right:0.4rem;">Bewerbung</span><?= e($p['name']) ?><?php if ($isAbsentOnDay($p['user_id'])): ?> <span class="muted">(abwesend)</span><?php elseif ($hint = $availHint($p['user_id'], $sh)): ?> <span class="muted">(<?= e($hint) ?>)</span><?php endif; ?></span>
+              <?php if (!shiftDayHasPassed($sh['shift_date'])): ?>
               <span style="display:flex;gap:0.4rem;">
                 <form class="inline" method="post">
                   <?= csrfField() ?>
@@ -110,6 +111,9 @@
                   <button type="submit" class="btn secondary">Ablehnen</button>
                 </form>
               </span>
+              <?php else: ?>
+              <span class="muted">vorbei</span>
+              <?php endif; ?>
             </div>
           <?php endforeach; ?>
 

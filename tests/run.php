@@ -301,6 +301,16 @@ same('Vergangen: heute ist noch nicht vorbei (auch wenn die Schicht begonnen hat
 same('Vergangen: morgen ist nicht vorbei', false, shiftDayHasPassed('2026-11-05', '2026-11-04'));
 same('Vergangen: Monats- und Jahreswechsel', [true, false], [shiftDayHasPassed('2026-12-31', '2027-01-01'), shiftDayHasPassed('2027-01-01', '2026-12-31')]);
 
+$decideShift = fn(string $date) => $mkShift($date, '10:00', '14:00');
+$pastShift = $decideShift(date('Y-m-d', strtotime('-2 days')));
+$futureShift = $decideShift(date('Y-m-d', strtotime('+2 days')));
+$assign($pastShift['id'], $bobId, 'pending');
+$assign($futureShift['id'], $bobId, 'pending');
+$appIdOf = fn(int $shiftId) => (int)$pdo->query("SELECT id FROM shift_applications WHERE shift_id = $shiftId AND user_id = $bobId")->fetchColumn();
+$res = decideApplication($appIdOf($pastShift['id']), 'approved', $annaId, []);
+same('Vergangen: Entscheiden für einen vergangenen Tag wird abgelehnt', [false, 'Für vergangene Tage wird nicht mehr entschieden.'], [$res['ok'], $res['message']]);
+same('Vergangen: die Bewerbung bleibt unverändert', 'pending', $pdo->query("SELECT status FROM shift_applications WHERE id = " . $appIdOf($pastShift['id']))->fetchColumn());
+
 // --- Rückgängig statt "Sind Sie sicher?": Bewerbung zurückziehen und Abwesenheit löschen ---
 $_SESSION = [];
 $undoShift = $mkShift('2026-10-27', '10:00', '14:00');

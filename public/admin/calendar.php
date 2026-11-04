@@ -425,6 +425,7 @@ require __DIR__ . '/../partials/header.php';
       <?php foreach ($applicants as $p): ?>
         <div class="decide-row">
           <span><span class="badge pending">Bewerbung</span> <?= e($p['name']) ?></span>
+          <?php if (!shiftDayHasPassed($sh['shift_date'])): ?>
           <span class="table-actions">
             <form method="post" class="inline decide-form">
               <?= csrfField() ?>
@@ -441,6 +442,9 @@ require __DIR__ . '/../partials/header.php';
               <button type="submit" class="btn small secondary">Ablehnen</button>
             </form>
           </span>
+          <?php else: ?>
+          <span class="muted">vorbei</span>
+          <?php endif; ?>
         </div>
       <?php endforeach; ?>
     </div>

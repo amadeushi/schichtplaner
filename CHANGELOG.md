@@ -6,6 +6,16 @@ Versionierung an [Semantic Versioning](https://semver.org/lang/de/) (grob:
 MAJOR für Breaking Changes an Daten/URLs, MINOR für neue Funktionen, PATCH
 für Fixes). Die aktuell laufende Version steht in `app/version.php`.
 
+## [1.29.2] - 2026-11-04
+
+### Behoben
+- Für vergangene Tage wird nicht mehr entschieden: "Im Plan entscheiden" auf der Seite "Bewerbungen" und
+  "Annehmen"/"Ablehnen" im Schichtplan und im Kalender-Dialog fehlten bei Schichten von gestern und früher
+  noch. Dort steht jetzt "vorbei". Offene Bewerbungen für vergangene Tage stehen auf "Bewerbungen" in
+  einer eigenen Karte "Vergangen" ohne Knopf und zählen nicht mehr bei "Ausstehend".
+- `decideApplication()` lehnt die Entscheidung für einen vergangenen Tag auch serverseitig ab (kein
+  "Bewerbung angenommen" mehr für eine Schicht, die vorbei ist). Mit Test (134 Prüfungen).
+
 ## [1.29.1] - 2026-11-04
 
 ### Geändert

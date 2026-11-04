@@ -34,6 +34,10 @@ $recent = db()->query(
      ORDER BY sa.decided_at DESC LIMIT 20"
 )->fetchAll();
 
+// Entschieden wird nur noch für heute und später; Bewerbungen für vergangene Tage stehen getrennt und ohne Knopf.
+$pastPending = array_values(array_filter($pending, fn($a) => shiftDayHasPassed($a['shift_date'])));
+$pending = array_values(array_filter($pending, fn($a) => !shiftDayHasPassed($a['shift_date'])));
+
 require __DIR__ . '/../partials/header.php';
 ?>
 <h1>Bewerbungen</h1>
@@ -64,6 +68,27 @@ require __DIR__ . '/../partials/header.php';
   </div>
   <?php endif; ?>
 </div>
+
+<?php if ($pastPending): ?>
+<div class="card">
+  <h2>Vergangen (<?= count($pastPending) ?>)</h2>
+  <p class="muted">Für vergangene Tage wird nicht mehr entschieden. Diese Bewerbungen sind unbeantwortet geblieben.</p>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>Datum</th><th>Schicht</th><th>Bewerber</th></tr></thead>
+    <tbody>
+    <?php foreach ($pastPending as $a): ?>
+      <tr>
+        <td data-label="Datum"><?= e(formatDateDe($a['shift_date'])) ?>, <?= e($a['start_time']) ?>-<?= e($a['end_time']) ?></td>
+        <td data-label="Schicht"><?= e($a['title']) ?></td>
+        <td data-label="Bewerber"><?= e($a['applicant_name']) ?></td>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table>
+  </div>
+</div>
+<?php endif; ?>
 
 <div class="card">
   <h2>Zuletzt entschieden</h2>
