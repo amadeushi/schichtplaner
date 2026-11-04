@@ -55,12 +55,16 @@ lokalen `storage/database.sqlite` entfernen, nicht committen.
 
 ## Deployment (Produktion)
 
-Läuft auf einem Raspberry Pi ("ballotpi") unter `schichtplaner.amds.at`
-(nginx + php-fpm, Let's Encrypt/certbot, ufw). Deploy-Ablauf für geänderte
-Dateien:
+Läuft seit der Umstellung Ende Oktober 2026 auf dem Pi-hole-Rechner
+(`192.168.178.104`, Hostname "pihole") unter `schichtplaner.amds.at` (nginx +
+php8.4-fpm, App in `/var/www/schichtplaner`). Der alte Pi "ballotpi"
+(`192.168.178.170`) ist nur noch eine Weiterleitung (nginx-Bridge "migration-bridge",
+php-fpm dort deaktiviert): ein Deploy dorthin ist wirkungslos. Deploy-Ablauf für
+geänderte Dateien:
 
-1. Per SSH als `hamun@ballotpi` verbinden (Key-Auth, passwortloses `sudo`
-   ist eingerichtet).
+1. Per SSH als `hamun@192.168.178.104` verbinden (Key `schichtplaner-deploy`,
+   passwortloses `sudo` ist eingerichtet; der Host-Schlüssel ist in
+   `known_hosts`).
 2. Geänderte Dateien via `rsync` in ein `/tmp`-Staging-Verzeichnis auf dem
    Pi kopieren (der Zielordner `/var/www/schichtplaner/public/...` gehört
    `www-data`, `hamun` kann dort nicht direkt per rsync schreiben).
